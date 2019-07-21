@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -20,7 +19,6 @@ type Platform interface {
 type Event struct {
 	EPPN    string `json:"eppn"`
 	Email   string `json:"email"`
-	Name    string `json:"name"`
 	ORCID   string `json:"orcid"`
 	Subject int    `json:"subject"`
 	Type    string `json:"type"`
@@ -42,9 +40,10 @@ func HandleRequest(ctx context.Context, e Event) (string, error) {
 	lc, _ := lambdacontext.FromContext(ctx)
 	log.Printf("Lambda Context: %#v", lc)
 	log.Print(lc.Identity.CognitoIdentityPoolID)
-	for _, pair := range os.Environ() {
-		log.Println(pair)
-	}
+	// isLambda := os.Getenv("_LAMBDA_SERVER_PORT") != ""
+	// for _, pair := range os.Environ() {
+	// 	log.Println(pair)
+	// }
 	log.Printf("Recieved: %#v", e)
 	if e.Records != nil {
 		for _, r := range e.Records {
@@ -54,7 +53,7 @@ func HandleRequest(ctx context.Context, e Event) (string, error) {
 		}
 	}
 
-	return fmt.Sprintf("Recieved: %v", e), nil
+	return fmt.Sprintf("Recieved: %#v", e), nil
 
 	// var e Event
 	// err := json.Unmarshal(message, &e)
@@ -72,5 +71,6 @@ func HandleRequest(ctx context.Context, e Event) (string, error) {
 }
 
 func main() {
+	log.SetPrefix("OHI")
 	lambda.Start(HandleRequest)
 }
