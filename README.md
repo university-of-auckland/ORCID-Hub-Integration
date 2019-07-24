@@ -12,3 +12,10 @@ It can be triggered either by SQS or API Gateway directly.
 ```
 go build . && upx consumer && zip consumer.zip consumer
 ```
+
+# Testing
+
+```
+export API_KEY=... CLIENT_ID=... CLIENT_SECRET=...
+go test -v .
+```
