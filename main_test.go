@@ -66,8 +66,8 @@ func TestAccessToken(t *testing.T) {
 
 func TestGetOrcidToken(t *testing.T) {
 	var c Client
-	c.ClientID = os.Getenv("ORCIDHUB_CLIENT_ID")
-	c.ClientSecret = os.Getenv("ORCIDHUB_CLIENT_SECRET")
+	c.ClientID = os.Getenv("CLIENT_ID")
+	c.ClientSecret = os.Getenv("CLIENT_SECRET")
 	c.BaseURL = "http://127.0.0.1:5000"
 	c.GetAccessToken("oauth/token")
 	var tokens []struct {
