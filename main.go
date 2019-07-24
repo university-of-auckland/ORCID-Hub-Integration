@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
 type Platform interface {
@@ -31,51 +31,83 @@ type Event struct {
 
 var (
 	api     Client
+	oh      Client
 	counter int
 )
 
-func processEmpUpdate(e Event) (string, error) {
+func (e *Event) process() (string, error) {
+	if api.ApiKey == "" {
+		api.ApiKey = os.Getenv("API_KEY")
+		api.BaseURL = "https://api.dev.auckland.ac.nz/service"
+	}
+	if e.EPPN != "" {
+		return e.processUserRegistration()
+	} else if e.Subject != 0 {
+		return e.processEmpUpdate()
+	}
+	return "", fmt.Errorf("Unhandled event: %#v", e)
+}
+
+func (e *Event) processEmpUpdate() (string, error) {
+	if oh.ClientID == "" {
+		oh.ClientID = os.Getenv("CLIENT_ID")
+		oh.ClientSecret = os.Getenv("CLIENT_SECRET")
+		oh.BaseURL = "https://api.dev.auckland.ac.nz/service"
+	}
+
 	return "", nil
 }
 
-func processUserRegistration(e Event) (string, error) {
-	if api.ApiKey == "" {
-		api.ApiKey = os.Getenv("API_KEY")
-		api.BaseURL = "https://api.dev.auckland.ac.nz/service/identity/integrations/v2/identity"
-	}
+func (e *Event) processUserRegistration() (string, error) {
 	var id Identity
 	parts := strings.Split(e.EPPN, "@")
 	log.Println("UID: ", parts[0])
-	err := api.Get(parts[0], &id)
+	err := api.Get("identity/integrations/v3/identity/"+parts[0], &id)
 	if err != nil {
 		return "", err
 	}
+	if id.ID == 0 {
+		return "", fmt.Errorf("No Identity for %q (%s)", e.EPPN, e.Email)
+	}
+	var emp Employment
+	err = api.Get("employment/integrations/v1/employee/"+strconv.Itoa(id.ID), &emp)
+	if err != nil {
+		return "", err
+	}
+	if len(emp.Job) > 0 {
+		for _, j := range emp.Job {
+			log.Print("JOB: ", j)
+		}
+	}
+
 	return fmt.Sprintf("%#v", id), nil
+
 }
 
 func HandleRequest(ctx context.Context, e Event) (string, error) {
 
 	log.Printf("Cotext: %#v, counter: %d", ctx, counter)
 	counter += 1
-	lc, _ := lambdacontext.FromContext(ctx)
-	log.Printf("Lambda Context: %#v", lc)
+	// lc, _ := lambdacontext.FromContext(ctx)
 	// log.Print(lc.Identity.CognitoIdentityPoolID)
 	// isLambda := os.Getenv("_LAMBDA_SERVER_PORT") != ""
 	// for _, pair := range os.Environ() {
 	// 	log.Println(pair)
 	// }
-	log.Printf("Recieved: %#v", e)
 	if e.Records != nil {
+		var resp []string
 		for _, r := range e.Records {
 			var e Event
 			json.Unmarshal([]byte(r.Body), &e)
-			log.Printf("Event: %#v", e)
+			r, err := e.process()
+			if err != nil {
+				return "", err
+			}
+			resp = append(resp, r)
 		}
-	} else if e.EPPN != "" {
-		return processUserRegistration(e)
+		return strings.Join(resp, "; "), nil
 	}
-
-	return fmt.Sprintf("Recieved: %#v, Counter: %d", e, counter), nil
+	return e.process()
 
 	// var e Event
 	// err := json.Unmarshal(message, &e)
