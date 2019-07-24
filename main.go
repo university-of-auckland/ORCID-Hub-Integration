@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -15,7 +17,7 @@ type Platform interface {
 }
 
 // Generic message suitable for both EMP Update event and
-// ORCIDHub Webhook propagagted event:
+// ORCIDHub Webhook propagagted event (with wrapped in SQS message batch):
 type Event struct {
 	EPPN    string `json:"eppn"`
 	Email   string `json:"email"`
@@ -27,19 +29,37 @@ type Event struct {
 	Records []events.SQSMessage
 }
 
+var (
+	api     Client
+	counter int
+)
+
 func processEmpUpdate(e Event) (string, error) {
 	return "", nil
 }
 
 func processUserRegistration(e Event) (string, error) {
-	return "", nil
+	if api.ApiKey == "" {
+		api.ApiKey = os.Getenv("API_KEY")
+		api.BaseURL = "https://api.dev.auckland.ac.nz/service/identity/integrations/v2/identity"
+	}
+	var id Identity
+	parts := strings.Split(e.EPPN, "@")
+	log.Println("UID: ", parts[0])
+	err := api.Get(parts[0], &id)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%#v", id), nil
 }
 
 func HandleRequest(ctx context.Context, e Event) (string, error) {
-	log.Printf("Cotext: %#v", ctx)
+
+	log.Printf("Cotext: %#v, counter: %d", ctx, counter)
+	counter += 1
 	lc, _ := lambdacontext.FromContext(ctx)
 	log.Printf("Lambda Context: %#v", lc)
-	log.Print(lc.Identity.CognitoIdentityPoolID)
+	// log.Print(lc.Identity.CognitoIdentityPoolID)
 	// isLambda := os.Getenv("_LAMBDA_SERVER_PORT") != ""
 	// for _, pair := range os.Environ() {
 	// 	log.Println(pair)
@@ -51,9 +71,11 @@ func HandleRequest(ctx context.Context, e Event) (string, error) {
 			json.Unmarshal([]byte(r.Body), &e)
 			log.Printf("Event: %#v", e)
 		}
+	} else if e.EPPN != "" {
+		return processUserRegistration(e)
 	}
 
-	return fmt.Sprintf("Recieved: %#v", e), nil
+	return fmt.Sprintf("Recieved: %#v, Counter: %d", e, counter), nil
 
 	// var e Event
 	// err := json.Unmarshal(message, &e)
