@@ -3,6 +3,9 @@
 a sample Lambda...
 It can be triggered either by SQS or API Gateway directly.
 
+![ScreenShot](/flow.png?raw=true "Message Flow")
+
+
 # Building
 
 ```
