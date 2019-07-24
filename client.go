@@ -62,6 +62,7 @@ func (c *Client) execute(req *http.Request, resp interface{}) error {
 	if err != nil {
 		return err
 	}
+	// log.Println("*****************", string(body))
 	err = json.Unmarshal(body, resp)
 	return err
 }
@@ -83,6 +84,26 @@ func (c *Client) Post(url string, body interface{}, resp interface{}) error {
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jb))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	return c.execute(req, resp)
+}
+
+func (c *Client) Put(url string, body interface{}, resp interface{}) (err error) {
+	url = c.BaseURL + "/" + url
+	var jb []byte
+	switch body.(type) {
+	case string:
+		jb = []byte(body.(string))
+	default:
+		jb, err = json.Marshal(body)
+		if err != nil {
+			return err
+		}
+	}
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jb))
 	if err != nil {
 		return err
 	}
