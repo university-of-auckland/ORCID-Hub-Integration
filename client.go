@@ -21,6 +21,7 @@ type RESTClient interface {
 type Client struct {
 	http.Client
 	AccessToken, BaseURL, ApiKey, ClientID, ClientSecret string
+	jsonBody                                             []byte
 }
 
 func (c *Client) GetAccessToken(url string) error {
@@ -54,6 +55,9 @@ func (c *Client) execute(req *http.Request, resp interface{}) error {
 	}
 
 	req.Header.Set("Accept", "application/json")
+	if req.Method != "GET" && req.Header.Get("Content-Type") == "" {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	r, err := c.Do(req)
 	if err != nil {
 		return err
@@ -80,37 +84,36 @@ func (c *Client) Get(url string, resp interface{}) error {
 	return c.execute(req, resp)
 }
 
-func (c *Client) Post(url string, body interface{}, resp interface{}) error {
+func (c *Client) prepare(method, url string, body interface{}) (req *http.Request, err error) {
 	url = c.BaseURL + "/" + url
-	jb, err := json.Marshal(body)
-	if err != nil {
-		return err
+	switch body.(type) {
+	case string:
+		c.jsonBody = []byte(body.(string))
+	default:
+		c.jsonBody, err = json.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
 	}
+	return http.NewRequest(method, url, bytes.NewBuffer(c.jsonBody))
+}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jb))
+func (c *Client) do(method, url string, body interface{}, resp interface{}) error {
+	req, err := c.prepare(method, url, body)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
 	return c.execute(req, resp)
 }
 
 func (c *Client) Put(url string, body interface{}, resp interface{}) (err error) {
-	url = c.BaseURL + "/" + url
-	var jb []byte
-	switch body.(type) {
-	case string:
-		jb = []byte(body.(string))
-	default:
-		jb, err = json.Marshal(body)
-		if err != nil {
-			return err
-		}
-	}
-	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jb))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	return c.execute(req, resp)
+	return c.do("PUT", url, body, resp)
+}
+
+func (c *Client) Post(url string, body interface{}, resp interface{}) error {
+	return c.do("POST", url, body, resp)
+}
+
+func (c *Client) Patch(url string, body interface{}, resp interface{}) error {
+	return c.do("PATCH", url, body, resp)
 }

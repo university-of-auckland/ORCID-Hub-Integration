@@ -31,10 +31,12 @@ type Event struct {
 }
 
 var (
-	api     Client
-	oh      Client
-	counter int
-	taskID  int
+	api             Client
+	oh              Client
+	counter         int
+	taskID          int
+	taskCreatedAt   time.Time
+	taskRecordCount int
 )
 
 const taskFilenamePrefix = "UOA-OH-INTEGRATION-TASK-"
@@ -59,45 +61,7 @@ func setup() {
 			panic(err)
 		}
 	}
-	// Either get the task ID or activate outstanding tasks and start a new one
-	if taskID == 0 {
-		now := time.Now()
-		var tasks []Task
-		oh.Get("api/v1/tasks?type=AFFILIATION", &tasks)
-		for _, t := range tasks {
-			log.Printf("TASK: %#v", t)
-			if t.Status == "ACTIVE" || t.CompletedAt != "" || !strings.HasPrefix(t.Filename, taskFilenamePrefix) {
-				continue
-			}
-			createdAt, err := time.Parse("2006-01-02T15:04:05", t.CreatedAt)
-			if err != nil {
-				continue
-			}
-			if now.Sub(createdAt).Minutes() > 1 {
-				var task Task
-				log.Printf("Activate the task %q (ID: %d)", t.Filename, t.ID)
-				err = oh.Put("api/v1/tasks/"+strconv.Itoa(t.ID), map[string]string{"status": "ACTIVE"}, &task)
-				if err != nil {
-					panic(err)
-				}
-				continue
-			}
-			taskID = t.ID
-			goto FOUND_TASK
-		}
-		{
-			taskFilename := taskFilenamePrefix + strconv.FormatInt(now.Unix(), 36) + ".json"
-			var task = Task{Filename: taskFilename, Type: "AFFILIATION", Records: []Record{}}
-			err := oh.Post("api/v1/affiliations?filename="+taskFilename, task, &task)
-			if err != nil {
-				panic(err)
-			}
-			taskID = task.ID
-			log.Printf("*** NEW TASK: %#v", task)
-		}
-
-	FOUND_TASK:
-	}
+	go setupTask()
 }
 
 func (e *Event) process() (string, error) {
@@ -106,6 +70,8 @@ func (e *Event) process() (string, error) {
 		return e.processUserRegistration()
 	} else if e.Subject != 0 {
 		return e.processEmpUpdate()
+	} else if e.Type == "PING" { // Heartbeat Check
+		return "GNIP", nil
 	}
 	return "", fmt.Errorf("Unhandled event: %#v", e)
 }
@@ -139,7 +105,12 @@ func (e *Event) processUserRegistration() (string, error) {
 	}
 	var employeeID = strconv.Itoa(id.ID)
 	for _, eid := range id.ExtIds {
-		if eid.Type == "ORCID" && eid.ID == e.ORCID {
+		if eid.Type == "ORCID" {
+			parts := strings.Split(eid.ID, "/")
+			orcid := parts[len(parts)-1]
+			if e.ORCID == "" {
+				e.ORCID = orcid
+			} // else orcid != e.ORCID { // TODO
 			goto HAS_ORCID
 		}
 	}
@@ -161,8 +132,24 @@ HAS_ORCID:
 	}
 	// TODO: register employment entries
 	if len(emp.Job) > 0 {
-		for _, j := range emp.Job {
-			log.Print("JOB: ", j)
+		records := make([]Record, len(emp.Job))
+		for i, job := range emp.Job {
+			records[i] = Record{
+				AffiliationType: "employment",
+				Department:      job.DepartmentDescription,
+				EndDate:         job.JobEndDate,
+				ExternalID:      job.PositionNumber,
+				Email:           id.EmailAddress,
+				Orcid:           e.ORCID,
+				Role:            job.PositionDescription,
+				StartDate:       job.JobStartDate,
+			}
+			log.Print("JOB: ", job)
+		}
+		var task Task
+		err := oh.Patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
+		if err != nil {
+			panic(err)
 		}
 	}
 	return fmt.Sprintf("%#v", id), nil

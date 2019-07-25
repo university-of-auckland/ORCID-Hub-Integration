@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -62,9 +63,168 @@ func SetupTest(t *testing.T, withAnIncomleteTask bool) {
 			}`)
 		case strings.HasPrefix(ru, "/service/identity/integrations/v3/identity/"):
 			var uid = strings.TrimPrefix(ru, "/service/identity/integrations/v3/identity/")
-			if uid == "1234" {
+			switch uid {
+			case "rpaw053":
+				io.WriteString(w, `{
+   "deceased":{
+      "dead":false
+   },
+   "disabilityInfo":{
+      "disabilities":[
+
+      ],
+      "isDisabled":false
+   },
+   "displayName":"Roshan Prakash ABC",
+   "dob":"1790-05-08",
+   "emailAddress":"roshan_pawarasjdfkasdjfajs_@auckland.ac.nz",
+   "emails":[
+      {
+         "email":"skajdfkljsadlf@auckland.ac.nz",
+         "lastUpdated":"2017-01-13T17:12:23.000+0000",
+         "typeId":"Campus",
+         "type":"University",
+         "verified":false
+      },
+      {
+         "email":"rpfkjds@aucklanduni.ac.nz",
+         "lastUpdated":"2017-01-13T17:12:24.000+0000",
+         "typeId":"Student",
+         "type":"Student",
+         "verified":true
+      },
+      {
+         "email":"getconfjsdlkajfalhan@gmail.com",
+         "lastUpdated":"2017-01-13T17:12:24.000+0000",
+         "typeId":"Business",
+         "type":"Work",
+         "verified":false
+      }
+   ],
+   "extIds":[
+      {
+         "id":"2121820801328312",
+         "type":"IDCard"
+      },
+      {
+         "id":"149928464",
+         "type":"NSN"
+      },
+      {
+         "id":"http://orcid.org/0000-0002-9398-4322",
+         "type":"ORCID"
+      },
+      {
+         "id":"2490528",
+         "type":"UID"
+      }
+   ],
+   "firstName":"Roshan Prakash",
+   "id":208013283,
+   "idPhotoExists":true,
+   "lastName":"Pawar",
+   "names":[
+      {
+         "first":"Roshan Prakash",
+         "last":"Pawar",
+         "lastUpdated":"2015-03-23T21:39:18.000+0000",
+         "title":"Mr",
+         "type":"Preferred"
+      },
+      {
+         "first":"Roshan Prakash",
+         "last":"Pawar",
+         "lastUpdated":"2015-03-31T21:02:51.000+0000",
+         "title":"Mr",
+         "type":"Primary"
+      }
+   ],
+   "primaryIdentity":true,
+   "residency":"I",
+   "upi":"rpaw053",
+   "whenUpdated":"2019-05-14T10:51:47.597+0000",
+   "resolved":true,
+   "previousIds":[]}`)
+			case "rcir178":
+				io.WriteString(w, `{
+    "displayName": "Radomirs Cirskis",
+    "dob": "1896-12-28",
+    "emailAddress": "kfsjdjadffsafkis@auckland.ac.nz",
+    "emails": [
+	{
+	    "email": "kfsjdjadffsafkis@auckland.ac.nz",
+	    "lastUpdated": "2017-08-24T23:25:18.000+0000",
+	    "type": "University",
+	    "typeId": "Campus",
+	    "verified": false
+	},
+	{
+	    "email": "nad2000@gmail.com",
+	    "lastUpdated": "2017-08-24T23:25:22.000+0000",
+	    "type": "Other",
+	    "typeId": "Other",
+	    "verified": true
+	},
+	{
+	    "email": "rad@nowitworks.eu",
+	    "lastUpdated": "2017-08-24T23:25:22.000+0000",
+	    "type": "Work",
+	    "typeId": "Business",
+	    "verified": false
+	}
+    ],
+    "extIds": [
+	{
+	    "id": "2011948437818225",
+	    "type": "IDCard"
+	},
+	{
+	    "id": "154244310",
+	    "type": "NSN"
+	},
+	{
+	    "id": "2594016",
+	    "type": "UID"
+	}
+    ],
+    "firstName": "Radomirs",
+    "gender": "MALE",
+    "id": 484378182,
+    "lastName": "Cirskis",
+    "mobile": "+64221221442",
+    "names": [
+	{
+	    "first": "Radomirs",
+	    "last": "Cirskis",
+	    "lastUpdated": "2017-01-19T20:53:57.000+0000",
+	    "type": "Primary"
+	},
+	{
+	    "first": "Radomirs",
+	    "last": "Cirskis",
+	    "lastUpdated": "2019-05-13T00:34:04.000+0000",
+	    "title": "Mr",
+	    "type": "Preferred"
+	}
+    ],
+    "previousIds": [],
+    "primaryIdentity": true,
+    "residency": "NZ-PR",
+    "resolved": true,
+    "upi": "rcir178",
+    "whenUpdated": "2019-05-13T00:34:04.698+0000"
+}`)
+			case "rad42":
+			case "non-existing-upi-error":
+				w.WriteHeader(http.StatusNotFound)
+				io.WriteString(w, `{"timestamp":"2019-07-25T06:34:50.211+0000","status":404,"error":"Not Found","message":"Identity not found","path":"/identity/`+uid+`"}`)
+			default:
+				w.WriteHeader(http.StatusBadRequest)
 				io.WriteString(w, `{"timestamp":"2019-07-25T02:23:32.668+0000","status":400,"error":"Bad Request","message":"Incorrect or not supported id","path":"/identity/`+uid+`"}`)
-			} else if uid == "rpaw053" {
+			}
+		case strings.HasPrefix(ru, "/service/employment/integrations/v1/employee/"):
+			var empID = strings.TrimPrefix(ru, "/service/employment/integrations/v1/employee/")
+			if empID == "477579437" {
 				io.WriteString(w, `{
     "employeeID":"477579437",
     "professionalStaffFTE":0,
@@ -77,32 +237,31 @@ func SetupTest(t *testing.T, withAnIncomleteTask bool) {
     ]
 }`)
 			}
+
 		default:
-			t.Log("!!!!!! Defaulting on :", ru)
-			io.WriteString(w, "Status OK")
+			w.WriteHeader(http.StatusNotFound)
+			io.WriteString(w, fmt.Sprintf("%q NOT FOUND!", ru))
 		}
 	}))
 	api.BaseURL = server.URL + "/service"
 	oh.BaseURL = server.URL
 }
 
-func teardown(t *testing.T) {
+func TeardownTest(t *testing.T) {
 	if server != nil {
 		server.Close()
 	}
 }
 
 func TestHandler(t *testing.T) {
-	// res, err := HandleRequest(context.Background(), Event{Subject: 1234})
 	SetupTest(t, true)
-	defer teardown(t)
+	defer TeardownTest(t)
 
 	res, err := HandleRequest(
 		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
 		Event{Subject: 1234})
 
 	assert.IsType(t, nil, err)
-	t.Logf("****%#v\n", err)
 	assert.Equal(
 		t,
 		`Recieved: main.Event{EPPN:"", Email:"", ORCID:"", Subject:1234, Type:"", URL:"", Records:[]events.SQSMessage(nil)}, Counter: 1`,
@@ -173,7 +332,25 @@ func TestProcessRegistration(t *testing.T) {
 	assert.NotEmpty(t, output)
 	assert.Nil(t, err)
 
+	e = Event{EPPN: "rcir178@auckland.ac.nz"}
+	output, err = e.process()
+	assert.NotEmpty(t, output)
+	assert.Nil(t, err)
+
 	e.EPPN = "non-existing-upi-error@error.edu"
+	output, err = e.process()
+	assert.Empty(t, output)
+	assert.NotNil(t, err)
+}
+
+func TestHealthCheck(t *testing.T) {
+	var e = Event{Type: "PING"}
+	output, err := e.process()
+	assert.NotEmpty(t, output)
+	assert.Equal(t, "GNIP", output)
+	assert.Nil(t, err)
+
+	e = Event{Type: "ABCD1234"}
 	output, err = e.process()
 	assert.Empty(t, output)
 	assert.NotNil(t, err)
