@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -62,7 +63,10 @@ func (c *Client) execute(req *http.Request, resp interface{}) error {
 	if err != nil {
 		return err
 	}
-	// log.Println("*****************", string(body))
+	log.Println("*****************")
+	log.Println("URL:", req.URL, "/", req.URL.RequestURI())
+	log.Println(string(body))
+	log.Println("*****************")
 	err = json.Unmarshal(body, resp)
 	return err
 }

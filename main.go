@@ -39,15 +39,20 @@ var (
 
 const taskFilenamePrefix = "UOA-OH-INTEGRATION-TASK-"
 
-func init() {
+var (
+	APIBaseURL = "https://api.dev.auckland.ac.nz/service"
+	OHBaseURL  = "https://dev.orcidhub.org.nz"
+)
+
+func setup() {
 	if api.ApiKey == "" {
 		api.ApiKey = os.Getenv("API_KEY")
-		api.BaseURL = "https://api.dev.auckland.ac.nz/service"
+		api.BaseURL = APIBaseURL
 	}
 	if oh.AccessToken == "" {
 		oh.ClientID = os.Getenv("CLIENT_ID")
 		oh.ClientSecret = os.Getenv("CLIENT_SECRET")
-		oh.BaseURL = "https://dev.orcidhub.org.nz"
+		oh.BaseURL = OHBaseURL
 		// oh.BaseURL = "http://127.0.0.1:5000"
 		err := oh.GetAccessToken("oauth/token")
 		if err != nil {
@@ -123,6 +128,8 @@ func (e *Event) processUserRegistration() (string, error) {
 	var id Identity
 	parts := strings.Split(e.EPPN, "@")
 	log.Println("UID: ", parts[0])
+
+	setup()
 	err := api.Get("identity/integrations/v3/identity/"+parts[0], &id)
 	if err != nil {
 		return "", err
@@ -141,7 +148,7 @@ func (e *Event) processUserRegistration() (string, error) {
 		var resp struct {
 			StatusCode string `json:"statusCode"`
 		}
-		err = api.Put("identity/integrations/v3/identity/"+employeeID+"/Identifier/ORCID", map[string]string{"identifier": e.ORCID}, &resp)
+		err = api.Put("identity/integrations/v3/identity/"+employeeID+"/identifier/ORCID", map[string]string{"identifier": e.ORCID}, &resp)
 		if err != nil {
 			return "", err
 		}
