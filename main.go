@@ -34,6 +34,8 @@ var (
 	api             Client
 	oh              Client
 	counter         int
+	gotAccessToken  chan bool
+	taskSetUp       chan bool
 	taskID          int
 	taskCreatedAt   time.Time
 	taskRecordCount int
@@ -46,21 +48,29 @@ var (
 	OHBaseURL  = "https://dev.orcidhub.org.nz"
 )
 
+func init() {
+	gotAccessToken = make(chan bool, 1)
+	taskSetUp = make(chan bool, 1)
+}
+
 func setup() {
 	if api.ApiKey == "" {
 		api.ApiKey = os.Getenv("API_KEY")
 		api.BaseURL = APIBaseURL
 	}
-	if oh.AccessToken == "" {
-		oh.ClientID = os.Getenv("CLIENT_ID")
-		oh.ClientSecret = os.Getenv("CLIENT_SECRET")
-		oh.BaseURL = OHBaseURL
-		// oh.BaseURL = "http://127.0.0.1:5000"
-		err := oh.GetAccessToken("oauth/token")
-		if err != nil {
-			panic(err)
+	go func() {
+		if oh.AccessToken == "" {
+			oh.ClientID = os.Getenv("CLIENT_ID")
+			oh.ClientSecret = os.Getenv("CLIENT_SECRET")
+			oh.BaseURL = OHBaseURL
+			// oh.BaseURL = "http://127.0.0.1:5000"
+			err := oh.GetAccessToken("oauth/token")
+			if err != nil {
+				panic(err)
+			}
 		}
-	}
+		gotAccessToken <- true
+	}()
 	go setupTask()
 }
 
@@ -91,46 +101,67 @@ func (e *Event) processEmpUpdate() (string, error) {
 }
 
 func (e *Event) processUserRegistration() (string, error) {
-	var id Identity
+	var (
+		id         Identity
+		idReady    chan bool
+		employeeID string
+		emp        Employment
+		empReady   chan bool
+	)
+	idReady = make(chan bool, 1)
+	empReady = make(chan bool, 1)
+
 	parts := strings.Split(e.EPPN, "@")
-	log.Println("UID: ", parts[0])
+	upi := parts[0]
+	log.Println("UPI: ", upi)
 
 	setup()
-	err := api.Get("identity/integrations/v3/identity/"+parts[0], &id)
-	if err != nil {
-		return "", err
-	}
-	if id.ID == 0 {
-		return "", fmt.Errorf("No Identity for %q (%s)", e.EPPN, e.Email)
-	}
-	var employeeID = strconv.Itoa(id.ID)
-	for _, eid := range id.ExtIds {
-		if eid.Type == "ORCID" {
-			parts := strings.Split(eid.ID, "/")
-			orcid := parts[len(parts)-1]
-			if e.ORCID == "" {
-				e.ORCID = orcid
-			} // else orcid != e.ORCID { // TODO
-			goto HAS_ORCID
-		}
-	}
-	{
-		// Add ORCID ID if the user doesn't have one
-		var resp struct {
-			StatusCode string `json:"statusCode"`
-		}
-		err = api.Put("identity/integrations/v3/identity/"+employeeID+"/identifier/ORCID", map[string]string{"identifier": e.ORCID}, &resp)
+
+	go func() {
+		err := api.Get("employment/integrations/v1/employee/"+upi, &emp)
 		if err != nil {
-			return "", err
+			panic(err)
 		}
-	}
-HAS_ORCID:
-	var emp Employment
-	err = api.Get("employment/integrations/v1/employee/"+employeeID, &emp)
-	if err != nil {
-		return "", err
-	}
+		empReady <- true
+	}()
+
+	go func() {
+		err := api.Get("identity/integrations/v3/identity/"+upi, &id)
+		if err != nil {
+			panic(err)
+		}
+		if id.ID == 0 {
+			panic(fmt.Errorf("No Identity for %q (%s)", e.EPPN, e.Email))
+		}
+		employeeID = strconv.Itoa(id.ID)
+		idReady <- true
+
+		for _, eid := range id.ExtIds {
+			if eid.Type == "ORCID" {
+				parts := strings.Split(eid.ID, "/")
+				orcid := parts[len(parts)-1]
+				if e.ORCID == "" {
+					e.ORCID = orcid
+				} // else orcid != e.ORCID { // TODO
+				return
+			}
+		}
+		{
+			// Add ORCID ID if the user doesn't have one
+			var resp struct {
+				StatusCode string `json:"statusCode"`
+			}
+			err := api.Put("identity/integrations/v3/identity/"+employeeID+"/identifier/ORCID", map[string]string{"identifier": e.ORCID}, &resp)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}()
+
 	// TODO: register employment entries
+	<-empReady
+	<-idReady
+
 	if len(emp.Job) > 0 {
 		records := make([]Record, len(emp.Job))
 		for i, job := range emp.Job {
@@ -146,6 +177,8 @@ HAS_ORCID:
 			}
 			log.Print("JOB: ", job)
 		}
+		// Make sure the task set-up is comlete
+		<-taskSetUp
 		var task Task
 		err := oh.Patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
 		if err != nil {

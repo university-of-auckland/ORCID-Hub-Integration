@@ -61,13 +61,18 @@ func newTask() {
 	taskID = task.ID
 	taskCreatedAt, err = time.Parse("2006-01-02T15:04:05", task.CreatedAt)
 	log.Printf("*** NEW TASK: %#v", task)
+	taskSetUp <- true
 }
 
 // Either get the task ID or activate outstanding tasks and start a new one
 func setupTask() {
+
 	now := time.Now()
 	if taskID == 0 {
 		var tasks []Task
+		// Make sure the access token acquired
+		log.Println("=======================================================================================")
+		<-gotAccessToken
 		oh.Get("api/v1/tasks?type=AFFILIATION", &tasks)
 		for _, t := range tasks {
 			log.Printf("TASK: %#v", t)
@@ -79,7 +84,7 @@ func setupTask() {
 				continue
 			}
 			if now.Sub(createdAt).Minutes() > 1 && len(t.Records) > 0 {
-				t.activateTask()
+				go t.activateTask()
 				continue
 			}
 			taskID = t.ID
@@ -87,12 +92,15 @@ func setupTask() {
 			taskRecordCount = len(t.Records)
 			goto FOUND_TASK
 		}
-		newTask()
+		go newTask()
+		return
 
-	FOUND_TASK:
 	} else if now.Sub(taskCreatedAt).Minutes() > 1 && taskRecordCount > 0 {
 		var task = Task{ID: taskID}
 		task.activateTask()
-		newTask()
+		go newTask()
+		return
 	}
+FOUND_TASK:
+	taskSetUp <- true
 }

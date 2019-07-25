@@ -327,12 +327,12 @@ func TestGetOrcidToken(t *testing.T) {
 }
 
 func TestProcessRegistration(t *testing.T) {
-	var e = Event{EPPN: "rpaw053@auckland.ac.nz"}
+	var e = Event{EPPN: "rpaw053@auckland.ac.nz", ORCID: "0000-0003-1255-9023"}
 	output, err := e.process()
 	assert.NotEmpty(t, output)
 	assert.Nil(t, err)
 
-	e = Event{EPPN: "rcir178@auckland.ac.nz"}
+	e = Event{EPPN: "rcir178@auckland.ac.nz", ORCID: "0000-0001-8228-7153"}
 	output, err = e.process()
 	assert.NotEmpty(t, output)
 	assert.Nil(t, err)
