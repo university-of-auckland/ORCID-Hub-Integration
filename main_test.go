@@ -290,6 +290,7 @@ func TestWithServer(t *testing.T) {
 	t.Run("Handler", testHandler)
 	t.Run("GetOrcidToken", testGetOrcidToken)
 	t.Run("IdentityGetOrcidAccessToken", testIdentityGetOrcidAccessToken)
+	t.Run("AccessToken", testAccessToken)
 }
 
 func testTaskControl(t *testing.T) {
@@ -352,11 +353,13 @@ func TestEmploymentAPICient(t *testing.T) {
 	}
 }
 
-func TestAccessToken(t *testing.T) {
+func testAccessToken(t *testing.T) {
+
 	var c Client
 	c.ClientID = os.Getenv("CLIENT_ID")
 	c.ClientSecret = os.Getenv("CLIENT_SECRET")
-	c.BaseURL = "http://127.0.0.1:5000"
+	// c.BaseURL = "http://127.0.0.1:5000"
+	c.BaseURL = server.URL
 	err := c.GetAccessToken("oauth/token")
 	assert.Nil(t, err)
 	assert.NotEmpty(t, c.AccessToken)
