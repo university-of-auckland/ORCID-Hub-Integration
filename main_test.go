@@ -301,8 +301,8 @@ func TestEmploymentAPICient(t *testing.T) {
 
 func TestAccessToken(t *testing.T) {
 	var c Client
-	c.ClientID = os.Getenv("ORCIDHUB_CLIENT_ID")
-	c.ClientSecret = os.Getenv("ORCIDHUB_CLIENT_SECRET")
+	c.ClientID = os.Getenv("CLIENT_ID")
+	c.ClientSecret = os.Getenv("CLIENT_SECRET")
 	c.BaseURL = "http://127.0.0.1:5000"
 	err := c.GetAccessToken("oauth/token")
 	assert.Nil(t, err)
@@ -411,4 +411,62 @@ func TestIdentityGetORCID(t *testing.T) {
    "id":208013283
    }`), &id)
 	assert.Equal(t, "1234-1234-1234-ABCD", id.GetORCID())
+}
+
+func TestIdentityGetOrcidAccessToken(t *testing.T) {
+
+	oh.ClientID = os.Getenv("CLIENT_ID")
+	oh.ClientSecret = os.Getenv("CLIENT_SECRET")
+	oh.BaseURL = "http://127.0.0.1:5000"
+	err := oh.GetAccessToken("oauth/token")
+	if err != nil {
+		t.Error(err)
+	}
+	var id Identity
+	json.Unmarshal([]byte(`{
+   "emailAddress":"rcir178NOWAY@auckland.ac.nz",
+   "emails":[
+      {
+         "email":"rad42ABC@mailinator.com",
+         "lastUpdated":"2017-01-13T17:12:23.000+0000",
+         "typeId":"Campus",
+         "type":"University",
+         "verified":false
+      }
+   ],
+   "extIds":[
+      {
+         "id":"http://orcid.org/0000-0001-8228-7153",
+         "type":"*ORCID*"
+      },
+      {
+         "id":"2490528",
+         "type":"UID"
+      }
+   ],
+   "upi":"rcir178ABC"
+   }`), &id)
+	token, ok := id.GetOrcidAccessToken()
+	assert.False(t, ok)
+	_ = token
+
+	id.Emails[0].Email = "rad42@mailinator.com"
+	token, ok = id.GetOrcidAccessToken()
+	assert.True(t, ok)
+	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+
+	// id.EmailAddress = "rcir178@auckland.ac.nz"
+	// token, ok = id.GetOrcidAccessToken()
+	// assert.True(t, ok)
+	// assert.Equal(t, "1234-1234-1234-ABCD", token.AccessToken)
+
+	// id.Upi = "rcir178"
+	// token, ok = id.GetOrcidAccessToken()
+	// assert.True(t, ok)
+	// assert.Equal(t, "1234-1234-1234-ABCD", token.AccessToken)
+
+	// id.ExtIds[1].Type = "ORCID"
+	// token, ok = id.GetOrcidAccessToken()
+	// assert.True(t, ok)
+	// assert.Equal(t, "1234-1234-1234-ABCD", token.AccessToken)
 }

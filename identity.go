@@ -146,18 +146,20 @@ func (id *Identity) GetOrcidAccessToken() (token Token, ok bool) {
 		}
 	}
 	{
-		otherIDs := make([]string, len(id.ExtIds)+2)
+		otherIDs := make([]string, len(id.Emails)+2)
 		otherIDs[0] = id.Upi + "@auckland.ac.nz"
 		otherIDs[1] = id.EmailAddress
 		for i, a := range id.Emails {
 			otherIDs[i+2] = a.Email
 		}
 		for _, oid := range otherIDs {
-			err := oh.Get("api/v1/tokens/"+oid, &tokens)
-			if err != nil {
-				log.Println("ERROR: ", err)
-			} else if len(tokens) > 0 {
-				goto TOKEN_FOUND
+			if oid != "" {
+				err := oh.Get("api/v1/tokens/"+oid, &tokens)
+				if err != nil {
+					log.Println("ERROR: ", err)
+				} else if len(tokens) > 0 {
+					goto TOKEN_FOUND
+				}
 			}
 		}
 	}

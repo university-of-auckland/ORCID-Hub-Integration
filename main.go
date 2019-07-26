@@ -96,16 +96,16 @@ func (e *Event) processEmpUpdate() (string, error) {
 	employments := make(chan Employment, 1)
 
 	go getIdentidy(identities, employeeID)
+	id := <-identities
+	token, ok := id.GetOrcidAccessToken()
 
-	// id := <-identities
-	// token, ok := id.GetOrcidAccessToken()
-
-	// if !ok {
-	// 	return "", fmt.Errorf("the user (ID: %s) hasn't granted access to the profile", employeeID)
-	// }
+	if !ok {
+		return "", fmt.Errorf("the user (ID: %s) hasn't granted access to the profile", employeeID)
+	}
 
 	go getEmp(employments, employeeID)
-	// emp := <-employments
+	emp := <-employments
+	emp.propagateToHub(token.Email, token.ORCID)
 
 	// TODO: update ORCID
 	// TODO: update employment records
@@ -183,28 +183,6 @@ func (e *Event) processUserRegistration() (string, error) {
 	}
 
 	if len(emp.Job) > 0 {
-		records := make([]Record, len(emp.Job))
-		for i, job := range emp.Job {
-			records[i] = Record{
-				AffiliationType: "employment",
-				Department:      job.DepartmentDescription,
-				EndDate:         job.JobEndDate,
-				ExternalID:      job.PositionNumber,
-				Email:           id.EmailAddress,
-				Orcid:           e.ORCID,
-				Role:            job.PositionDescription,
-				StartDate:       job.JobStartDate,
-			}
-			log.Print("JOB: ", job)
-		}
-		// Make sure the task set-up is comlete
-		<-taskSetUp
-		var task Task
-		err := oh.Patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
-		if err != nil {
-			log.Println("ERROR: Failed to update the taks: ", err)
-			return "", err
-		}
 	}
 	return fmt.Sprintf("%#v", id), nil
 }

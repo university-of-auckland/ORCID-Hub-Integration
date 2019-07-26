@@ -1,5 +1,10 @@
 package main
 
+import (
+	"log"
+	"strconv"
+)
+
 type Employment struct {
 	AcademicStaffFTE int    `json:"academicStaffFTE"`
 	EmployeeID       string `json:"employeeID"`
@@ -40,4 +45,30 @@ type Employment struct {
 	ProfessionalStaffFTE int    `json:"professionalStaffFTE"`
 	RequestTimeStamp     string `json:"requestTimeStamp"`
 	UniServicesFTE       int    `json:"uniServicesFTE"`
+}
+
+func (emp *Employment) propagateToHub(email, orcid string) (count int, err error) {
+	count = len(emp.Job)
+	records := make([]Record, count)
+	for i, job := range emp.Job {
+		records[i] = Record{
+			AffiliationType: "employment",
+			Department:      job.DepartmentDescription,
+			EndDate:         job.JobEndDate,
+			ExternalID:      job.PositionNumber,
+			Email:           email,
+			Orcid:           orcid,
+			Role:            job.PositionDescription,
+			StartDate:       job.JobStartDate,
+		}
+	}
+	// Make sure the task set-up is comlete
+	<-taskSetUp
+	var task Task
+	err = oh.Patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
+	if err != nil {
+		log.Println("ERROR: Failed to update the taks: ", err)
+		return 0, err
+	}
+	return count, nil
 }
