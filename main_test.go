@@ -10,15 +10,22 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var server *httptest.Server
 
+func init() {
+	verbose = true
+}
+
 func SetupTest(t *testing.T, withAnIncomleteTask bool) {
+
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
@@ -62,6 +69,15 @@ func SetupTest(t *testing.T, withAnIncomleteTask bool) {
 				"task-type":"AFFILIATION",
 				"updated-at":"2032-07-25T02:23:32"
 			}`)
+		case strings.HasPrefix(ru, "/api/v1/tokens/"):
+			io.WriteString(w, `[
+				{
+					"access_token": "ecf16b31-ad54-4ba2-ae55-e97fb90e211a",
+					"expires_in": 631138518,
+					"refresh_token": "a6c9da20-31be-442a-9faa-73f1d92fac45",
+					"scopes": "/read-limited,/activities/update"
+				}
+			]`)
 		case strings.HasPrefix(ru, "/api/v1/affiliations?filename="):
 			var filename = strings.TrimPrefix(ru, "/api/v1/affiliations?filename=")
 			io.WriteString(w, `{
@@ -265,19 +281,46 @@ func TeardownTest(t *testing.T) {
 	}
 }
 
-func TestHandler(t *testing.T) {
+func TestWithServer(t *testing.T) {
+
 	SetupTest(t, true)
 	defer TeardownTest(t)
 
-	res, err := HandleRequest(
+	t.Run("TaskControl", testTaskControl)
+	t.Run("Handler", testHandler)
+	t.Run("GetOrcidToken", testGetOrcidToken)
+	t.Run("IdentityGetOrcidAccessToken", testIdentityGetOrcidAccessToken)
+}
+
+func testTaskControl(t *testing.T) {
+
+	_, err := HandleRequest(
+		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
+		Event{Type: "PING"})
+	require.Nil(t, err)
+
+	taskRecordCount = 999
+
+	taskCreatedAt.Add(time.Hour)
+	_, err = HandleRequest(
+		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
+		Event{Type: "PING"})
+	require.Nil(t, err)
+
+	taskCreatedAt.Add(-2 * time.Hour)
+	_, err = HandleRequest(
+		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
+		Event{Type: "PING"})
+	require.Nil(t, err)
+}
+
+func testHandler(t *testing.T) {
+
+	_, err := HandleRequest(
 		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
 		Event{Subject: 1234})
-
-	assert.IsType(t, nil, err)
-	assert.Equal(
-		t,
-		`Recieved: main.Event{EPPN:"", Email:"", ORCID:"", Subject:1234, Type:"", URL:"", Records:[]events.SQSMessage(nil)}, Counter: 1`,
-		res)
+	require.NotNil(t, err)
+	assert.Contains(t, err.Error(), "hasn't granted")
 }
 
 func TestIdentityAPICient(t *testing.T) {
@@ -286,14 +329,14 @@ func TestIdentityAPICient(t *testing.T) {
 	c.BaseURL = "https://api.dev.auckland.ac.nz/service/identity/integrations/v3/identity"
 	var id Identity
 	c.Get("rcir178", &id)
-	t.Logf("IDENTITY: %#v", id)
+	if verbose {
+		t.Logf("IDENTITY: %#v", id)
+	}
 	assert.NotEqual(t, 0, id.ID)
 	err := c.Get("rad42", &id)
 	if err != nil {
 		t.Error(err)
 	}
-	output, _ := json.MarshalIndent(id, "", "    ")
-	t.Logf("ID: %s", string(output))
 }
 
 func TestEmploymentAPICient(t *testing.T) {
@@ -307,8 +350,6 @@ func TestEmploymentAPICient(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	output, _ := json.MarshalIndent(emp, "", "    ")
-	t.Logf("EMPLOYMENT: %s", string(output))
 }
 
 func TestAccessToken(t *testing.T) {
@@ -321,11 +362,13 @@ func TestAccessToken(t *testing.T) {
 	assert.NotEmpty(t, c.AccessToken)
 }
 
-func TestGetOrcidToken(t *testing.T) {
+func testGetOrcidToken(t *testing.T) {
+
 	var c Client
 	c.ClientID = os.Getenv("CLIENT_ID")
 	c.ClientSecret = os.Getenv("CLIENT_SECRET")
 	// c.BaseURL = "http://127.0.0.1:5000"
+	c.BaseURL = server.URL
 	c.GetAccessToken("oauth/token")
 	var tokens []struct {
 		AccessToken  string `json:"access_token"`
@@ -333,7 +376,7 @@ func TestGetOrcidToken(t *testing.T) {
 		RefreshToken string `json:"refresh_token"`
 		Scopes       string `json:"scopes"`
 	}
-	err := c.Get("api/v1/tokens/rad42%40mailinator.com", &tokens)
+	err := c.Get("api/v1/tokens/rad42@mailinator.com", &tokens)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, tokens)
 }
@@ -425,9 +468,7 @@ func TestIdentityGetORCID(t *testing.T) {
 	assert.Equal(t, "1234-1234-1234-ABCD", id.GetORCID())
 }
 
-func TestIdentityGetOrcidAccessToken(t *testing.T) {
-	SetupTest(t, true)
-	defer TeardownTest(t)
+func testIdentityGetOrcidAccessToken(t *testing.T) {
 
 	oh.ClientID = os.Getenv("CLIENT_ID")
 	oh.ClientSecret = os.Getenv("CLIENT_SECRET")
@@ -467,26 +508,26 @@ func TestIdentityGetOrcidAccessToken(t *testing.T) {
 	id.Emails[0].Email = "rad42@mailinator.com"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	assert.Equal(t, "6547ae2f-d48c-444b-9717-a2949bae048d", token.AccessToken)
 
 	id.EmailAddress = "rcir178@auckland.ac.nz"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	assert.Equal(t, "6547ae2f-d48c-444b-9717-a2949bae048d", token.AccessToken)
 
 	id.Upi = "rcir178"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	assert.Equal(t, "6547ae2f-d48c-444b-9717-a2949bae048d", token.AccessToken)
 
 	id.ExtIds[0].Type = "ORCID"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	assert.Equal(t, "6547ae2f-d48c-444b-9717-a2949bae048d", token.AccessToken)
 }
 
-// ,
 func TestProcessEmpUpdate(t *testing.T) {
+
 	var err error
 
 	_, err = HandleRequest(

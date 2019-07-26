@@ -68,16 +68,18 @@ func (c *Client) execute(req *http.Request, resp interface{}) error {
 		if err != nil {
 			return err
 		}
-		log.Println("*****************")
-		log.Println("URL:", req.URL, "/ \""+req.Method+"\":", req.URL.RequestURI())
 		err = json.Unmarshal(body, resp)
-		if err == nil {
-			output, _ := json.MarshalIndent(resp, "", "    ")
-			log.Println(string(output))
-		} else {
-			log.Println(string(body))
+		if verbose {
+			log.Println("*****************")
+			log.Println("URL:", req.URL, "/ \""+req.Method+"\":", req.URL.RequestURI())
+			if err == nil {
+				output, _ := json.MarshalIndent(resp, "", "    ")
+				log.Println(string(output))
+			} else {
+				log.Println(string(body))
+			}
+			log.Println("*****************")
 		}
-		log.Println("*****************")
 		return err
 	}
 	return nil

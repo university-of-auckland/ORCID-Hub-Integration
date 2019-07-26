@@ -44,7 +44,9 @@ type Record struct {
 
 func (t *Task) activateTask() {
 	var task Task
-	log.Printf("Activate the task %q (ID: %d)", t.Filename, t.ID)
+	if verbose {
+		log.Printf("Activate the task %q (ID: %d)", t.Filename, t.ID)
+	}
 	err := oh.Put("api/v1/tasks/"+strconv.Itoa(t.ID), map[string]string{"status": "ACTIVE"}, &task)
 	if err != nil {
 		panic(err)
@@ -60,7 +62,9 @@ func newTask() {
 	}
 	taskID = task.ID
 	taskCreatedAt, err = time.Parse("2006-01-02T15:04:05", task.CreatedAt)
-	log.Printf("*** NEW TASK: %#v", task)
+	if verbose {
+		log.Printf("*** NEW TASK: %#v", task)
+	}
 	taskSetUp <- true
 }
 
@@ -71,11 +75,15 @@ func setupTask() {
 	if taskID == 0 {
 		var tasks []Task
 		// Make sure the access token acquired
-		log.Println("=======================================================================================")
+		if verbose {
+			log.Println("=======================================================================================")
+		}
 		<-gotAccessToken
 		oh.Get("api/v1/tasks?type=AFFILIATION", &tasks)
 		for _, t := range tasks {
-			log.Printf("TASK: %#v", t)
+			if verbose {
+				log.Printf("TASK: %#v", t)
+			}
 			if t.Status == "ACTIVE" || t.CompletedAt != "" || !strings.HasPrefix(t.Filename, taskFilenamePrefix) {
 				continue
 			}

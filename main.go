@@ -22,6 +22,7 @@ var (
 	taskID          int
 	taskCreatedAt   time.Time
 	taskRecordCount int
+	verbose         bool
 )
 
 const taskFilenamePrefix = "UOA-OH-INTEGRATION-TASK-"
