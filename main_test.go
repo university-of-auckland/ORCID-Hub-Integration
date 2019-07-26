@@ -486,7 +486,7 @@ func TestIdentityGetOrcidAccessToken(t *testing.T) {
 }
 
 // ,
-func TestEmpUpdate(t *testing.T) {
+func TestProcessEmpUpdate(t *testing.T) {
 	var err error
 
 	_, err = HandleRequest(
