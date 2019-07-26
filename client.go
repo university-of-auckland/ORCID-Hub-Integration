@@ -62,17 +62,25 @@ func (c *Client) execute(req *http.Request, resp interface{}) error {
 	if err != nil {
 		return err
 	}
-	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
+	if r.StatusCode == http.StatusOK {
+		defer r.Body.Close()
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return err
+		}
+		log.Println("*****************")
+		log.Println("URL:", req.URL, "/ \""+req.Method+"\":", req.URL.RequestURI())
+		err = json.Unmarshal(body, resp)
+		if err == nil {
+			output, _ := json.MarshalIndent(resp, "", "    ")
+			log.Println(string(output))
+		} else {
+			log.Println(string(body))
+		}
+		log.Println("*****************")
 		return err
 	}
-	log.Println("*****************")
-	log.Println("URL:", req.URL, "/", req.URL.RequestURI())
-	log.Println(string(body))
-	log.Println("*****************")
-	err = json.Unmarshal(body, resp)
-	return err
+	return nil
 }
 
 func (c *Client) Get(url string, resp interface{}) error {

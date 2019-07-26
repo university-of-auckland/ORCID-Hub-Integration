@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,14 +34,25 @@ func SetupTest(t *testing.T, withAnIncomleteTask bool) {
 				io.WriteString(w, `,{"created-at":"2099-07-25T00:34:08","filename":"UOA-OH-INTEGRATION-TASK-pv69kZ.json","id":888,"records":[],"task-type":"AFFILIATION"}`)
 			}
 			io.WriteString(w, "]")
-		case ru == "/api/v1/tokens/rad42%40mailinator.com":
-			io.WriteString(w, `[{
-				"access_token": "kdfjsb31-ad54-4ba2-ae55-e97fb90e211a", 
-				"expires_in": 631138518, 
-				"issue_time": "2019-07-18T03:13:35", 
-				"refresh_token": "kdfjsa20-31be-442a-9faa-73f1d92fac45", 
-				"scopes": "/read-limited,/activities/update"
+		case strings.HasPrefix(ru, "/api/v1/tokens/"):
+			var id = strings.TrimPrefix(ru, "/api/v1/tokens/")
+			if id == "rad42@mailinator.com" || id == "0000-0001-8228-7153" {
+				io.WriteString(w, `[{
+				"access_token":"ecf16b31-ad54-4ba2-ae55-e97fb90e211a", 
+				"email":"rad42@mailinator.com", 
+				"eppn":"443469635@auckland.ac.nz", 
+				"expires_in":631138518, 
+				"issue_time":"2019-07-18T03:13:35", 
+				"orcid":"0000-0001-8228-7153", 
+				"refresh_token":"a6c9da20-31be-442a-9faa-73f1d92fac45",
+				"scopes":"/read-limited,/activities/update"
 			}]`)
+			} else if id == "rcir178@auckland.ac.nz" {
+				io.WriteString(w, `[]`)
+			} else {
+				w.WriteHeader(http.StatusNotFound)
+				io.WriteString(w, `{"error": "User with specified identifier 'rcir178ABC@auckland.ac.nz' not found."}`)
+			}
 		case strings.HasPrefix(ru, "/api/v1/tasks/"):
 			io.WriteString(w, `{
 				"created-at":"2032-08-25T02:07:28",
@@ -414,37 +426,39 @@ func TestIdentityGetORCID(t *testing.T) {
 }
 
 func TestIdentityGetOrcidAccessToken(t *testing.T) {
+	SetupTest(t, true)
+	defer TeardownTest(t)
 
 	oh.ClientID = os.Getenv("CLIENT_ID")
 	oh.ClientSecret = os.Getenv("CLIENT_SECRET")
-	oh.BaseURL = "http://127.0.0.1:5000"
+	// oh.BaseURL = "http://127.0.0.1:5000"
 	err := oh.GetAccessToken("oauth/token")
 	if err != nil {
 		t.Error(err)
 	}
 	var id Identity
 	json.Unmarshal([]byte(`{
-   "emailAddress":"rcir178NOWAY@auckland.ac.nz",
-   "emails":[
-      {
-         "email":"rad42ABC@mailinator.com",
-         "lastUpdated":"2017-01-13T17:12:23.000+0000",
-         "typeId":"Campus",
-         "type":"University",
-         "verified":false
-      }
-   ],
-   "extIds":[
-      {
-         "id":"http://orcid.org/0000-0001-8228-7153",
-         "type":"*ORCID*"
-      },
-      {
-         "id":"2490528",
-         "type":"UID"
-      }
-   ],
-   "upi":"rcir178ABC"
+		"emailAddress":"rcir178NOWAY@auckland.ac.nz",
+		"emails":[
+			{
+				"email":"rad42ABC@mailinator.com",
+				"lastUpdated":"2017-01-13T17:12:23.000+0000",
+				"typeId":"Campus",
+				"type":"University",
+				"verified":false
+			}
+		],
+		"extIds":[
+			{
+				"id":"http://orcid.org/0000-0001-8228-7153",
+				"type":"*ORCID*"
+			},
+			{
+				"id":"2490528",
+				"type":"UID"
+			}
+		],
+		"upi":"rcir178ABC"
    }`), &id)
 	token, ok := id.GetOrcidAccessToken()
 	assert.False(t, ok)
@@ -455,18 +469,44 @@ func TestIdentityGetOrcidAccessToken(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
 
-	// id.EmailAddress = "rcir178@auckland.ac.nz"
-	// token, ok = id.GetOrcidAccessToken()
-	// assert.True(t, ok)
-	// assert.Equal(t, "1234-1234-1234-ABCD", token.AccessToken)
+	id.EmailAddress = "rcir178@auckland.ac.nz"
+	token, ok = id.GetOrcidAccessToken()
+	assert.True(t, ok)
+	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
 
-	// id.Upi = "rcir178"
-	// token, ok = id.GetOrcidAccessToken()
-	// assert.True(t, ok)
-	// assert.Equal(t, "1234-1234-1234-ABCD", token.AccessToken)
+	id.Upi = "rcir178"
+	token, ok = id.GetOrcidAccessToken()
+	assert.True(t, ok)
+	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
 
-	// id.ExtIds[1].Type = "ORCID"
-	// token, ok = id.GetOrcidAccessToken()
-	// assert.True(t, ok)
-	// assert.Equal(t, "1234-1234-1234-ABCD", token.AccessToken)
+	id.ExtIds[0].Type = "ORCID"
+	token, ok = id.GetOrcidAccessToken()
+	assert.True(t, ok)
+	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+}
+
+// ,
+func TestEmpUpdate(t *testing.T) {
+	var err error
+
+	_, err = HandleRequest(
+		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
+		Event{Subject: 208013283})
+	// t.Log(err)
+	assert.NotNil(t, err)
+
+	_, err = HandleRequest(
+		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
+		Event{Subject: 484378182})
+	assert.Nil(t, err)
+
+	_, err = HandleRequest(
+		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
+		Event{
+			Records: []events.SQSMessage{
+				events.SQSMessage{Body: `{"subject":484378182}`},
+				events.SQSMessage{Body: `{"subject":208013283}`},
+			},
+		})
+	assert.NotNil(t, err)
 }

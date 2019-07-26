@@ -105,10 +105,12 @@ func (e *Event) processEmpUpdate() (string, error) {
 
 	go getEmp(employments, employeeID)
 	emp := <-employments
-	emp.propagateToHub(token.Email, token.ORCID)
 
-	// TODO: update ORCID
-	// TODO: update employment records
+	count, err := emp.propagateToHub(token.Email, token.ORCID)
+	if err != nil {
+		return "", err
+	}
+	taskRecordCount += count
 
 	return "", nil
 }
@@ -182,8 +184,11 @@ func (e *Event) processUserRegistration() (string, error) {
 		return "", fmt.Errorf("no Identity for %q (%s, %s) or employment records", e.EPPN, e.Email, e.ORCID)
 	}
 
-	if len(emp.Job) > 0 {
+	count, err := emp.propagateToHub(id.EmailAddress, e.ORCID)
+	if err != nil {
+		return "", err
 	}
+	taskRecordCount += count
 	return fmt.Sprintf("%#v", id), nil
 }
 

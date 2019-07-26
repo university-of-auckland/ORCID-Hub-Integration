@@ -49,6 +49,9 @@ type Employment struct {
 
 func (emp *Employment) propagateToHub(email, orcid string) (count int, err error) {
 	count = len(emp.Job)
+	if count == 0 {
+		return 0, nil
+	}
 	records := make([]Record, count)
 	for i, job := range emp.Job {
 		records[i] = Record{
