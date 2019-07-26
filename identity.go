@@ -1,5 +1,10 @@
 package main
 
+import (
+	"log"
+	"strings"
+)
+
 type Identity struct {
 	Addresses []struct {
 		CareOf      string `json:"careOf"`
@@ -111,4 +116,57 @@ type Identity struct {
 	Resolved        bool     `json:"resolved"`
 	Upi             string   `json:"upi"`
 	WhenUpdated     string   `json:"whenUpdated"`
+}
+
+// GetORCID returns the principal part of ORCID iD
+// if the identify has an ORCID
+func (id *Identity) GetORCID() string {
+	if id.ExtIds == nil {
+		return ""
+	}
+	for _, eid := range id.ExtIds {
+		if eid.Type == "ORCID" {
+			parts := strings.Split(eid.ID, "/")
+			return parts[len(parts)-1]
+		}
+	}
+	return ""
+}
+
+// GetOrcidAccessToken
+func (id *Identity) GetOrcidAccessToken() (token Token, ok bool) {
+	var tokens []Token
+	orcid := id.GetORCID()
+	if orcid != "" {
+		err := oh.Get("api/v1/tokens/"+orcid, &tokens)
+		if err != nil {
+			log.Println("ERROR: ", err)
+		} else if len(tokens) > 0 {
+			goto TOKEN_FOUND
+		}
+	}
+	{
+		otherIDs := make([]string, len(id.ExtIds)+2)
+		otherIDs[0] = id.Upi + "@auckland.ac.nz"
+		otherIDs[1] = id.EmailAddress
+		for i, a := range id.Emails {
+			otherIDs[i+2] = a.Email
+		}
+		for _, oid := range otherIDs {
+			err := oh.Get("api/v1/tokens/"+oid, &tokens)
+			if err != nil {
+				log.Println("ERROR: ", err)
+			} else if len(tokens) > 0 {
+				goto TOKEN_FOUND
+			}
+		}
+	}
+	return
+TOKEN_FOUND:
+	for _, token := range tokens {
+		if strings.Contains(token.Scopes, "update") {
+			return token, true
+		}
+	}
+	return
 }

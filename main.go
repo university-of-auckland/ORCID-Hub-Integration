@@ -66,7 +66,7 @@ func setup() {
 			// oh.BaseURL = "http://127.0.0.1:5000"
 			err := oh.GetAccessToken("oauth/token")
 			if err != nil {
-				panic(err)
+				log.Panic(err)
 			}
 		}
 		gotAccessToken <- true
@@ -76,91 +76,111 @@ func setup() {
 
 func (e *Event) process() (string, error) {
 
-	if e.EPPN != "" {
-		return e.processUserRegistration()
-	} else if e.Subject != 0 {
-		return e.processEmpUpdate()
-	} else if e.Type == "PING" { // Heartbeat Check
-		return "GNIP", nil
+	if e.EPPN != "" || e.Subject != 0 || e.Type == "PING" {
+		setup()
+		if e.EPPN != "" {
+			return e.processUserRegistration()
+		} else if e.Subject != 0 {
+			return e.processEmpUpdate()
+		} else if e.Type == "PING" { // Heartbeat Check
+			return "GNIP", nil
+		}
 	}
 	return "", fmt.Errorf("Unhandled event: %#v", e)
 }
 
 func (e *Event) processEmpUpdate() (string, error) {
+
 	var employeeID = strconv.Itoa(e.Subject)
-	var id Identity
-	err := api.Get("identity/integrations/v3/identity/"+employeeID, &id)
-	if err != nil {
-		return "", err
-	}
-	// TODO: check if the user has ORCID and linked account on the HUB
+	identities := make(chan Identity, 1)
+	employments := make(chan Employment, 1)
+
+	go getIdentidy(identities, employeeID)
+
+	// id := <-identities
+	// token, ok := id.GetOrcidAccessToken()
+
+	// if !ok {
+	// 	return "", fmt.Errorf("the user (ID: %s) hasn't granted access to the profile", employeeID)
+	// }
+
+	go getEmp(employments, employeeID)
+	// emp := <-employments
+
 	// TODO: update ORCID
 	// TODO: update employment records
 
 	return "", nil
 }
 
+func getIdentidy(output chan<- Identity, upiOrID string) {
+	var id Identity
+	err := api.Get("identity/integrations/v3/identity/"+upiOrID, &id)
+	if err != nil {
+		log.Fatalln("Failed to retrieve the identity record: ", err)
+	}
+	output <- id
+}
+
+func getEmp(output chan<- Employment, upiOrID string) {
+	var emp Employment
+	err := api.Get("employment/integrations/v1/employee/"+upiOrID, &emp)
+	if err != nil {
+		log.Fatalln("Failed to get employment record: ", err)
+	}
+	output <- emp
+}
+
+func (id *Identity) updateOrcid(done chan<- bool, ORCID string) {
+	defer func() {
+		done <- true
+	}()
+
+	currentORCID := id.GetORCID()
+	if currentORCID != "" {
+		if ORCID != currentORCID {
+			// TODO
+		}
+		return
+	}
+	// Add ORCID ID if the user doesn't have one
+	var resp struct {
+		StatusCode string `json:"statusCode"`
+	}
+	err := api.Put(fmt.Sprintf("identity/integrations/v3/identity/%d/identifier/ORCID", id.ID), map[string]string{"identifier": ORCID}, &resp)
+	if err != nil {
+		log.Println("ERROR: Failed to update or add ORCID: ", err)
+	}
+}
+
 func (e *Event) processUserRegistration() (string, error) {
 	var (
-		id         Identity
-		idReady    chan bool
-		employeeID string
-		emp        Employment
-		empReady   chan bool
+		id  Identity
+		emp Employment
 	)
-	idReady = make(chan bool, 1)
-	empReady = make(chan bool, 1)
+	identities := make(chan Identity, 1)
+	employments := make(chan Employment, 1)
 
 	parts := strings.Split(e.EPPN, "@")
 	upi := parts[0]
 	log.Println("UPI: ", upi)
 
-	setup()
+	go getIdentidy(identities, upi)
+	go getEmp(employments, upi)
 
-	go func() {
-		err := api.Get("employment/integrations/v1/employee/"+upi, &emp)
-		if err != nil {
-			panic(err)
-		}
-		empReady <- true
-	}()
+	id = <-identities
+	if id.ID != 0 {
+		idUpdateDone := make(chan bool, 1)
+		go id.updateOrcid(idUpdateDone, e.ORCID)
+		defer func() {
+			<-idUpdateDone
+		}()
+	}
+	emp = <-employments
 
-	go func() {
-		err := api.Get("identity/integrations/v3/identity/"+upi, &id)
-		if err != nil {
-			panic(err)
-		}
-		if id.ID == 0 {
-			panic(fmt.Errorf("No Identity for %q (%s)", e.EPPN, e.Email))
-		}
-		employeeID = strconv.Itoa(id.ID)
-		idReady <- true
-
-		for _, eid := range id.ExtIds {
-			if eid.Type == "ORCID" {
-				parts := strings.Split(eid.ID, "/")
-				orcid := parts[len(parts)-1]
-				if e.ORCID == "" {
-					e.ORCID = orcid
-				} // else orcid != e.ORCID { // TODO
-				return
-			}
-		}
-		{
-			// Add ORCID ID if the user doesn't have one
-			var resp struct {
-				StatusCode string `json:"statusCode"`
-			}
-			err := api.Put("identity/integrations/v3/identity/"+employeeID+"/identifier/ORCID", map[string]string{"identifier": e.ORCID}, &resp)
-			if err != nil {
-				panic(err)
-			}
-		}
-	}()
-
-	// TODO: register employment entries
-	<-empReady
-	<-idReady
+	if id.ID == 0 || emp.Job == nil {
+		return "", fmt.Errorf("no Identity for %q (%s, %s) or employment records", e.EPPN, e.Email, e.ORCID)
+	}
 
 	if len(emp.Job) > 0 {
 		records := make([]Record, len(emp.Job))
@@ -182,7 +202,8 @@ func (e *Event) processUserRegistration() (string, error) {
 		var task Task
 		err := oh.Patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
 		if err != nil {
-			panic(err)
+			log.Println("ERROR: Failed to update the taks: ", err)
+			return "", err
 		}
 	}
 	return fmt.Sprintf("%#v", id), nil

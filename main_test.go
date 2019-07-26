@@ -327,8 +327,14 @@ func TestGetOrcidToken(t *testing.T) {
 }
 
 func TestProcessRegistration(t *testing.T) {
-	var e = Event{EPPN: "rpaw053@auckland.ac.nz", ORCID: "0000-0003-1255-9023"}
-	output, err := e.process()
+	var (
+		e      Event
+		err    error
+		output string
+	)
+
+	e = Event{EPPN: "rpaw053@auckland.ac.nz", ORCID: "0000-0003-1255-9023"}
+	output, err = e.process()
 	assert.NotEmpty(t, output)
 	assert.Nil(t, err)
 
@@ -354,4 +360,55 @@ func TestHealthCheck(t *testing.T) {
 	output, err = e.process()
 	assert.Empty(t, output)
 	assert.NotNil(t, err)
+}
+
+func TestIdentityGetORCID(t *testing.T) {
+	var id Identity
+	json.Unmarshal([]byte(`{
+   "emailAddress":"rosh1234@auckland.ac.nz",
+   "emails":[
+      {
+         "email":"rosh83458349@auckland.ac.nz",
+         "lastUpdated":"2017-01-13T17:12:23.000+0000",
+         "typeId":"Campus",
+         "type":"University",
+         "verified":false
+      },
+      {
+         "email":"rpfkjds@aucklanduni.ac.nz",
+         "lastUpdated":"2017-01-13T17:12:24.000+0000",
+         "typeId":"Student",
+         "type":"Student",
+         "verified":true
+      },
+      {
+         "email":"getconfjsdlkajfalhan@gmail.com",
+         "lastUpdated":"2017-01-13T17:12:24.000+0000",
+         "typeId":"Business",
+         "type":"Work",
+         "verified":false
+      }
+   ],
+   "extIds":[
+      {
+         "id":"2121820801328312",
+         "type":"IDCard"
+      },
+      {
+         "id":"149928464",
+         "type":"NSN"
+      },
+      {
+         "id":"http://orcid.org/1234-1234-1234-ABCD",
+         "type":"ORCID"
+      },
+      {
+         "id":"2490528",
+         "type":"UID"
+      }
+   ],
+   "firstName":"Roshan Prakash",
+   "id":208013283
+   }`), &id)
+	assert.Equal(t, "1234-1234-1234-ABCD", id.GetORCID())
 }
