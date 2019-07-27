@@ -15,22 +15,25 @@ import (
 )
 
 var (
-	api              Client
-	oh               Client
-	counter          int
-	taskSetUpWG      sync.WaitGroup
-	gotAccessTokenWG sync.WaitGroup
-	taskID           int
-	taskCreatedAt    time.Time
-	taskRecordCount  int
-	verbose          bool
+	api                  Client
+	oh                   Client
+	counter              int
+	taskSetUpWG          sync.WaitGroup
+	gotAccessTokenWG     sync.WaitGroup
+	taskID               int
+	taskCreatedAt        time.Time
+	taskRecordCount      int
+	taskRecordCountMutex sync.Mutex
+	verbose              bool
 )
 
 const taskFilenamePrefix = "UOA-OH-INTEGRATION-TASK-"
 
 var (
+	// APIBaseURL is the UoA API base URL
 	APIBaseURL = "https://api.dev.auckland.ac.nz/service"
-	OHBaseURL  = "https://dev.orcidhub.org.nz"
+	// OHBaseURL is the ORCID Hub API base URL
+	OHBaseURL = "https://dev.orcidhub.org.nz"
 )
 
 func setup() {
@@ -55,6 +58,7 @@ func setup() {
 	go setupTask()
 }
 
+// process performs the incoming message routing.
 func (e *Event) process() (string, error) {
 
 	if e.EPPN != "" || e.Subject != 0 || e.Type == "PING" {
@@ -70,12 +74,14 @@ func (e *Event) process() (string, error) {
 	return "", fmt.Errorf("Unhandled event: %#v", e)
 }
 
+// processEmpUpdate handles the employer update event.
 func (e *Event) processEmpUpdate() (string, error) {
 
 	var employeeID = strconv.Itoa(e.Subject)
 	identities := make(chan Identity, 1)
 	employments := make(chan Employment, 1)
 
+	// TODO: this can be doen sychroniously
 	go getIdentidy(identities, employeeID)
 	id := <-identities
 	token, ok := id.GetOrcidAccessToken()
@@ -84,18 +90,16 @@ func (e *Event) processEmpUpdate() (string, error) {
 		return "", fmt.Errorf("the user (ID: %s) hasn't granted access to the profile", employeeID)
 	}
 
+	// TODO: this can be doen sychroniously
 	go getEmp(employments, employeeID)
 	emp := <-employments
 
-	count, err := emp.propagateToHub(token.Email, token.ORCID)
-	if err != nil {
-		return "", err
-	}
-	taskRecordCount += count
+	go emp.propagateToHub(token.Email, token.ORCID)
 
 	return "", nil
 }
 
+// getIdentidy retrieves the user identity records.
 func getIdentidy(output chan<- Identity, upiOrID string) {
 	var id Identity
 	err := api.Get("identity/integrations/v3/identity/"+upiOrID, &id)
@@ -105,6 +109,7 @@ func getIdentidy(output chan<- Identity, upiOrID string) {
 	output <- id
 }
 
+// getEmp retrieves the user employment records.
 func getEmp(output chan<- Employment, upiOrID string) {
 	var emp Employment
 	err := api.Get("employment/integrations/v1/employee/"+upiOrID, &emp)
@@ -114,6 +119,7 @@ func getEmp(output chan<- Employment, upiOrID string) {
 	output <- emp
 }
 
+// updateOrcid updates the user ORCID iD.
 func (id *Identity) updateOrcid(done chan<- bool, ORCID string) {
 	defer func() {
 		done <- true
@@ -136,6 +142,7 @@ func (id *Identity) updateOrcid(done chan<- bool, ORCID string) {
 	}
 }
 
+// processUserRegistration handles the user registration/ORCID account linking on the Hub.
 func (e *Event) processUserRegistration() (string, error) {
 	var (
 		id  Identity
@@ -186,24 +193,40 @@ func (el errorList) Error() string {
 	return sb.String()
 }
 
+// HandleRequest handle "AWS lambda" request with a single event message or
+// a batch of event messages.
 func HandleRequest(ctx context.Context, e Event) (string, error) {
 
 	log.Printf("Cotext: %#v, counter: %d", ctx, counter)
-	counter += 1
+	counter++
 
 	if e.Records != nil {
 		var (
 			resp   []string
 			errors errorList
 		)
+
+		type restponse struct {
+			message string
+			err     error
+		}
+
+		output := make(chan restponse, len(e.Records))
 		for _, r := range e.Records {
 			var e Event
 			json.Unmarshal([]byte(r.Body), &e)
-			rv, err := e.process()
-			if err != nil {
-				errors = append(errors, err)
+
+			go func(e Event, o chan<- restponse) {
+				resp, err := e.process()
+				o <- restponse{resp, err}
+			}(e, output)
+		}
+		for range e.Records {
+			r := <-output
+			if r.err != nil {
+				errors = append(errors, r.err)
 			}
-			resp = append(resp, rv)
+			resp = append(resp, r.message)
 		}
 		return strings.Join(resp, "; "), errors
 	}

@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// Eployment API empoyment-v1 response message.
 type Employment struct {
 	AcademicStaffFTE int    `json:"academicStaffFTE"`
 	EmployeeID       string `json:"employeeID"`
@@ -47,6 +48,7 @@ type Employment struct {
 	UniServicesFTE       int    `json:"uniServicesFTE"`
 }
 
+// propagateToHub adds employment records to the current affiliation task.
 func (emp *Employment) propagateToHub(email, orcid string) (count int, err error) {
 	count = len(emp.Job)
 	if count == 0 {
@@ -67,11 +69,14 @@ func (emp *Employment) propagateToHub(email, orcid string) (count int, err error
 	}
 	// Make sure the task set-up is comlete
 	taskSetUpWG.Wait()
+
 	var task Task
 	err = oh.Patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
 	if err != nil {
 		log.Println("ERROR: Failed to update the taks: ", err)
-		return 0, err
 	}
+	taskRecordCountMutex.Lock()
+	taskRecordCount += count
+	taskRecordCountMutex.Unlock()
 	return count, nil
 }

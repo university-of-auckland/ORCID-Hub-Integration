@@ -21,7 +21,7 @@ import (
 var server *httptest.Server
 
 func init() {
-	verbose = true
+	verbose = os.Getenv("VERBOSE") != ""
 }
 
 func SetupTest(t *testing.T, withAnIncomleteTask bool) {
@@ -533,24 +533,34 @@ func TestProcessEmpUpdate(t *testing.T) {
 
 	var err error
 
+	taskRecordCount = 0
 	_, err = HandleRequest(
 		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
 		Event{Subject: 208013283})
 	// t.Log(err)
 	assert.NotNil(t, err)
+	assert.Equal(t, 0, taskRecordCount)
 
 	_, err = HandleRequest(
 		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
 		Event{Subject: 484378182})
 	assert.Nil(t, err)
 
+	taskRecordCount = 0
 	_, err = HandleRequest(
 		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
 		Event{
 			Records: []events.SQSMessage{
-				events.SQSMessage{Body: `{"subject":484378182}`},
-				events.SQSMessage{Body: `{"subject":208013283}`},
+				{Body: `{"subject":484378182}`},
+				{Body: `{"subject":477579437}`},
+				{Body: `{"subject":208013283}`},
+				{Body: `{"subject":987654321}`},
+				{Body: `{"subject":8524255}`},
+				{Body: `{"subject":350622514}`},
+				{Body: `{"subject":4306445}`},
 			},
 		})
+	assert.True(t, 0 < taskRecordCount, "The number of records should be > 0.")
+	t.Log(err)
 	assert.NotNil(t, err)
 }
