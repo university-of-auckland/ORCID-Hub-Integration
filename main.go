@@ -38,9 +38,9 @@ func setup() {
 		api.ApiKey = os.Getenv("API_KEY")
 		api.BaseURL = APIBaseURL
 	}
-	gotAccessTokenWG.Add(1)
-	go func() {
-		if oh.AccessToken == "" {
+	if oh.AccessToken == "" {
+		gotAccessTokenWG.Add(1)
+		go func() {
 			oh.ClientID = os.Getenv("CLIENT_ID")
 			oh.ClientSecret = os.Getenv("CLIENT_SECRET")
 			oh.BaseURL = OHBaseURL
@@ -49,9 +49,9 @@ func setup() {
 			if err != nil {
 				log.Panic(err)
 			}
-		}
-		gotAccessTokenWG.Done()
-	}()
+			gotAccessTokenWG.Done()
+		}()
+	}
 	go setupTask()
 }
 
