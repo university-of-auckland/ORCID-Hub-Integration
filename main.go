@@ -8,21 +8,22 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
 var (
-	api             Client
-	oh              Client
-	counter         int
-	gotAccessToken  chan bool
-	taskSetUp       chan bool
-	taskID          int
-	taskCreatedAt   time.Time
-	taskRecordCount int
-	verbose         bool
+	api              Client
+	oh               Client
+	counter          int
+	taskSetUpWG      sync.WaitGroup
+	gotAccessTokenWG sync.WaitGroup
+	taskID           int
+	taskCreatedAt    time.Time
+	taskRecordCount  int
+	verbose          bool
 )
 
 const taskFilenamePrefix = "UOA-OH-INTEGRATION-TASK-"
@@ -32,16 +33,12 @@ var (
 	OHBaseURL  = "https://dev.orcidhub.org.nz"
 )
 
-func init() {
-	gotAccessToken = make(chan bool, 1)
-	taskSetUp = make(chan bool, 1)
-}
-
 func setup() {
 	if api.ApiKey == "" {
 		api.ApiKey = os.Getenv("API_KEY")
 		api.BaseURL = APIBaseURL
 	}
+	gotAccessTokenWG.Add(1)
 	go func() {
 		if oh.AccessToken == "" {
 			oh.ClientID = os.Getenv("CLIENT_ID")
@@ -53,7 +50,7 @@ func setup() {
 				log.Panic(err)
 			}
 		}
-		gotAccessToken <- true
+		gotAccessTokenWG.Done()
 	}()
 	go setupTask()
 }

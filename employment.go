@@ -66,7 +66,7 @@ func (emp *Employment) propagateToHub(email, orcid string) (count int, err error
 		}
 	}
 	// Make sure the task set-up is comlete
-	<-taskSetUp
+	taskSetUpWG.Wait()
 	var task Task
 	err = oh.Patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
 	if err != nil {

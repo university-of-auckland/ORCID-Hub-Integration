@@ -49,7 +49,7 @@ func (t *Task) activateTask() {
 	}
 	err := oh.Put("api/v1/tasks/"+strconv.Itoa(t.ID), map[string]string{"status": "ACTIVE"}, &task)
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR: Failed to activate task %d: %q", t.ID, err)
 	}
 }
 
@@ -58,18 +58,19 @@ func newTask() {
 	var task = Task{Filename: taskFilename, Type: "AFFILIATION", Records: []Record{}}
 	err := oh.Post("api/v1/affiliations?filename="+taskFilename, task, &task)
 	if err != nil {
-		panic(err)
+		log.Fatal("Failed to create a new affiliation task: ", err)
 	}
 	taskID = task.ID
 	taskCreatedAt, err = time.Parse("2006-01-02T15:04:05", task.CreatedAt)
 	if verbose {
-		log.Printf("*** NEW TASK: %#v", task)
+		log.Printf("*** New affiliation task created (ID: %d, filename: %q)", task.ID, task.Filename)
 	}
-	taskSetUp <- true
+	taskSetUpWG.Done()
 }
 
 // Either get the task ID or activate outstanding tasks and start a new one
 func setupTask() {
+	taskSetUpWG.Add(1)
 
 	now := time.Now()
 	if taskID == 0 {
@@ -78,7 +79,8 @@ func setupTask() {
 		if verbose {
 			log.Println("=======================================================================================")
 		}
-		<-gotAccessToken
+
+		gotAccessTokenWG.Wait()
 		oh.Get("api/v1/tasks?type=AFFILIATION", &tasks)
 		for _, t := range tasks {
 			if verbose {
@@ -110,5 +112,5 @@ func setupTask() {
 		return
 	}
 FOUND_TASK:
-	taskSetUp <- true
+	taskSetUpWG.Done()
 }
