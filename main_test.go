@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,7 +22,9 @@ import (
 var server *httptest.Server
 
 func init() {
-	verbose = os.Getenv("VERBOSE") != ""
+	verboseFlag := flag.Bool("verbose", false, "Print out the recieved responses.")
+	flag.Parse()
+	verbose = *verboseFlag || os.Getenv("VERBOSE") != ""
 }
 
 func SetupTest(t *testing.T, withAnIncomleteTask bool) {
@@ -282,7 +285,6 @@ func TeardownTest(t *testing.T) {
 }
 
 func TestWithServer(t *testing.T) {
-
 	SetupTest(t, true)
 	defer TeardownTest(t)
 

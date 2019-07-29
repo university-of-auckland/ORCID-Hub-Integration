@@ -81,7 +81,7 @@ func setupTask() {
 		}
 
 		gotAccessTokenWG.Wait()
-		oh.Get("api/v1/tasks?type=AFFILIATION", &tasks)
+		oh.Get("api/v1/tasks?type=AFFILIATION&staus=INACTIVE", &tasks)
 		for _, t := range tasks {
 			if verbose {
 				log.Printf("TASK: %#v", t)
