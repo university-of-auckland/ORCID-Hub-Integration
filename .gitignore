@@ -10,3 +10,12 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+.env
+consumer
+consumer.zip
+tags
+cover*
+main
+main.zip
+output*

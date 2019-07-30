@@ -13,19 +13,21 @@ import (
 	"unicode"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/joho/godotenv"
 )
 
 var (
 	api                  Client
-	oh                   Client
 	counter              int
-	taskSetUpWG          sync.WaitGroup
 	gotAccessTokenWG     sync.WaitGroup
-	taskID               int
+	oh                   Client
 	taskCreatedAt        time.Time
+	taskID               int
 	taskRecordCount      int
 	taskRecordCountMutex sync.Mutex
+	updateOrcidWG        sync.WaitGroup
 	verbose              bool
+	wg                   sync.WaitGroup
 )
 
 const taskFilenamePrefix = "UOA-OH-INTEGRATION-TASK-"
@@ -36,6 +38,10 @@ var (
 	// OHBaseURL is the ORCID Hub API base URL
 	OHBaseURL = "https://dev.orcidhub.org.nz"
 )
+
+func init() {
+	godotenv.Load()
+}
 
 func setup() {
 	if api.ApiKey == "" {
@@ -120,29 +126,6 @@ func getEmp(output chan<- Employment, upiOrID string) {
 	output <- emp
 }
 
-// updateOrcid updates the user ORCID iD.
-func (id *Identity) updateOrcid(done chan<- bool, ORCID string) {
-	defer func() {
-		done <- true
-	}()
-
-	currentORCID := id.GetORCID()
-	if currentORCID != "" {
-		if ORCID != currentORCID {
-			// TODO
-		}
-		return
-	}
-	// Add ORCID ID if the user doesn't have one
-	var resp struct {
-		StatusCode string `json:"statusCode"`
-	}
-	err := api.Put(fmt.Sprintf("identity/integrations/v3/identity/%d/identifier/ORCID", id.ID), map[string]string{"identifier": ORCID}, &resp)
-	if err != nil {
-		log.Println("ERROR: Failed to update or add ORCID: ", err)
-	}
-}
-
 // isValidUPI validates UPI
 func isValidUPI(upi string) bool {
 	if len(upi) != 7 {
@@ -163,6 +146,14 @@ func isValidUPI(upi string) bool {
 
 // processUserRegistration handles the user registration/ORCID account linking on the Hub.
 func (e *Event) processUserRegistration() (string, error) {
+
+	parts := strings.Split(e.EPPN, "@")
+	upi := parts[0]
+	if !isValidUPI(upi) {
+		return "", fmt.Errorf("Invalid UPI: %q", upi)
+	}
+	log.Println("UPI: ", upi)
+
 	var (
 		id  Identity
 		emp Employment
@@ -170,24 +161,12 @@ func (e *Event) processUserRegistration() (string, error) {
 	identities := make(chan Identity)
 	employments := make(chan Employment)
 
-	parts := strings.Split(e.EPPN, "@")
-
-	upi := parts[0]
-	if !isValidUPI(upi) {
-		return "Invalid UPI", fmt.Errorf("Invalid UPI: %q", upi)
-	}
-	log.Println("UPI: ", upi)
-
 	go getIdentidy(identities, upi)
 	go getEmp(employments, upi)
 
 	id = <-identities
 	if id.ID != 0 {
-		idUpdateDone := make(chan bool, 1)
-		go id.updateOrcid(idUpdateDone, e.ORCID)
-		defer func() {
-			<-idUpdateDone
-		}()
+		go id.updateOrcid(e.ORCID)
 	}
 	emp = <-employments
 
@@ -220,8 +199,13 @@ func (el errorList) Error() string {
 // a batch of event messages.
 func HandleRequest(ctx context.Context, e Event) (string, error) {
 
-	log.Printf("Cotext: %#v, counter: %d", ctx, counter)
+	defer func() {
+		wg.Wait()
+	}()
 	counter++
+	if verbose {
+		log.Printf("Context: %#v, counter: %d", ctx, counter)
+	}
 
 	if e.Records != nil {
 		var (

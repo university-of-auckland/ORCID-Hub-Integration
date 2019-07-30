@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strings"
 )
 
+// Identity - the user identity record.
 type Identity struct {
 	Addresses []struct {
 		CareOf      string `json:"careOf"`
@@ -119,7 +121,7 @@ type Identity struct {
 }
 
 // GetORCID returns the principal part of ORCID iD
-// if the identify has an ORCID
+// if the identify has an ORCID.
 func (id *Identity) GetORCID() string {
 	if id.ExtIds == nil {
 		return ""
@@ -133,7 +135,8 @@ func (id *Identity) GetORCID() string {
 	return ""
 }
 
-// GetOrcidAccessToken
+// GetOrcidAccessToken gets the ORCID API token to verify that the user
+// has granted access to the university.
 func (id *Identity) GetOrcidAccessToken() (token Token, ok bool) {
 	var tokens []Token
 	orcid := id.GetORCID()
@@ -171,4 +174,30 @@ TOKEN_FOUND:
 		}
 	}
 	return
+}
+
+// updateOrcid updates the user ORCID iD.
+func (id *Identity) updateOrcid(ORCID string) {
+	currentORCID := id.GetORCID()
+	if currentORCID != "" {
+		if ORCID != currentORCID {
+			// TODO
+		}
+		return
+	}
+
+	wg.Add(1)
+	defer func() {
+		wg.Done()
+	}()
+
+	// Add ORCID ID if the user doesn't have one
+	var resp struct {
+		StatusCode string `json:"statusCode"`
+	}
+
+	err := api.Put(fmt.Sprintf("identity/integrations/v3/identity/%d/identifier/ORCID", id.ID), map[string]string{"identifier": ORCID}, &resp)
+	if err != nil {
+		log.Println("ERROR: Failed to update or add ORCID: ", err)
+	}
 }

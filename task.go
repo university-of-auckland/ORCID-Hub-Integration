@@ -4,9 +4,13 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
+var taskSetUpWG sync.WaitGroup
+
+// Task - ORCID Hub affiliation registration batch task
 type Task struct {
 	ID          int      `json:"id,omitempty"`
 	CompletedAt string   `json:"completed-at,omitempty"`
@@ -18,6 +22,7 @@ type Task struct {
 	Records     []Record `json:"records"`
 }
 
+// Record - ORCID Hub affiliation registration batch task recordr
 type Record struct {
 	ID                  int    `json:"id,omitempty"`
 	AffiliationType     string `json:"affiliation-type"`
