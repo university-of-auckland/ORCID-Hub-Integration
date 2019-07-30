@@ -562,7 +562,17 @@ func TestProcessEmpUpdate(t *testing.T) {
 				{Body: `{"subject":4306445}`},
 			},
 		})
-	assert.True(t, 0 < taskRecordCount, "The number of records should be > 0.")
+	assert.True(t, taskRecordCount > 0, "The number of records should be > 0.")
 	t.Log(err)
 	assert.NotNil(t, err)
+}
+
+func TestIsValidUPI(t *testing.T) {
+	assert.True(t, isValidUPI("rcir178"))
+	assert.True(t, isValidUPI("rpaw053"))
+	assert.False(t, isValidUPI("123456"))
+	assert.False(t, isValidUPI("ABC123456"))
+	assert.False(t, isValidUPI("abc1234"))
+	assert.False(t, isValidUPI("abcdd34"))
+	assert.False(t, isValidUPI("abcd23x"))
 }

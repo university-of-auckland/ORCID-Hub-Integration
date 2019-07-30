@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/aws/aws-lambda-go/lambda"
 )
@@ -78,8 +79,8 @@ func (e *Event) process() (string, error) {
 func (e *Event) processEmpUpdate() (string, error) {
 
 	var employeeID = strconv.Itoa(e.Subject)
-	identities := make(chan Identity, 1)
-	employments := make(chan Employment, 1)
+	identities := make(chan Identity)
+	employments := make(chan Employment)
 
 	// TODO: this can be doen sychroniously
 	go getIdentidy(identities, employeeID)
@@ -142,17 +143,39 @@ func (id *Identity) updateOrcid(done chan<- bool, ORCID string) {
 	}
 }
 
+// isValidUPI validates UPI
+func isValidUPI(upi string) bool {
+	if len(upi) != 7 {
+		return false
+	}
+	for _, r := range upi[0:4] {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	for _, r := range upi[4:] {
+		if !unicode.IsDigit(r) {
+			return false
+		}
+	}
+	return true
+}
+
 // processUserRegistration handles the user registration/ORCID account linking on the Hub.
 func (e *Event) processUserRegistration() (string, error) {
 	var (
 		id  Identity
 		emp Employment
 	)
-	identities := make(chan Identity, 1)
-	employments := make(chan Employment, 1)
+	identities := make(chan Identity)
+	employments := make(chan Employment)
 
 	parts := strings.Split(e.EPPN, "@")
+
 	upi := parts[0]
+	if !isValidUPI(upi) {
+		return "Invalid UPI", fmt.Errorf("Invalid UPI: %q", upi)
+	}
 	log.Println("UPI: ", upi)
 
 	go getIdentidy(identities, upi)
@@ -234,6 +257,7 @@ func HandleRequest(ctx context.Context, e Event) (string, error) {
 }
 
 func main() {
-	log.SetPrefix("OHI")
+	log.SetPrefix("OHI: ")
 	lambda.Start(HandleRequest)
+	log.Println("=================== DONE =============================================")
 }
