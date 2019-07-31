@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -141,9 +140,9 @@ func (id *Identity) GetOrcidAccessToken() (token Token, ok bool) {
 	var tokens []Token
 	orcid := id.GetORCID()
 	if orcid != "" {
-		err := oh.Get("api/v1/tokens/"+orcid, &tokens)
+		err := oh.get("api/v1/tokens/"+orcid, &tokens)
 		if err != nil {
-			log.Println("ERROR: ", err)
+			log.Error(err)
 		} else if len(tokens) > 0 {
 			goto TOKEN_FOUND
 		}
@@ -157,9 +156,9 @@ func (id *Identity) GetOrcidAccessToken() (token Token, ok bool) {
 		}
 		for _, oid := range otherIDs {
 			if oid != "" {
-				err := oh.Get("api/v1/tokens/"+oid, &tokens)
+				err := oh.get("api/v1/tokens/"+oid, &tokens)
 				if err != nil {
-					log.Println("ERROR: ", err)
+					log.Error(err)
 				} else if len(tokens) > 0 {
 					goto TOKEN_FOUND
 				}
@@ -196,8 +195,8 @@ func (id *Identity) updateOrcid(ORCID string) {
 		StatusCode string `json:"statusCode"`
 	}
 
-	err := api.Put(fmt.Sprintf("identity/integrations/v3/identity/%d/identifier/ORCID", id.ID), map[string]string{"identifier": ORCID}, &resp)
+	err := api.put(fmt.Sprintf("identity/integrations/v3/identity/%d/identifier/ORCID", id.ID), map[string]string{"identifier": ORCID}, &resp)
 	if err != nil {
-		log.Println("ERROR: Failed to update or add ORCID: ", err)
+		log.Error("failed to update or add ORCID: ", err)
 	}
 }

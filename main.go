@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -14,6 +13,9 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/joho/godotenv"
+
+	"github.com/dougEfresh/lambdazap"
+	"go.uber.org/zap"
 )
 
 var (
@@ -28,6 +30,10 @@ var (
 	updateOrcidWG        sync.WaitGroup
 	verbose              bool
 	wg                   sync.WaitGroup
+
+	lambdazapper *lambdazap.LambdaLogContext
+	logger       *zap.Logger
+	log          *zap.SugaredLogger
 )
 
 const taskFilenamePrefix = "UOA-OH-INTEGRATION-TASK-"
@@ -41,23 +47,33 @@ var (
 
 func init() {
 	godotenv.Load()
+	if verbose || strings.Contains(os.Getenv("ENV"), "dev") {
+		logger, _ = zap.NewDevelopment()
+	} else {
+		logger, _ = zap.NewProduction()
+	}
+	if os.Getenv("_LAMBDA_SERVER_PORT") != "" {
+		lambdazapper = lambdazap.New().With(lambdazap.AwsRequestID)
+		logger.With(lambdazapper.NonContextValues()...)
+	}
+	log = logger.Sugar()
 }
 
 func setup() {
-	if api.ApiKey == "" {
-		api.ApiKey = os.Getenv("API_KEY")
-		api.BaseURL = APIBaseURL
+	if api.apiKey == "" {
+		api.apiKey = os.Getenv("API_KEY")
+		api.baseURL = APIBaseURL
 	}
-	if oh.AccessToken == "" {
+	if oh.accessToken == "" {
 		gotAccessTokenWG.Add(1)
 		go func() {
-			oh.ClientID = os.Getenv("CLIENT_ID")
-			oh.ClientSecret = os.Getenv("CLIENT_SECRET")
-			oh.BaseURL = OHBaseURL
+			oh.clientID = os.Getenv("CLIENT_ID")
+			oh.clientSecret = os.Getenv("CLIENT_SECRET")
+			oh.baseURL = OHBaseURL
 			// oh.BaseURL = "http://127.0.0.1:5000"
-			err := oh.GetAccessToken("oauth/token")
+			err := oh.getAccessToken("oauth/token")
 			if err != nil {
-				log.Panic(err)
+				log.Fatal("filed to authorize with the client credentials", zap.Error(err))
 			}
 			gotAccessTokenWG.Done()
 		}()
@@ -109,9 +125,9 @@ func (e *Event) processEmpUpdate() (string, error) {
 // getIdentidy retrieves the user identity records.
 func getIdentidy(output chan<- Identity, upiOrID string) {
 	var id Identity
-	err := api.Get("identity/integrations/v3/identity/"+upiOrID, &id)
+	err := api.get("identity/integrations/v3/identity/"+upiOrID, &id)
 	if err != nil {
-		log.Fatalln("Failed to retrieve the identity record: ", err)
+		log.Fatal("failed to retrieve the identity record", zap.Error(err))
 	}
 	output <- id
 }
@@ -119,9 +135,9 @@ func getIdentidy(output chan<- Identity, upiOrID string) {
 // getEmp retrieves the user employment records.
 func getEmp(output chan<- Employment, upiOrID string) {
 	var emp Employment
-	err := api.Get("employment/integrations/v1/employee/"+upiOrID, &emp)
+	err := api.get("employment/integrations/v1/employee/"+upiOrID, &emp)
 	if err != nil {
-		log.Fatalln("Failed to get employment record: ", err)
+		log.Fatal("failed to get employment record", zap.Error(err))
 	}
 	output <- emp
 }
@@ -144,6 +160,19 @@ func isValidUPI(upi string) bool {
 	return true
 }
 
+// isValidID validates employment/student ID
+func isValidID(uid string) bool {
+	if l := len(uid); l < 8 || l > 10 {
+		return false
+	}
+	for _, r := range uid {
+		if !unicode.IsDigit(r) {
+			return false
+		}
+	}
+	return true
+}
+
 // processUserRegistration handles the user registration/ORCID account linking on the Hub.
 func (e *Event) processUserRegistration() (string, error) {
 
@@ -152,7 +181,7 @@ func (e *Event) processUserRegistration() (string, error) {
 	if !isValidUPI(upi) {
 		return "", fmt.Errorf("Invalid UPI: %q", upi)
 	}
-	log.Println("UPI: ", upi)
+	log.Info("UPI: ", upi)
 
 	var (
 		id  Identity
@@ -201,11 +230,10 @@ func HandleRequest(ctx context.Context, e Event) (string, error) {
 
 	defer func() {
 		wg.Wait()
+		logger.Sync()
 	}()
 	counter++
-	if verbose {
-		log.Printf("Context: %#v, counter: %d", ctx, counter)
-	}
+	log.Infof("Context: %+v, counter: %d", ctx, counter)
 
 	if e.Records != nil {
 		var (
@@ -241,7 +269,7 @@ func HandleRequest(ctx context.Context, e Event) (string, error) {
 }
 
 func main() {
-	log.SetPrefix("OHI: ")
+
 	lambda.Start(HandleRequest)
-	log.Println("=================== DONE =============================================")
+	log.Info("=================== DONE =============================================")
 }

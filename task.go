@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -50,25 +49,25 @@ type Record struct {
 func (t *Task) activateTask() {
 	var task Task
 	if verbose {
-		log.Printf("Activate the task %q (ID: %d)", t.Filename, t.ID)
+		log.Infof("Activate the task %q (ID: %d)", t.Filename, t.ID)
 	}
-	err := oh.Put("api/v1/tasks/"+strconv.Itoa(t.ID), map[string]string{"status": "ACTIVE"}, &task)
+	err := oh.put("api/v1/tasks/"+strconv.Itoa(t.ID), map[string]string{"status": "ACTIVE"}, &task)
 	if err != nil {
-		log.Printf("ERROR: Failed to activate task %d: %q", t.ID, err)
+		log.Errorw("ERROR: Failed to activate task %d: %q", t.ID, err.Error)
 	}
 }
 
 func newTask() {
 	taskFilename := taskFilenamePrefix + strconv.FormatInt(time.Now().Unix(), 36) + ".json"
 	var task = Task{Filename: taskFilename, Type: "AFFILIATION", Records: []Record{}}
-	err := oh.Post("api/v1/affiliations?filename="+taskFilename, task, &task)
+	err := oh.post("api/v1/affiliations?filename="+taskFilename, task, &task)
 	if err != nil {
-		log.Fatal("Failed to create a new affiliation task: ", err)
+		log.Fatal("failed to create a new affiliation task", err)
 	}
 	taskID = task.ID
 	taskCreatedAt, err = time.Parse("2006-01-02T15:04:05", task.CreatedAt)
 	if verbose {
-		log.Printf("*** New affiliation task created (ID: %d, filename: %q)", task.ID, task.Filename)
+		log.Infof("*** New affiliation task created (ID: %d, filename: %q)", task.ID, task.Filename)
 	}
 	taskSetUpWG.Done()
 }
@@ -81,16 +80,11 @@ func setupTask() {
 	if taskID == 0 {
 		var tasks []Task
 		// Make sure the access token acquired
-		if verbose {
-			log.Println("=======================================================================================")
-		}
-
+		log.Debug("=======================================================================================")
 		gotAccessTokenWG.Wait()
-		oh.Get("api/v1/tasks?type=AFFILIATION&staus=INACTIVE", &tasks)
+		oh.get("api/v1/tasks?type=AFFILIATION&staus=INACTIVE", &tasks)
 		for _, t := range tasks {
-			if verbose {
-				log.Printf("TASK: %#v", t)
-			}
+			log.Debugf("TASK: %#v", t)
 			if t.Status == "ACTIVE" || t.CompletedAt != "" || !strings.HasPrefix(t.Filename, taskFilenamePrefix) {
 				continue
 			}

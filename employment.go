@@ -1,11 +1,10 @@
 package main
 
 import (
-	"log"
 	"strconv"
 )
 
-// Eployment API empoyment-v1 response message.
+// Employment API empoyment-v1 response message.
 type Employment struct {
 	AcademicStaffFTE int    `json:"academicStaffFTE"`
 	EmployeeID       string `json:"employeeID"`
@@ -71,9 +70,9 @@ func (emp *Employment) propagateToHub(email, orcid string) (count int, err error
 	taskSetUpWG.Wait()
 
 	var task Task
-	err = oh.Patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
+	err = oh.patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
 	if err != nil {
-		log.Println("ERROR: Failed to update the taks: ", err)
+		log.Error("failed to update the taks: ", err)
 	}
 	taskRecordCountMutex.Lock()
 	taskRecordCount += count

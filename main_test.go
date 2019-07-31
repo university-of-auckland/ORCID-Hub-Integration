@@ -19,7 +19,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var server *httptest.Server
+var (
+	server              *httptest.Server
+	withAnIncomleteTask bool
+)
 
 func init() {
 	verboseFlag := flag.Bool("verbose", false, "Print out the recieved responses.")
@@ -27,16 +30,15 @@ func init() {
 	verbose = *verboseFlag || os.Getenv("VERBOSE") != ""
 }
 
-func SetupTest(t *testing.T, withAnIncomleteTask bool) {
+func setupTests(t *testing.T) {
 
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		ru := r.URL.RequestURI()
+		url, ru := r.URL, r.URL.RequestURI()
 		switch {
 		case ru == "/oauth/token":
 			io.WriteString(w, `{"access_token": "7jsxDZceygy2xNbK2M23sD5eyHimtx", "expires_in": 86400, "token_type": "Bearer", "scope": ""}`)
-		case ru == "/api/v1/tasks?type=AFFILIATION":
+		case ru == "/api/v1/tasks?type=AFFILIATION" || ru == "/api/v1/tasks?type=AFFILIATION&staus=INACTIVE":
 			io.WriteString(w, `[
 	{"created-at":"2019-07-24T08:47:09","filename":"UOA-OH-INTEGRATION-TASK-pv51ql.json","id":781,"records":[],"status":"ACTIVE","task-type":"AFFILIATION","updated-at":"2019-07-24T09:29:24"},
 	{"created-at":"2019-07-25T00:34:08","filename":"UOA-OH-INTEGRATION-TASK-pv69kw.json","id":787,"records":[],"task-type":"AFFILIATION","updated-at":"2019-07-25T01:32:36"}`)
@@ -46,7 +48,7 @@ func SetupTest(t *testing.T, withAnIncomleteTask bool) {
 			io.WriteString(w, "]")
 		case strings.HasPrefix(ru, "/api/v1/tokens/"):
 			var id = strings.TrimPrefix(ru, "/api/v1/tokens/")
-			if id == "rad42@mailinator.com" || id == "0000-0001-8228-7153" {
+			if id == "rad42@mailinator.com" || id == "0000-0001-8228-7153" || id == "rcir178@auckland.ac.nz" {
 				io.WriteString(w, `[{
 				"access_token":"ecf16b31-ad54-4ba2-ae55-e97fb90e211a", 
 				"email":"rad42@mailinator.com", 
@@ -58,20 +60,34 @@ func SetupTest(t *testing.T, withAnIncomleteTask bool) {
 				"scopes":"/read-limited,/activities/update"
 			}]`)
 			} else if id == "rcir178@auckland.ac.nz" {
-				io.WriteString(w, `[]`)
+				io.WriteString(w, `[
+
+
+]`)
 			} else {
 				w.WriteHeader(http.StatusNotFound)
 				io.WriteString(w, `{"error": "User with specified identifier 'rcir178ABC@auckland.ac.nz' not found."}`)
 			}
 		case strings.HasPrefix(ru, "/api/v1/tasks/"):
-			io.WriteString(w, `{
+			if r.Method == "POST" {
+				filename := url.Query()["filename"][0]
+				io.WriteString(w, `{
+				"id":99999,
 				"created-at":"2032-08-25T02:07:28",
-				"filename":"UOA-OH-INTEGRATION-TASK-pv6dwg.json",
+				"filename":"`+filename+`",
+				"task-type":"AFFILIATION",
+				"updated-at":"2032-07-25T02:23:32"
+			}`)
+			} else {
+				io.WriteString(w, `{
+				"created-at":"2032-08-25T02:07:28",
+				"filename":"UOA-OH-INTEGRATION-TASK-pv6xi6.json",
 				"id":`+strings.TrimPrefix(ru, "/api/v1/tasks/")+`,
 				"status":"ACTIVE",
 				"task-type":"AFFILIATION",
 				"updated-at":"2032-07-25T02:23:32"
 			}`)
+			}
 		case strings.HasPrefix(ru, "/api/v1/tokens/"):
 			io.WriteString(w, `[
 				{
@@ -92,10 +108,203 @@ func SetupTest(t *testing.T, withAnIncomleteTask bool) {
 				"task-type":"AFFILIATION",
 				"updated-at":"2019-07-25T02:23:32"
 			}`)
+		case strings.HasPrefix(ru, "/api/v1/affiliations/"):
+			var taskID = strings.TrimPrefix(ru, "/api/v1/affiliations/")
+			io.WriteString(w, `{
+				"id": `+taskID+`,
+				"created-at": "2019-07-31T02:53:03",
+				"filename": "UOA-OH-INTEGRATION-TASK-pvhk0f.json",
+				"task-type": "AFFILIATION",
+				"records": [
+					{
+						"id": 11441,
+						"affiliation-type": "employment",
+						"department": "Enterprise Architecture",
+						"email": "radomirs.cirskis@auckland.ac.nz",
+						"end-date": "2019-12-09",
+						"orcid": "0000-0001-8228-7153",
+						"role": "Project Architect",
+						"start-date": "2018-08-09"
+					},
+					{
+						"id": 11442,
+						"affiliation-type": "employment",
+						"department": "Enterprise Architecture",
+						"email": "roshan.pawar@auckland.ac.nz",
+						"end-date": "2019-11-15",
+						"orcid": "0000-0003-1255-9023",
+						"role": "Developer",
+						"start-date": "2018-07-16"
+					},
+					{
+						"id": 11443,
+						"affiliation-type": "employment",
+						"department": "Cent Learning \u0026 Rsch Higher Ed",
+						"email": "roshan.pawar@auckland.ac.nz",
+						"end-date": "2018-04-28",
+						"orcid": "0000-0003-1255-9023",
+						"role": "Professional Casual Staff",
+						"start-date": "2016-06-15"
+					},
+					        {
+						"id": 11449,
+						"affiliation-type": "employment",
+						"department": "Info Systems \u0026 Operations Mgmt",
+						"email": "daniel.jimenez@auckland.ac.nz",
+						"end-date": "2019-07-13",
+						"orcid": "0000-0002-3008-0422",
+						"role": "Teaching Assistant",
+						"start-date": "2019-03-04"
+					},
+					{
+						"id": 11448,
+						"affiliation-type": "employment",
+						"department": "Enterprise Architecture",
+						"email": "daniel.jimenez@auckland.ac.nz",
+						"orcid": "0000-0002-3008-0422",
+						"role": "Professional Casual Staff",
+						"start-date": "2017-03-01"
+					},
+					{
+						"id": 11447,
+						"affiliation-type": "employment",
+						"department": "App Dev and QA",
+						"email": "daniel.jimenez@auckland.ac.nz",
+						"end-date": "2017-03-03",
+						"orcid": "0000-0002-3008-0422",
+						"role": "Intern",
+						"start-date": "2016-11-16"
+					},
+					{
+						"id": 11446,
+						"affiliation-type": "employment",
+						"department": "Enterprise Architecture",
+						"email": "radomirs.cirskis@auckland.ac.nz",
+						"end-date": "2019-12-09",
+						"orcid": "0000-0001-8228-7153",
+						"role": "Project Architect",
+						"start-date": "2018-08-09"
+					},
+					{
+						"id": 11445,
+						"affiliation-type": "employment",
+						"department": "Enterprise Architecture",
+						"email": "roshan.pawar@auckland.ac.nz",
+						"end-date": "2019-11-15",
+						"orcid": "0000-0003-1255-9023",
+						"role": "Developer",
+						"start-date": "2018-07-16"
+					},
+					{
+						"id": 11444,
+						"affiliation-type": "employment",
+						"department": "Cent Learning \u0026 Rsch Higher Ed",
+						"email": "roshan.pawar@auckland.ac.nz",
+						"end-date": "2018-04-28",
+						"orcid": "0000-0003-1255-9023",
+						"role": "Professional Casual Staff",
+						"start-date": "2016-06-15"
+					}
+				]
+			}`)
 		case strings.HasPrefix(ru, "/service/identity/integrations/v3/identity/"):
 			var uid = strings.TrimPrefix(ru, "/service/identity/integrations/v3/identity/")
 			switch uid {
-			case "rpaw053":
+			case "jken016", "8524255":
+				io.WriteString(w, `{
+    "dob": "1967-03-18",
+    "emailAddress": "jeff.kennedy@auckland.ac.nz",
+    "emails": [
+        {
+            "email": "jeff_is_dead_at_last_in_spite_of_all@hotmail.com",
+            "lastUpdated": "2016-03-17T21:06:21.000+0000",
+            "type": "Other",
+            "typeId": "Other",
+            "verified": false
+        },
+        {
+            "email": "jken016@aucklanduni.ac.nz",
+            "lastUpdated": "2015-07-27T22:16:33.000+0000",
+            "type": "Student",
+            "typeId": "Student",
+            "verified": true
+        },
+        {
+            "email": "honeylarkin@gmail.com",
+            "lastUpdated": "2015-07-27T22:16:33.000+0000",
+            "type": "Work",
+            "typeId": "Business",
+            "verified": true
+        },
+        {
+            "email": "jeff.kennedy@auckland.ac.nz",
+            "lastUpdated": "2016-03-17T21:06:21.000+0000",
+            "type": "University",
+            "typeId": "Campus",
+            "verified": true
+        },
+        {
+            "email": "belacqua66@hotmail.com",
+            "lastUpdated": "2019-03-01T06:10:56.000+0000",
+            "type": "Personal",
+            "typeId": "Home",
+            "verified": false
+        }
+    ],
+    "extIds": [
+        {
+            "id": "38713",
+            "type": "Advancement"
+        },
+        {
+            "id": "20517852425502",
+            "type": "IDCard"
+        },
+        {
+            "id": "138256828",
+            "type": "NSN"
+        },
+        {
+            "id": "http://orcid.org/0000-0002-8982-6444",
+            "type": "ORCID"
+        },
+        {
+            "id": "23817",
+            "type": "UID"
+        }
+    ],
+    "id": 8524255,
+    "primaryIdentity": true,
+    "resolved": true,
+    "upi": "jken016"
+}`)
+			case "4306445", "yyan161":
+				io.WriteString(w, `{
+    "emailAddress": "jasmine_yinyin@hotmail.com",
+    "emails": [
+        {
+            "email": "jasmine_yinyin@hotmail.com",
+            "lastUpdated": "2018-08-27T23:51:28.000+0000",
+            "type": "Other",
+            "typeId": "Other",
+            "verified": false
+        }
+    ],
+    "extIds": [
+        {
+            "id": "118009562",
+            "type": "NSN"
+        },
+        {
+            "id": "340776",
+            "type": "UID"
+        }
+    ],
+    "id": 4306445,
+    "resolved": true,
+    "upi": "yyan161"
+	}`)
+			case "rpaw053", "208013283":
 				io.WriteString(w, `{
    "deceased":{
       "dead":false
@@ -176,86 +385,298 @@ func SetupTest(t *testing.T, withAnIncomleteTask bool) {
    "whenUpdated":"2019-05-14T10:51:47.597+0000",
    "resolved":true,
    "previousIds":[]}`)
-			case "rcir178":
+			case "rcir178", "484378182":
 				io.WriteString(w, `{
     "displayName": "Radomirs Cirskis",
     "dob": "1896-12-28",
     "emailAddress": "kfsjdjadffsafkis@auckland.ac.nz",
     "emails": [
-	{
-	    "email": "kfsjdjadffsafkis@auckland.ac.nz",
-	    "lastUpdated": "2017-08-24T23:25:18.000+0000",
-	    "type": "University",
-	    "typeId": "Campus",
-	    "verified": false
-	},
-	{
-	    "email": "nad2000@gmail.com",
-	    "lastUpdated": "2017-08-24T23:25:22.000+0000",
-	    "type": "Other",
-	    "typeId": "Other",
-	    "verified": true
-	},
-	{
-	    "email": "rad@nowitworks.eu",
-	    "lastUpdated": "2017-08-24T23:25:22.000+0000",
-	    "type": "Work",
-	    "typeId": "Business",
-	    "verified": false
-	}
+		{
+			"email": "kfsjdjadffsafkis@auckland.ac.nz",
+			"lastUpdated": "2017-08-24T23:25:18.000+0000",
+			"type": "University",
+			"typeId": "Campus",
+			"verified": false
+		},
+		{
+			"email": "nad2000@gmail.com",
+			"lastUpdated": "2017-08-24T23:25:22.000+0000",
+			"type": "Other",
+			"typeId": "Other",
+			"verified": true
+		},
+		{
+			"email": "rad@nowitworks.eu",
+			"lastUpdated": "2017-08-24T23:25:22.000+0000",
+			"type": "Work",
+			"typeId": "Business",
+			"verified": false
+		}
     ],
     "extIds": [
-	{
-	    "id": "2011948437818225",
-	    "type": "IDCard"
-	},
-	{
-	    "id": "154244310",
-	    "type": "NSN"
-	},
-	{
-	    "id": "2594016",
-	    "type": "UID"
-	}
+		{
+			"id": "2011948437818225",
+			"type": "IDCard"
+		},
+		{
+			"id": "154244310",
+			"type": "NSN"
+		},
+		{
+			"id": "2594016",
+			"type": "UID"
+		}
     ],
     "firstName": "Radomirs",
     "gender": "MALE",
     "id": 484378182,
     "lastName": "Cirskis",
     "mobile": "+64221221442",
+    "upi": "rcir178"
+}`)
+			case "477579437", "djim087":
+				io.WriteString(w, `{
+    "addresses": [
+        {
+            "careOf": "",
+            "city": "Auckland",
+            "country": "New Zealand",
+            "countryId": "NZL",
+            "dpid": "314526",
+            "lastUpdated": "2018-06-15T00:09:53.718+0000",
+            "line1": "17 Astoria Place",
+            "line2": "",
+            "line3": "",
+            "postcode": "2013",
+            "state": "",
+            "stateId": "",
+            "suburb": "Northpark",
+            "type": "Semester",
+            "typeId": "Semester"
+        },
+        {
+            "careOf": "",
+            "city": "Auckland",
+            "country": "New Zealand",
+            "countryId": "NZL",
+            "dpid": "314526",
+            "lastUpdated": "2018-08-24T00:57:20.346+0000",
+            "line1": "17 Astoria Place",
+            "line2": "",
+            "line3": "",
+            "postcode": "2013",
+            "state": "",
+            "stateId": "",
+            "suburb": "Northpark",
+            "type": "Mailing",
+            "typeId": "Mailing"
+        },
+        {
+            "careOf": "",
+            "city": "Auckland",
+            "country": "New Zealand",
+            "countryId": "NZL",
+            "dpid": "314526",
+            "lastUpdated": "2018-08-24T00:57:20.168+0000",
+            "line1": "17 Astoria Place",
+            "line2": "",
+            "line3": "",
+            "postcode": "2013",
+            "state": "",
+            "stateId": "",
+            "suburb": "Northpark",
+            "type": "Home",
+            "typeId": "Home"
+        },
+        {
+            "careOf": "",
+            "city": "AUCKLAND",
+            "country": "New Zealand",
+            "countryId": "NZL",
+            "dpid": "5/435",
+            "lastUpdated": "2019-03-10T00:55:12.889+0000",
+            "line1": "ITS CENTRE - Bldg 435",
+            "line2": "Level 5, Room 540",
+            "line3": "58 SYMONDS ST",
+            "postcode": "1010",
+            "state": "",
+            "stateId": "",
+            "suburb": "GRAFTON",
+            "type": "Primary Campus",
+            "typeId": "Campus"
+        }
+    ],
+    "citizenships": [
+        {
+            "country": "New Zealand",
+            "countryId": "NZL"
+        }
+    ],
+    "countryOfBirth": {
+        "country": "",
+        "countryId": ""
+    },
+    "deceased": {
+        "comments": "",
+        "date": "",
+        "dead": false,
+        "deathCertificate": "",
+        "place": ""
+    },
+    "disabilityInfo": {
+        "disabilities": [],
+        "disabilityPermanent": false,
+        "disabilitySupport": false,
+        "isDisabled": false
+    },
+    "displayName": "Daniel Jimenez",
+    "dob": "1997-04-23",
+    "emailAddress": "daniel.jimenez@auckland.ac.nz",
+    "emails": [
+        {
+            "email": "daniel.jimenez@auckland.ac.nz",
+            "lastUpdated": "2017-05-05T03:31:13.000+0000",
+            "type": "University",
+            "typeId": "Campus",
+            "verified": false
+        },
+        {
+            "email": "dan.kiwi@live.com",
+            "lastUpdated": "2017-05-05T03:31:14.000+0000",
+            "type": "Other",
+            "typeId": "Other",
+            "verified": true
+        },
+        {
+            "email": "djim087@aucklanduni.ac.nz",
+            "lastUpdated": "2017-05-05T03:31:15.000+0000",
+            "type": "Student",
+            "typeId": "Student",
+            "verified": false
+        }
+    ],
+    "emergencyContacts": [
+        {
+            "emailAddress": "",
+            "lastUpdated": "2019-01-13T22:09:31.000+0000",
+            "name": "Avril Jimenez",
+            "phones": [
+                {
+                    "areaCode": "22",
+                    "countryCode": "64",
+                    "extension": "",
+                    "lastUpdated": "2019-01-13T22:09:31.000+0000",
+                    "number": "0688940",
+                    "type": "Mobile",
+                    "typeId": "Cellular"
+                }
+            ],
+            "relationship": "Parent"
+        }
+    ],
+    "ethnicities": [
+        {
+            "id": "11",
+            "value": "British/Irish"
+        }
+    ],
+    "extIds": [
+        {
+            "id": "2121847757943760",
+            "type": "IDCard"
+        },
+        {
+            "id": "130768622",
+            "type": "NSN"
+        },
+        {
+            "id": "2456801",
+            "type": "UID"
+        }
+    ],
+    "firstName": "Daniel",
+    "gender": "MALE",
+    "groups": null,
+    "id": 477579437,
+    "idPhotoExists": true,
+    "iwiAffiliations": [],
+    "lastName": "Jimenez",
+    "mergedToId": "",
+    "mobile": "",
     "names": [
-	{
-	    "first": "Radomirs",
-	    "last": "Cirskis",
-	    "lastUpdated": "2017-01-19T20:53:57.000+0000",
-	    "type": "Primary"
-	},
-	{
-	    "first": "Radomirs",
-	    "last": "Cirskis",
-	    "lastUpdated": "2019-05-13T00:34:04.000+0000",
-	    "title": "Mr",
-	    "type": "Preferred"
-	}
+        {
+            "first": "Daniel",
+            "last": "Jimenez",
+            "lastUpdated": "2014-10-15T03:08:41.000+0000",
+            "middle": "Francisco",
+            "suffix": "",
+            "title": "Mr",
+            "type": "Preferred"
+        },
+        {
+            "first": "Daniel",
+            "last": "Jimenez",
+            "lastUpdated": "2014-10-15T03:09:01.000+0000",
+            "middle": "Francisco",
+            "suffix": "",
+            "title": "Mr",
+            "type": "Primary"
+        }
+    ],
+    "phones": [
+        {
+            "areaCode": "22",
+            "countryCode": "64",
+            "extension": "",
+            "lastUpdated": "2019-01-13T22:09:31.000+0000",
+            "number": "4067229",
+            "type": "Mobile",
+            "typeId": "Cellular"
+        },
+        {
+            "areaCode": "9",
+            "countryCode": "64",
+            "extension": "",
+            "lastUpdated": "2017-05-05T03:31:45.000+0000",
+            "number": "5337035",
+            "type": "Home",
+            "typeId": "Home"
+        },
+        {
+            "areaCode": "9",
+            "countryCode": "64",
+            "extension": "",
+            "lastUpdated": "2014-07-21T01:57:20.000+0000",
+            "number": "5337035",
+            "type": "Other",
+            "typeId": "Other"
+        }
     ],
     "previousIds": [],
     "primaryIdentity": true,
-    "residency": "NZ-PR",
+    "residency": "NZ-C",
     "resolved": true,
-    "upi": "rcir178",
-    "whenUpdated": "2019-05-13T00:34:04.698+0000"
+    "upi": "djim087",
+    "whenUpdated": "2019-04-26T00:23:01.965+0000"
 }`)
-			case "rad42":
-			case "non-existing-upi-error":
+
+			case "rad42", "non-existing-upi-error":
+				t.Log("NOT FOUND .... ", uid)
 				w.WriteHeader(http.StatusNotFound)
-				io.WriteString(w, `{"timestamp":"2019-07-25T06:34:50.211+0000","status":404,"error":"Not Found","message":"Identity not found","path":"/identity/`+uid+`"}`)
+				io.WriteString(w, `{
+					"timestamp":"2019-07-25T06:34:50.211+0000",
+					"status":404,
+					"error":"Not Found",
+					"message":"Identity not found","path":"/identity/`+uid+`"
+				}`)
 			default:
 				w.WriteHeader(http.StatusBadRequest)
 				io.WriteString(w, `{"timestamp":"2019-07-25T02:23:32.668+0000","status":400,"error":"Bad Request","message":"Incorrect or not supported id","path":"/identity/`+uid+`"}`)
 			}
 		case strings.HasPrefix(ru, "/service/employment/integrations/v1/employee/"):
-			var empID = strings.TrimPrefix(ru, "/service/employment/integrations/v1/employee/")
-			if empID == "477579437" {
+			var upiOrID = strings.TrimPrefix(ru, "/service/employment/integrations/v1/employee/")
+			switch upiOrID {
+			case "477579437", "djim087":
 				io.WriteString(w, `{
     "employeeID":"477579437",
     "professionalStaffFTE":0,
@@ -267,32 +688,184 @@ func SetupTest(t *testing.T, withAnIncomleteTask bool) {
         {"employeeRecord":2,"effectiveDate":"2019-07-14","effectiveSequence":0,"organizationalRelation":"EMP","departmentID":"ISOM","departmentDescription":"Info Systems & Operations Mgmt","jobCode":"A00363","jobGrade":"TAS","positionNumber":"00009299","positionDescription":"Teaching Assistant","hrStatus":"I","employeeStatus":"T","lastHRaction":"TER","location":"260","locationDescription":"Owen G Glenn Building","standardHours":0.01,"employeeType":"Casual","salAdminPlan":"AS1","fullTimeEquivalent":0,"jobIndicator":"S","supervisorID":"2450582","poiType":"","jobStartDate":"2019-03-04","jobEndDate":"2019-07-13","jobCodeDescription":"Teaching Assistant","parentDepartmentDescription":"Information Systems and Operations Management","primaryActivityCentreDeptID":"BUSEC","primaryActivityCentreDeptDescription":"Business and Economics","reportsToPosition":"55560561","company":"UOA","costCentre":"1545","updatedDateTime":"2019-07-15T01:59:48.000Z"}
     ]
 }`)
+			case "208013283", "rpaw053":
+				io.WriteString(w, `{
+    "employeeID": "208013283",
+    "professionalStaffFTE": 1,
+    "academicStaffFTE": 0,
+    "uniServicesFTE": 0,
+    "requestTimeStamp": "2019-07-31T01:39:11.000Z",
+    "job": [
+        {
+            "employeeRecord": 0,
+            "effectiveDate": "2018-04-29",
+            "effectiveSequence": 0,
+            "organizationalRelation": "EMP",
+            "departmentID": "CLEAR",
+            "departmentDescription": "Cent Learning & Rsch Higher Ed",
+            "jobCode": "B00029",
+            "jobGrade": "G2S",
+            "positionNumber": "00004741",
+            "positionDescription": "Professional Casual Staff",
+            "hrStatus": "I",
+            "employeeStatus": "T",
+            "lastHRaction": "TER",
+            "location": "804",
+            "locationDescription": "Fisher Building",
+            "standardHours": 0.01,
+            "employeeType": "Casual",
+            "salAdminPlan": "GS1",
+            "fullTimeEquivalent": 0,
+            "jobIndicator": "S",
+            "supervisorID": "8986011",
+            "poiType": "",
+            "jobStartDate": "2016-06-15",
+            "jobEndDate": "2018-04-28",
+            "jobCodeDescription": "Professional Casual Staff",
+            "parentDepartmentDescription": "Centre for Learning and Research in Higher Education",
+            "primaryActivityCentreDeptID": "EDUFAC",
+            "primaryActivityCentreDeptDescription": "Education and Social Work",
+            "reportsToPosition": "55561014",
+            "company": "UOA",
+            "costCentre": "7000",
+            "updatedDateTime": "2018-05-02T19:54:47.000Z"
+        },
+        {
+            "employeeRecord": 1,
+            "effectiveDate": "2019-02-01",
+            "effectiveSequence": 0,
+            "organizationalRelation": "EMP",
+            "departmentID": "ITARCHIT",
+            "departmentDescription": "Enterprise Architecture",
+            "jobCode": "H00028",
+            "jobGrade": "G5S",
+            "positionNumber": "55561720",
+            "positionDescription": "Developer",
+            "hrStatus": "A",
+            "employeeStatus": "A",
+            "lastHRaction": "PAY",
+            "location": "435",
+            "locationDescription": "58 Symonds Street",
+            "standardHours": 37.5,
+            "employeeType": "Fixed Term",
+            "salAdminPlan": "GS1",
+            "fullTimeEquivalent": 1,
+            "jobIndicator": "P",
+            "supervisorID": "8524255",
+            "poiType": "",
+            "jobStartDate": "2018-07-16",
+            "jobEndDate": "2019-11-15",
+            "jobCodeDescription": "IT Analyst",
+            "parentDepartmentDescription": "Enterprise Architecture",
+            "primaryActivityCentreDeptID": "CDO",
+            "primaryActivityCentreDeptDescription": "Chief Digital Officer's Office",
+            "reportsToPosition": "00012578",
+            "company": "UOA",
+            "costCentre": "8848",
+            "updatedDateTime": "2019-02-06T23:33:42.000Z"
+        }
+    ]
+}`)
+			case "484378182", "rcir178":
+				io.WriteString(w, `{
+    "employeeID": "484378182",
+    "professionalStaffFTE": 1,
+    "academicStaffFTE": 0,
+    "uniServicesFTE": 0,
+    "requestTimeStamp": "2019-07-31T01:40:45.000Z",
+    "job": [
+        {
+            "employeeRecord": 0,
+            "effectiveDate": "2019-02-01",
+            "effectiveSequence": 0,
+            "organizationalRelation": "EMP",
+            "departmentID": "ITARCHIT",
+            "departmentDescription": "Enterprise Architecture",
+            "jobCode": "H00028",
+            "jobGrade": "G6S",
+            "positionNumber": "55561722",
+            "positionDescription": "Project Architect",
+            "hrStatus": "A",
+            "employeeStatus": "A",
+            "lastHRaction": "PAY",
+            "location": "435",
+            "locationDescription": "58 Symonds Street",
+            "standardHours": 37.5,
+            "employeeType": "Fixed Term",
+            "salAdminPlan": "GS1",
+            "fullTimeEquivalent": 1,
+            "jobIndicator": "P",
+            "supervisorID": "8524255",
+            "poiType": "",
+            "jobStartDate": "2018-08-09",
+            "jobEndDate": "2019-12-09",
+            "jobCodeDescription": "IT Analyst",
+            "parentDepartmentDescription": "Enterprise Architecture",
+            "primaryActivityCentreDeptID": "CDO",
+            "primaryActivityCentreDeptDescription": "Chief Digital Officer's Office",
+            "reportsToPosition": "00012578",
+            "company": "UOA",
+            "costCentre": "8848",
+            "updatedDateTime": "2019-02-06T23:56:56.000Z"
+        }
+    ]
+}`)
+			default:
+				if isValidUPI(upiOrID) || isValidID(upiOrID) {
+					w.WriteHeader(http.StatusNotFound)
+					io.WriteString(w, `{
+				"timestamp": "2029-07-31T01:30:15.565Z",
+				"status": 404,
+				"error": "Not Found",
+				"exception": "nz.ac.auckland.exceptions.ApiException",
+				"message": "User is not found in LDAP",
+				"path": "/employment/v1/employee/`+upiOrID+`"
+			}`)
+				} else {
+					w.WriteHeader(http.StatusBadRequest)
+					io.WriteString(w, `{
+				"timestamp": "2019-07-31T01:34:06.957Z",
+				"status": 400,
+				"error": "Bad Request",
+				"exception": "nz.ac.auckland.exceptions.ApiException",
+				"message": "Incorrect or not supported id: `+upiOrID+`",
+				"path": "/employment/v1/employee/`+upiOrID+`"
+			}`)
+				}
 			}
-
 		default:
 			w.WriteHeader(http.StatusNotFound)
 			io.WriteString(w, fmt.Sprintf("%q NOT FOUND!", ru))
 		}
 	}))
-	api.BaseURL = server.URL + "/service"
-	oh.BaseURL = server.URL
+
+	APIBaseURL = server.URL + "/service"
+	OHBaseURL = server.URL
+	api.baseURL = server.URL + "/service"
+	oh.baseURL = server.URL
 }
 
-func TeardownTest(t *testing.T) {
+func teardownTests(t *testing.T) {
 	if server != nil {
 		server.Close()
 	}
 }
 
 func TestWithServer(t *testing.T) {
-	SetupTest(t, true)
-	defer TeardownTest(t)
+	withAnIncomleteTask = true
+
+	setupTests(t)
+	defer teardownTests(t)
 
 	t.Run("TaskControl", testTaskControl)
 	t.Run("Handler", testHandler)
 	t.Run("GetOrcidToken", testGetOrcidToken)
 	t.Run("IdentityGetOrcidAccessToken", testIdentityGetOrcidAccessToken)
 	t.Run("AccessToken", testAccessToken)
+	t.Run("IdentityAPICient", testIdentityAPICient)
+	t.Run("EmploymentAPICient", testEmploymentAPICient)
+	t.Run("ProcessRegistration", testProcessRegistration)
+	t.Run("ProcessEmpUpdate", testProcessEmpUpdate)
 }
 
 func testTaskControl(t *testing.T) {
@@ -326,30 +899,32 @@ func testHandler(t *testing.T) {
 	assert.Contains(t, err.Error(), "hasn't granted")
 }
 
-func TestIdentityAPICient(t *testing.T) {
+func testIdentityAPICient(t *testing.T) {
 	var c Client
-	c.ApiKey = os.Getenv("API_KEY")
-	c.BaseURL = "https://api.dev.auckland.ac.nz/service/identity/integrations/v3/identity"
+	// c.ApiKey = os.Getenv("API_KEY")
+	// c.BaseURL = "https://api.dev.auckland.ac.nz"
+
+	c.baseURL = APIBaseURL
 	var id Identity
-	c.Get("rcir178", &id)
-	if verbose {
-		t.Logf("IDENTITY: %#v", id)
-	}
+	c.get("identity/integrations/v3/identity/rcir178", &id)
 	assert.NotEqual(t, 0, id.ID)
-	err := c.Get("rad42", &id)
+
+	var idNotFound Identity
+	err := c.get("identity/integrations/v3/identity/rad42", &idNotFound)
 	if err != nil {
 		t.Error(err)
 	}
+	assert.Equal(t, 0, idNotFound.ID)
 }
 
-func TestEmploymentAPICient(t *testing.T) {
+func testEmploymentAPICient(t *testing.T) {
 	var c Client
-	c.ApiKey = os.Getenv("API_KEY")
-	c.BaseURL = "https://api.dev.auckland.ac.nz/service/employment/integrations/v1/employee"
+
+	c.apiKey = os.Getenv("API_KEY")
+	c.baseURL = APIBaseURL
+
 	var emp Employment
-	// c.Get("rcir178", &id)
-	// t.Logf("IDENTITY: %#v", id)
-	err := c.Get("rcir178", &emp)
+	err := c.get("rcir178", &emp)
 	if err != nil {
 		t.Error(err)
 	}
@@ -358,40 +933,40 @@ func TestEmploymentAPICient(t *testing.T) {
 func testAccessToken(t *testing.T) {
 
 	var c Client
-	c.ClientID = os.Getenv("CLIENT_ID")
-	c.ClientSecret = os.Getenv("CLIENT_SECRET")
-	// c.BaseURL = "http://127.0.0.1:5000"
-	c.BaseURL = server.URL
-	err := c.GetAccessToken("oauth/token")
+	c.clientID = os.Getenv("CLIENT_ID")
+	c.clientSecret = os.Getenv("CLIENT_SECRET")
+	c.baseURL = OHBaseURL
+	err := c.getAccessToken("oauth/token")
 	assert.Nil(t, err)
-	assert.NotEmpty(t, c.AccessToken)
+	assert.NotEmpty(t, c.accessToken)
 }
 
 func testGetOrcidToken(t *testing.T) {
 
 	var c Client
-	c.ClientID = os.Getenv("CLIENT_ID")
-	c.ClientSecret = os.Getenv("CLIENT_SECRET")
-	// c.BaseURL = "http://127.0.0.1:5000"
-	c.BaseURL = server.URL
-	c.GetAccessToken("oauth/token")
+	c.clientID = os.Getenv("CLIENT_ID")
+	c.clientSecret = os.Getenv("CLIENT_SECRET")
+	c.baseURL = OHBaseURL
+	c.getAccessToken("oauth/token")
 	var tokens []struct {
 		AccessToken  string `json:"access_token"`
 		ExpiresIn    int64  `json:"expires_in"`
 		RefreshToken string `json:"refresh_token"`
 		Scopes       string `json:"scopes"`
 	}
-	err := c.Get("api/v1/tokens/rad42@mailinator.com", &tokens)
+	err := c.get("api/v1/tokens/rad42@mailinator.com", &tokens)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, tokens)
 }
 
-func TestProcessRegistration(t *testing.T) {
+func testProcessRegistration(t *testing.T) {
 	var (
 		e      Event
 		err    error
 		output string
 	)
+
+	withAnIncomleteTask = true
 
 	e = Event{EPPN: "rpaw053@auckland.ac.nz", ORCID: "0000-0003-1255-9023"}
 	output, err = e.process()
@@ -402,6 +977,14 @@ func TestProcessRegistration(t *testing.T) {
 	output, err = e.process()
 	assert.NotEmpty(t, output)
 	assert.Nil(t, err)
+
+	e = Event{EPPN: "djim087@auckland.ac.nz", ORCID: "0000-0002-3008-0422"}
+	output, err = e.process()
+	assert.NotEmpty(t, output)
+	assert.Nil(t, err)
+
+	withAnIncomleteTask = false
+	taskID = 0
 
 	e.EPPN = "non-existing-upi-error@error.edu"
 	output, err = e.process()
@@ -475,10 +1058,7 @@ func TestIdentityGetORCID(t *testing.T) {
 
 func testIdentityGetOrcidAccessToken(t *testing.T) {
 
-	oh.ClientID = os.Getenv("CLIENT_ID")
-	oh.ClientSecret = os.Getenv("CLIENT_SECRET")
-	// oh.BaseURL = "http://127.0.0.1:5000"
-	err := oh.GetAccessToken("oauth/token")
+	err := oh.getAccessToken("oauth/token")
 	if err != nil {
 		t.Error(err)
 	}
@@ -513,25 +1093,25 @@ func testIdentityGetOrcidAccessToken(t *testing.T) {
 	id.Emails[0].Email = "rad42@mailinator.com"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "6547ae2f-d48c-444b-9717-a2949bae048d", token.AccessToken)
+	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
 
 	id.EmailAddress = "rcir178@auckland.ac.nz"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "6547ae2f-d48c-444b-9717-a2949bae048d", token.AccessToken)
+	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
 
 	id.Upi = "rcir178"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "6547ae2f-d48c-444b-9717-a2949bae048d", token.AccessToken)
+	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
 
 	id.ExtIds[0].Type = "ORCID"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "6547ae2f-d48c-444b-9717-a2949bae048d", token.AccessToken)
+	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
 }
 
-func TestProcessEmpUpdate(t *testing.T) {
+func testProcessEmpUpdate(t *testing.T) {
 
 	var err error
 

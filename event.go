@@ -2,7 +2,7 @@ package main
 
 import "github.com/aws/aws-lambda-go/events"
 
-// Generic message suitable for both EMP Update event and
+// Event - a generic message suitable for both EMP Update event and
 // ORCIDHub Webhook propagagted event (with wrapped in SQS message batch):
 type Event struct {
 	EPPN    string `json:"eppn"`

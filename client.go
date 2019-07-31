@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -17,23 +16,23 @@ type RESTClient interface {
 	Post(url string, body interface{}, resp interface{}) error
 }
 
-// Service - RESTfull service implementation
+// Client - RESTfull service implementation
 type Client struct {
 	http.Client
-	AccessToken, BaseURL, ApiKey, ClientID, ClientSecret string
+	accessToken, baseURL, apiKey, clientID, clientSecret string
 	jsonBody                                             []byte
 }
 
-func (c *Client) GetAccessToken(url string) error {
+func (c *Client) getAccessToken(url string) error {
 	var token struct {
 		AccessToken string `json:"access_token"`
 		ExpiresIn   int64  `json:"expires_in"`
 		TokenType   string `json:"token_type"`
 		Scope       string `json:"scope"`
 	}
-	url = c.BaseURL + "/" + url
+	url = c.baseURL + "/" + url
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(fmt.Sprintf(
-		"client_id=%s&client_secret=%s&grant_type=client_credentials", c.ClientID, c.ClientSecret))))
+		"client_id=%s&client_secret=%s&grant_type=client_credentials", c.clientID, c.clientSecret))))
 	if err != nil {
 		return err
 	}
@@ -42,16 +41,16 @@ func (c *Client) GetAccessToken(url string) error {
 	if err != nil {
 		return err
 	}
-	c.AccessToken = token.AccessToken
+	c.accessToken = token.AccessToken
 	return nil
 }
 
 func (c *Client) execute(req *http.Request, resp interface{}) error {
 
-	if c.ApiKey != "" {
-		req.Header.Set("apikey", c.ApiKey)
-	} else if c.AccessToken != "" {
-		req.Header.Set("Authorization", "Bearer "+c.AccessToken)
+	if c.apiKey != "" {
+		req.Header.Set("apikey", c.apiKey)
+	} else if c.accessToken != "" {
+		req.Header.Set("Authorization", "Bearer "+c.accessToken)
 	}
 
 	req.Header.Set("Accept", "application/json")
@@ -62,6 +61,8 @@ func (c *Client) execute(req *http.Request, resp interface{}) error {
 	if err != nil {
 		return err
 	}
+	log.Debug("*****************")
+	log.Debug("URL:", req.URL, "/ \""+req.Method+"\":", req.URL.RequestURI())
 	if r.StatusCode == http.StatusOK {
 		defer r.Body.Close()
 		body, err := ioutil.ReadAll(r.Body)
@@ -69,24 +70,20 @@ func (c *Client) execute(req *http.Request, resp interface{}) error {
 			return err
 		}
 		err = json.Unmarshal(body, resp)
-		if verbose {
-			log.Println("*****************")
-			log.Println("URL:", req.URL, "/ \""+req.Method+"\":", req.URL.RequestURI())
-			if err == nil {
-				output, _ := json.MarshalIndent(resp, "", "    ")
-				log.Println(string(output))
-			} else {
-				log.Println(string(body))
-			}
-			log.Println("*****************")
+		if err == nil {
+			output, _ := json.MarshalIndent(resp, "", "    ")
+			log.Debug(string(output))
+		} else {
+			log.Debug(string(body))
 		}
+		log.Debug("*****************")
 		return err
 	}
 	return nil
 }
 
-func (c *Client) Get(url string, resp interface{}) error {
-	url = c.BaseURL + "/" + url
+func (c *Client) get(url string, resp interface{}) error {
+	url = c.baseURL + "/" + url
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
@@ -95,7 +92,7 @@ func (c *Client) Get(url string, resp interface{}) error {
 }
 
 func (c *Client) prepare(method, url string, body interface{}) (req *http.Request, err error) {
-	url = c.BaseURL + "/" + url
+	url = c.baseURL + "/" + url
 	switch body.(type) {
 	case string:
 		c.jsonBody = []byte(body.(string))
@@ -116,14 +113,14 @@ func (c *Client) do(method, url string, body interface{}, resp interface{}) erro
 	return c.execute(req, resp)
 }
 
-func (c *Client) Put(url string, body interface{}, resp interface{}) (err error) {
+func (c *Client) put(url string, body interface{}, resp interface{}) (err error) {
 	return c.do("PUT", url, body, resp)
 }
 
-func (c *Client) Post(url string, body interface{}, resp interface{}) error {
+func (c *Client) post(url string, body interface{}, resp interface{}) error {
 	return c.do("POST", url, body, resp)
 }
 
-func (c *Client) Patch(url string, body interface{}, resp interface{}) error {
+func (c *Client) patch(url string, body interface{}, resp interface{}) error {
 	return c.do("PATCH", url, body, resp)
 }

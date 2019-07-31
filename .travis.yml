@@ -10,7 +10,8 @@ before_install:
   - go get github.com/mattn/goveralls
 
 script:
-  - go test -cover -covermode=count -coverprofile coverage.out  ./...
+  - go test ./... -run TestHealthCheck
+  - go test -cover -covermode=count -coverprofile coverage.out  ./... -args -verbose
 
 after_success:
   - $GOPATH/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
