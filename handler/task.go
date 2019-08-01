@@ -55,7 +55,7 @@ func (t *Task) activateTask() {
 	}
 	err := oh.put("api/v1/tasks/"+strconv.Itoa(t.ID), map[string]string{"status": "ACTIVE"}, &task)
 	if err != nil {
-		log.Errorw("ERROR: Failed to activate task %d: %q", t.ID, err.Error)
+		log.Errorf("ERROR: Failed to activate task %d: %q", t.ID, err)
 	}
 }
 
