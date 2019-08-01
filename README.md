@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/university-of-auckland/ORCID-Hub-Integration.svg?branch=master)](https://travis-ci.org/university-of-auckland/ORCID-Hub-Integration)
-[![Coverage Status](https://coveralls.io/repos/github/nad2000/consumer/badge.svg?branch=master)](https://coveralls.io/github/nad2000/consumer?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/university-of-auckland/ORCID-Hub-Integration/badge.svg?branch=master)](https://coveralls.io/github/university-of-auckland/ORCID-Hub-Integration?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/university-of-auckland/ORCID-Hub-Integration)](https://goreportcard.com/report/github.com/university-of-auckland/ORCID-Hub-Integration)
 
 # Swagger generated server
