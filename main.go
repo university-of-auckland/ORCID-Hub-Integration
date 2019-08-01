@@ -234,6 +234,7 @@ func HandleRequest(ctx context.Context, e Event) (string, error) {
 	}()
 	counter++
 	log.Infof("Context: %+v, counter: %d", ctx, counter)
+	log.Infof("Event message: %#v", e)
 
 	if e.Records != nil {
 		var (

@@ -320,14 +320,14 @@ func setupTests(t *testing.T) {
    "emailAddress":"roshan_pawarasjdfkasdjfajs_@auckland.ac.nz",
    "emails":[
       {
-         "email":"skajdfkljsadlf@auckland.ac.nz",
+         "email":"rwrrwe3343@auckland.ac.nz",
          "lastUpdated":"2017-01-13T17:12:23.000+0000",
          "typeId":"Campus",
          "type":"University",
          "verified":false
       },
       {
-         "email":"rpfkjds@aucklanduni.ac.nz",
+         "email":"rpfds434@aucklanduni.ac.nz",
          "lastUpdated":"2017-01-13T17:12:24.000+0000",
          "typeId":"Student",
          "type":"Student",
@@ -359,40 +359,15 @@ func setupTests(t *testing.T) {
          "type":"UID"
       }
    ],
-   "firstName":"Roshan Prakash",
    "id":208013283,
-   "idPhotoExists":true,
-   "lastName":"Pawar",
-   "names":[
-      {
-         "first":"Roshan Prakash",
-         "last":"Pawar",
-         "lastUpdated":"2015-03-23T21:39:18.000+0000",
-         "title":"Mr",
-         "type":"Preferred"
-      },
-      {
-         "first":"Roshan Prakash",
-         "last":"Pawar",
-         "lastUpdated":"2015-03-31T21:02:51.000+0000",
-         "title":"Mr",
-         "type":"Primary"
-      }
-   ],
-   "primaryIdentity":true,
-   "residency":"I",
    "upi":"rpaw053",
-   "whenUpdated":"2019-05-14T10:51:47.597+0000",
-   "resolved":true,
    "previousIds":[]}`)
 			case "rcir178", "484378182":
 				io.WriteString(w, `{
-    "displayName": "Radomirs Cirskis",
-    "dob": "1896-12-28",
-    "emailAddress": "kfsjdjadffsafkis@auckland.ac.nz",
+    "emailAddress": "sjdfkjd9444353@auckland.ac.nz",
     "emails": [
 		{
-			"email": "kfsjdjadffsafkis@auckland.ac.nz",
+			"email": "rrrr4353@auckland.ac.nz",
 			"lastUpdated": "2017-08-24T23:25:18.000+0000",
 			"type": "University",
 			"typeId": "Campus",
@@ -427,110 +402,12 @@ func setupTests(t *testing.T) {
 			"type": "UID"
 		}
     ],
-    "firstName": "Radomirs",
-    "gender": "MALE",
     "id": 484378182,
-    "lastName": "Cirskis",
     "mobile": "+64221221442",
     "upi": "rcir178"
 }`)
 			case "477579437", "djim087":
 				io.WriteString(w, `{
-    "addresses": [
-        {
-            "careOf": "",
-            "city": "Auckland",
-            "country": "New Zealand",
-            "countryId": "NZL",
-            "dpid": "314526",
-            "lastUpdated": "2018-06-15T00:09:53.718+0000",
-            "line1": "17 Astoria Place",
-            "line2": "",
-            "line3": "",
-            "postcode": "2013",
-            "state": "",
-            "stateId": "",
-            "suburb": "Northpark",
-            "type": "Semester",
-            "typeId": "Semester"
-        },
-        {
-            "careOf": "",
-            "city": "Auckland",
-            "country": "New Zealand",
-            "countryId": "NZL",
-            "dpid": "314526",
-            "lastUpdated": "2018-08-24T00:57:20.346+0000",
-            "line1": "17 Astoria Place",
-            "line2": "",
-            "line3": "",
-            "postcode": "2013",
-            "state": "",
-            "stateId": "",
-            "suburb": "Northpark",
-            "type": "Mailing",
-            "typeId": "Mailing"
-        },
-        {
-            "careOf": "",
-            "city": "Auckland",
-            "country": "New Zealand",
-            "countryId": "NZL",
-            "dpid": "314526",
-            "lastUpdated": "2018-08-24T00:57:20.168+0000",
-            "line1": "17 Astoria Place",
-            "line2": "",
-            "line3": "",
-            "postcode": "2013",
-            "state": "",
-            "stateId": "",
-            "suburb": "Northpark",
-            "type": "Home",
-            "typeId": "Home"
-        },
-        {
-            "careOf": "",
-            "city": "AUCKLAND",
-            "country": "New Zealand",
-            "countryId": "NZL",
-            "dpid": "5/435",
-            "lastUpdated": "2019-03-10T00:55:12.889+0000",
-            "line1": "ITS CENTRE - Bldg 435",
-            "line2": "Level 5, Room 540",
-            "line3": "58 SYMONDS ST",
-            "postcode": "1010",
-            "state": "",
-            "stateId": "",
-            "suburb": "GRAFTON",
-            "type": "Primary Campus",
-            "typeId": "Campus"
-        }
-    ],
-    "citizenships": [
-        {
-            "country": "New Zealand",
-            "countryId": "NZL"
-        }
-    ],
-    "countryOfBirth": {
-        "country": "",
-        "countryId": ""
-    },
-    "deceased": {
-        "comments": "",
-        "date": "",
-        "dead": false,
-        "deathCertificate": "",
-        "place": ""
-    },
-    "disabilityInfo": {
-        "disabilities": [],
-        "disabilityPermanent": false,
-        "disabilitySupport": false,
-        "isDisabled": false
-    },
-    "displayName": "Daniel Jimenez",
-    "dob": "1997-04-23",
     "emailAddress": "daniel.jimenez@auckland.ac.nz",
     "emails": [
         {
@@ -555,31 +432,6 @@ func setupTests(t *testing.T) {
             "verified": false
         }
     ],
-    "emergencyContacts": [
-        {
-            "emailAddress": "",
-            "lastUpdated": "2019-01-13T22:09:31.000+0000",
-            "name": "Avril Jimenez",
-            "phones": [
-                {
-                    "areaCode": "22",
-                    "countryCode": "64",
-                    "extension": "",
-                    "lastUpdated": "2019-01-13T22:09:31.000+0000",
-                    "number": "0688940",
-                    "type": "Mobile",
-                    "typeId": "Cellular"
-                }
-            ],
-            "relationship": "Parent"
-        }
-    ],
-    "ethnicities": [
-        {
-            "id": "11",
-            "value": "British/Irish"
-        }
-    ],
     "extIds": [
         {
             "id": "2121847757943760",
@@ -594,70 +446,7 @@ func setupTests(t *testing.T) {
             "type": "UID"
         }
     ],
-    "firstName": "Daniel",
-    "gender": "MALE",
-    "groups": null,
-    "id": 477579437,
-    "idPhotoExists": true,
-    "iwiAffiliations": [],
-    "lastName": "Jimenez",
-    "mergedToId": "",
-    "mobile": "",
-    "names": [
-        {
-            "first": "Daniel",
-            "last": "Jimenez",
-            "lastUpdated": "2014-10-15T03:08:41.000+0000",
-            "middle": "Francisco",
-            "suffix": "",
-            "title": "Mr",
-            "type": "Preferred"
-        },
-        {
-            "first": "Daniel",
-            "last": "Jimenez",
-            "lastUpdated": "2014-10-15T03:09:01.000+0000",
-            "middle": "Francisco",
-            "suffix": "",
-            "title": "Mr",
-            "type": "Primary"
-        }
-    ],
-    "phones": [
-        {
-            "areaCode": "22",
-            "countryCode": "64",
-            "extension": "",
-            "lastUpdated": "2019-01-13T22:09:31.000+0000",
-            "number": "4067229",
-            "type": "Mobile",
-            "typeId": "Cellular"
-        },
-        {
-            "areaCode": "9",
-            "countryCode": "64",
-            "extension": "",
-            "lastUpdated": "2017-05-05T03:31:45.000+0000",
-            "number": "5337035",
-            "type": "Home",
-            "typeId": "Home"
-        },
-        {
-            "areaCode": "9",
-            "countryCode": "64",
-            "extension": "",
-            "lastUpdated": "2014-07-21T01:57:20.000+0000",
-            "number": "5337035",
-            "type": "Other",
-            "typeId": "Other"
-        }
-    ],
-    "previousIds": [],
-    "primaryIdentity": true,
-    "residency": "NZ-C",
-    "resolved": true,
-    "upi": "djim087",
-    "whenUpdated": "2019-04-26T00:23:01.965+0000"
+    "upi": "djim087"
 }`)
 
 			case "rad42", "non-existing-upi-error":
@@ -1008,30 +797,6 @@ func TestHealthCheck(t *testing.T) {
 func TestIdentityGetORCID(t *testing.T) {
 	var id Identity
 	json.Unmarshal([]byte(`{
-   "emailAddress":"rosh1234@auckland.ac.nz",
-   "emails":[
-      {
-         "email":"rosh83458349@auckland.ac.nz",
-         "lastUpdated":"2017-01-13T17:12:23.000+0000",
-         "typeId":"Campus",
-         "type":"University",
-         "verified":false
-      },
-      {
-         "email":"rpfkjds@aucklanduni.ac.nz",
-         "lastUpdated":"2017-01-13T17:12:24.000+0000",
-         "typeId":"Student",
-         "type":"Student",
-         "verified":true
-      },
-      {
-         "email":"getconfjsdlkajfalhan@gmail.com",
-         "lastUpdated":"2017-01-13T17:12:24.000+0000",
-         "typeId":"Business",
-         "type":"Work",
-         "verified":false
-      }
-   ],
    "extIds":[
       {
          "id":"2121820801328312",
@@ -1049,10 +814,7 @@ func TestIdentityGetORCID(t *testing.T) {
          "id":"2490528",
          "type":"UID"
       }
-   ],
-   "firstName":"Roshan Prakash",
-   "id":208013283
-   }`), &id)
+   ]}`), &id)
 	assert.Equal(t, "1234-1234-1234-ABCD", id.GetORCID())
 }
 
