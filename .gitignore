@@ -22,3 +22,5 @@ output*
 
 *.log
 *.json
+.idea/
+*.iml
