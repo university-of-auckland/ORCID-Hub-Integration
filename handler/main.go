@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,6 +14,21 @@ import (
 )
 
 var lambdazapper *lambdazap.LambdaLogContext
+
+// HandleRequest handle "AWS lambda" request with a single event message or
+// a batch of event messages.
+func HandleRequest(ctx context.Context, e Event) {
+
+	defer func() {
+		logger.Sync()
+		wg.Wait()
+		logger.Sync()
+	}()
+
+	e.handle()
+	return
+
+}
 
 func main() {
 

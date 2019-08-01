@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -282,19 +281,4 @@ func (el errorList) Error() string {
 		sb.WriteString(e.Error())
 	}
 	return sb.String()
-}
-
-// HandleRequest handle "AWS lambda" request with a single event message or
-// a batch of event messages.
-func HandleRequest(ctx context.Context, e Event) {
-
-	defer func() {
-		logger.Sync()
-		wg.Wait()
-		logger.Sync()
-	}()
-
-	e.handle()
-	return
-
 }
