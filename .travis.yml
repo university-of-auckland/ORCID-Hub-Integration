@@ -14,7 +14,7 @@ before_install:
 script:
   - go vet ./handler
   - golint ./handler
-  - gotest -v -cover -covermode=count -coverprofile coverage.out  ./...
+  - gotest -v -tags test -cover -covermode=count -coverprofile coverage.out  ./...
 
 after_success:
   - $GOPATH/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
