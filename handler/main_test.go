@@ -22,10 +22,12 @@ import (
 var (
 	server              *httptest.Server
 	withAnIncomleteTask bool
+	live                bool
 )
 
 func init() {
 	verboseFlag := flag.Bool("verbose", false, "Print out the received responses.")
+	flag.BoolVar(&live, "live", false, "Run with the DEV/SANDBOX APIs.")
 	flag.Parse()
 	verbose = *verboseFlag || os.Getenv("VERBOSE") != ""
 }
@@ -36,6 +38,8 @@ func setupTests(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		url, ru := r.URL, r.URL.RequestURI()
 		switch {
+		case ru == "/ping":
+			w.WriteHeader(http.StatusNoContent)
 		case ru == "/oauth/token":
 			io.WriteString(w, `{"access_token": "7jsxDZceygy2xNbK2M23sD5eyHimtx", "expires_in": 86400, "token_type": "Bearer", "scope": ""}`)
 		case ru == "/api/v1/tasks?type=AFFILIATION" || ru == "/api/v1/tasks?type=AFFILIATION&staus=INACTIVE":
@@ -618,6 +622,15 @@ func setupTests(t *testing.T) {
 	OHBaseURL = server.URL
 	api.baseURL = server.URL + "/service"
 	oh.baseURL = server.URL
+
+	// warm-up the server
+	for {
+		time.Sleep(time.Millisecond * 10)
+		resp, err := http.Get(server.URL + "/ping")
+		if err == nil && resp.StatusCode == http.StatusNoContent {
+			break
+		}
+	}
 }
 
 func teardownTests(t *testing.T) {
@@ -626,11 +639,14 @@ func teardownTests(t *testing.T) {
 	}
 }
 
-func TestWithServer(t *testing.T) {
+func TestCore(t *testing.T) {
+
 	withAnIncomleteTask = true
 
-	setupTests(t)
-	defer teardownTests(t)
+	if !live {
+		setupTests(t)
+		defer teardownTests(t)
+	}
 
 	t.Run("TaskControl", testTaskControl)
 	t.Run("Handler", testHandler)
