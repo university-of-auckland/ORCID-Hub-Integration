@@ -58,7 +58,7 @@ func init() {
 		loggingLevel = zap.InfoLevel
 	}
 	logger, _ = zap.Config{
-		Level:       zap.NewAtomicLevelAt(zap.DebugLevel),
+		Level:       zap.NewAtomicLevelAt(loggingLevel),
 		Development: isDevelopment,
 		Encoding:    "console",
 		EncoderConfig: zapcore.EncoderConfig{
