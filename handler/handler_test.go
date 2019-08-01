@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"net/http"
@@ -11,16 +10,15 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	server              *httptest.Server
-	withAnIncomleteTask bool
-	live                bool
+	server                         *httptest.Server
+	withTasks, withAnIncomleteTask bool
+	live                           bool
 )
 
 func init() {
@@ -65,7 +63,13 @@ func TestCore(t *testing.T) {
 
 	if !live {
 		setupTests(t)
-		defer teardownTests(t)
+		defer func() {
+			gotAccessTokenWG.Wait()
+			taskSetUpWG.Wait()
+			wg.Wait()
+
+			teardownTests(t)
+		}()
 	} else {
 		setupAPIClients()
 	}
@@ -79,28 +83,42 @@ func TestCore(t *testing.T) {
 	t.Run("EmploymentAPICient", testEmploymentAPICient)
 	t.Run("ProcessRegistration", testProcessRegistration)
 	t.Run("ProcessEmpUpdate", testProcessEmpUpdate)
+	t.Run("ProcessMixed", testProcessMixed)
+	t.Run("HealthCheck", testHealthCheck)
 }
 
 func testTaskControl(t *testing.T) {
 
 	counter = 0
-	HandleRequest(
-		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
-		Event{Type: "PING"})
+	(&Event{Type: "PING"}).handle()
 
 	taskRecordCount = 999
 
 	taskCreatedAt.Add(time.Hour)
-	HandleRequest(
-		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
-		Event{Type: "PING"})
+	(&Event{Type: "PING"}).handle()
 
 	taskCreatedAt.Add(-2 * time.Hour)
-	HandleRequest(
-		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
-		Event{Type: "PING"})
+	(&Event{Type: "PING"}).handle()
 
 	assert.Equal(t, 3, counter)
+
+	for _, o := range []struct {
+		v1 bool
+		v2 bool
+	}{
+		{false, false},
+		{false, true},
+		{true, false},
+		{true, true},
+	} {
+		taskSetUpWG.Wait()
+		taskID = 0
+		withTasks = o.v1
+		withAnIncomleteTask = o.v2
+
+		(&Event{Type: "PING"}).handle()
+	}
+	assert.Equal(t, 7, counter)
 }
 
 func testHandler(t *testing.T) {
@@ -114,6 +132,22 @@ func testHandler(t *testing.T) {
 		require.NotNil(t, err)
 		assert.Contains(t, err.Error(), "hasn't granted access to the profile")
 	}
+
+	_, err = (&Event{Subject: 123}).handle()
+	if !live {
+		require.NotNil(t, err)
+		assert.Contains(t, err.Error(), "failed to retrieve the identity record")
+	}
+
+	_, err = (&Event{Subject: 1234567890123}).handle()
+	if !live {
+		require.NotNil(t, err)
+		assert.Contains(t, err.Error(), "failed to retrieve the identity record")
+	}
+
+	_, err = (&Event{Type: "ERROR"}).handle()
+	require.NotNil(t, err)
+	assert.Contains(t, err.Error(), "unhandled")
 }
 
 func testIdentityAPICient(t *testing.T) {
@@ -218,7 +252,11 @@ func testProcessRegistration(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestHealthCheck(t *testing.T) {
+func testHealthCheck(t *testing.T) {
+
+	withAnIncomleteTask = false
+	taskID = 0
+
 	var e = Event{Type: "PING"}
 	output, err := e.handle()
 	assert.NotEmpty(t, output)
@@ -354,7 +392,61 @@ func testProcessEmpUpdate(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestIsValidUPI(t *testing.T) {
+func testProcessMixed(t *testing.T) {
+
+	var err error
+
+	taskRecordCount = 0
+	_, err = (&Event{
+		Records: []events.SQSMessage{
+			{Body: `{"subject":484378182}`},
+			{Body: `{"subject":477579437}`},
+			{Body: `{
+				"orcid": "0000-0001-8228-7153", 
+				"url": "https://sandbox.orcid.org/0000-0001-8228-7153", 
+				"type": "CREATED", "updated-at": "2019-07-25T02:05:32", 
+				"email": "rad42@mailinator.com", 
+				"eppn": "rcir178@auckland.ac.nz"
+			}`},
+			{Body: `{"subject":208013283}`},
+			{Body: `{"subject":66666666}`},
+			{Body: `{"subject":77777777}`},
+			{Body: `{
+				"orcid": "0000-0001-6666-7153", 
+				"url": "https://sandbox.orcid.org/0000-0001-6666-7153", 
+				"type": "CREATED", 
+				"updated-at": "2019-07-25T02:05:32", 
+				"email": "dthn666@mailinator.com", 
+				"eppn": "dthn666@auckland.ac.nz"
+			}`},
+			{Body: `{
+				"orcid": "0000-0001-7777-7153", 
+				"url": "https://sandbox.orcid.org/0000-0001-7777-7153", 
+				"type": "CREATED", 
+				"updated-at": "2019-07-25T02:05:32", 
+				"email": "dthn7777mailinator.com", 
+				"eppn": "dthn7777auckland.ac.nz"
+			}`},
+			{Body: `{"subject":987654321}`},
+			{Body: `{"subject":8524255}`},
+			{Body: `{
+				"orcid": "0000-0001-8228-7153", 
+				"url": "https://sandbox.orcid.org/0000-0001-8228-7153", 
+				"type": "UPDATED", 
+				"updated-at": "2019-07-25T02:05:32", 
+				"email": "rad42@mailinator.com", 
+				"eppn": "rcir178@auckland.ac.nz"
+			}`},
+			{Body: `{"subject":350622514}`},
+			{Body: `{"subject":4306445}`},
+		},
+	}).handle()
+	assert.True(t, taskRecordCount == 3, "The number of records should be 3, got: %d.", taskRecordCount)
+	t.Log(err)
+	assert.NotNil(t, err)
+}
+
+func TestIsValidUPIAndID(t *testing.T) {
 	assert.True(t, isValidUPI("rcir178"))
 	assert.True(t, isValidUPI("rpaw053"))
 	assert.False(t, isValidUPI("123456"))
@@ -362,4 +454,11 @@ func TestIsValidUPI(t *testing.T) {
 	assert.False(t, isValidUPI("abc1234"))
 	assert.False(t, isValidUPI("abcdd34"))
 	assert.False(t, isValidUPI("abcd23x"))
+
+	assert.False(t, isValidID("123456789A"))
+	assert.False(t, isValidID("123"))
+	assert.False(t, isValidID("1234567890123445"))
+	assert.True(t, isValidID("12345678"))
+	assert.True(t, isValidID("123456789"))
+	assert.True(t, isValidID("1234567890"))
 }

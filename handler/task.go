@@ -50,13 +50,13 @@ type Record struct {
 
 func (t *Task) activateTask() {
 	var task Task
-	if verbose {
-		log.Infof("Activate the task %q (ID: %d)", t.Filename, t.ID)
-	}
+	log.Debugf("Activate the task %q (ID: %d)", t.Filename, t.ID)
 	err := oh.put("api/v1/tasks/"+strconv.Itoa(t.ID), map[string]string{"status": "ACTIVE"}, &task)
 	if err != nil {
 		log.Errorf("ERROR: Failed to activate task %d: %q", t.ID, err)
 	}
+	taskSetUpWG.Done()
+
 }
 
 func newTask() {
@@ -71,16 +71,14 @@ func newTask() {
 	if err != nil {
 		log.Errorf("failed to parse date %q: %s", task.CreatedAt, err)
 	}
-	if verbose {
-		log.Infof("*** New affiliation task created (ID: %d, filename: %q)", task.ID, task.Filename)
-	}
+	log.Debugf("*** New affiliation task created (ID: %d, filename: %q)", task.ID, task.Filename)
 	taskSetUpWG.Done()
 }
 
 // Either get the task ID or activate outstanding tasks and start a new one
 func setupTask() {
-	taskSetUpWG.Add(1)
 
+	defer taskSetUpWG.Done()
 	now := time.Now()
 	if taskID == 0 {
 		var tasks []Task
@@ -99,6 +97,7 @@ func setupTask() {
 				continue
 			}
 			if now.Sub(createdAt).Minutes() > taskRetentionMin && len(t.Records) > 0 {
+				taskSetUpWG.Add(1)
 				go t.activateTask()
 				continue
 			}
@@ -107,15 +106,15 @@ func setupTask() {
 			taskRecordCount = len(t.Records)
 			goto FOUND_TASK
 		}
+		taskSetUpWG.Add(1)
 		go newTask()
-		return
 
 	} else if now.Sub(taskCreatedAt).Minutes() > taskRetentionMin && taskRecordCount > 0 {
 		var task = Task{ID: taskID}
-		task.activateTask()
+		taskSetUpWG.Add(1)
+		go task.activateTask()
+		taskSetUpWG.Add(1)
 		go newTask()
-		return
 	}
 FOUND_TASK:
-	taskSetUpWG.Done()
 }

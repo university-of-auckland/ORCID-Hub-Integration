@@ -20,12 +20,23 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 			w.WriteHeader(http.StatusNoContent)
 		case ru == "/oauth/token":
 			io.WriteString(w, `{"access_token": "7jsxDZceygy2xNbK2M23sD5eyHimtx", "expires_in": 86400, "token_type": "Bearer", "scope": ""}`)
-		case ru == "/api/v1/tasks?type=AFFILIATION" || ru == "/api/v1/tasks?type=AFFILIATION&staus=INACTIVE":
-			io.WriteString(w, `[
+		case ru == "/api/v1/tasks?type=AFFILIATION&status=INACTIVE":
+			if withTasks {
+				io.WriteString(w, `[
 	{"created-at":"2019-07-24T08:47:09","filename":"UOA-OH-INTEGRATION-TASK-pv51ql.json","id":781,"records":[],"status":"ACTIVE","task-type":"AFFILIATION","updated-at":"2019-07-24T09:29:24"},
 	{"created-at":"2019-07-25T00:34:08","filename":"UOA-OH-INTEGRATION-TASK-pv69kw.json","id":787,"records":[],"task-type":"AFFILIATION","updated-at":"2019-07-25T01:32:36"}`)
+			} else {
+				io.WriteString(w, "[")
+			}
+			if withTasks && withAnIncomleteTask {
+				io.WriteString(w, ",")
+			}
+
 			if withAnIncomleteTask {
-				io.WriteString(w, `,{"created-at":"2099-07-25T00:34:08","filename":"UOA-OH-INTEGRATION-TASK-pv69kZ.json","id":888,"records":[],"task-type":"AFFILIATION"}`)
+				io.WriteString(w, `
+	{"created-at":"2019-07-24T08:47:09","filename":"UOA-OH-INTEGRATION-TASK-this-should-get-activated.json","id":892,
+		"records":[{}, {}],"task-type":"AFFILIATION","updated-at":"2019-07-24T09:29:24"},
+	{"created-at":"2099-07-25T00:34:08","filename":"UOA-OH-INTEGRATION-TASK-pv69kZ.json","id":888,"records":[{},{}],"task-type":"AFFILIATION"}`)
 			}
 			io.WriteString(w, "]")
 		case strings.HasPrefix(ru, "/api/v1/tokens/"):
@@ -51,6 +62,7 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 				io.WriteString(w, `{"error": "User with specified identifier 'rcir178ABC@auckland.ac.nz' not found."}`)
 			}
 		case strings.HasPrefix(ru, "/api/v1/tasks/"):
+			id := strings.TrimPrefix(ru, "/api/v1/tasks/")
 			if r.Method == "POST" {
 				filename := url.Query()["filename"][0]
 				io.WriteString(w, `{
@@ -60,25 +72,35 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 				"task-type":"AFFILIATION",
 				"updated-at":"2032-07-25T02:23:32"
 			}`)
+			} else if id == "12345" {
+				io.WriteString(w, `{
+				"created-at":"2032-08-25T02:07:28",
+				"filename":"UOA-OH-INTEGRATION-TASK-pv6xi6.json",
+				"id":`+id+`,
+				"status":"ACTIVE",
+				"task-type":"AFFILIATION",
+				"updated-at":"2032-07-25T02:23:32",
+				"records": [{}, {}]
+			}`)
+			} else if id == "54321" {
+				io.WriteString(w, `{
+				"created-at":"2002-08-25T02:07:28",
+				"filename":"UOA-OH-INTEGRATION-TASK-this-should-get-activatged.json",
+				"id":`+id+`,
+				"task-type":"AFFILIATION",
+				"updated-at":"2002-07-25T02:23:32",
+				"records": [{}, {}]
+			}`)
 			} else {
 				io.WriteString(w, `{
 				"created-at":"2032-08-25T02:07:28",
 				"filename":"UOA-OH-INTEGRATION-TASK-pv6xi6.json",
-				"id":`+strings.TrimPrefix(ru, "/api/v1/tasks/")+`,
+				"id":`+id+`,
 				"status":"ACTIVE",
 				"task-type":"AFFILIATION",
 				"updated-at":"2032-07-25T02:23:32"
 			}`)
 			}
-		case strings.HasPrefix(ru, "/api/v1/tokens/"):
-			io.WriteString(w, `[
-				{
-					"access_token": "ecf16b31-ad54-4ba2-ae55-e97fb90e211a",
-					"expires_in": 631138518,
-					"refresh_token": "a6c9da20-31be-442a-9faa-73f1d92fac45",
-					"scopes": "/read-limited,/activities/update"
-				}
-			]`)
 		case strings.HasPrefix(ru, "/api/v1/affiliations?filename="):
 			var filename = strings.TrimPrefix(ru, "/api/v1/affiliations?filename=")
 			io.WriteString(w, `{
@@ -192,6 +214,10 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 		case strings.HasPrefix(ru, "/service/identity/integrations/v3/identity/"):
 			var uid = strings.TrimPrefix(ru, "/service/identity/integrations/v3/identity/")
 			switch uid {
+			case "dthn666", "66666666":
+				io.WriteString(w, `{}`)
+			case "dthn777", "77777777":
+				io.WriteString(w, `{"upi":"dthn777", "id":77777777}`)
 			case "jken016", "8524255":
 				io.WriteString(w, `{
     "emailAddress": "jeff.kennedy@auckland.ac.nz",

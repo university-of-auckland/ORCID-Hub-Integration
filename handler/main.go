@@ -89,6 +89,8 @@ func init() {
 
 func setup() {
 	setupAPIClients()
+
+	taskSetUpWG.Add(1)
 	go setupTask()
 }
 
@@ -119,22 +121,18 @@ func (e *Event) handle() (string, error) {
 			}
 		}
 
-		if len(events) < 1 {
+		if events == nil {
 			return "", nil
 		}
 
 		output := make(chan restponse, len(events))
-
-		for _, r := range e.Records {
-			var e Event
-			json.Unmarshal([]byte(r.Body), &e)
-
+		for _, e := range events {
 			go func(e Event, o chan<- restponse) {
 				resp, err := e.handle()
 				o <- restponse{resp, err}
 			}(e, output)
 		}
-		for range e.Records {
+		for range events {
 			rr := <-output
 			if rr.err != nil {
 				errors = append(errors, rr.err)
@@ -154,7 +152,7 @@ func (e *Event) handle() (string, error) {
 			return "GNIP", nil
 		}
 	}
-	return "", fmt.Errorf("Unhandled event: %#v", e)
+	return "", fmt.Errorf("unhandled event: %#v", e)
 }
 
 // processEmpUpdate handles the employer update event.
