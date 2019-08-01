@@ -37,7 +37,6 @@ func setupAPIClients() {
 			oh.clientID = os.Getenv("CLIENT_ID")
 			oh.clientSecret = os.Getenv("CLIENT_SECRET")
 			oh.baseURL = OHBaseURL
-			// oh.BaseURL = "http://127.0.0.1:5000"
 			err := oh.getAccessToken("oauth/token")
 			if err != nil {
 				log.Fatal("filed to authorize with the client credentials", zap.Error(err))
@@ -55,7 +54,6 @@ func (c *Client) getAccessToken(url string) error {
 		Scope       string `json:"scope"`
 	}
 	url = c.baseURL + "/" + url
-	log.Debug("URL: ", url)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(fmt.Sprintf(
 		"client_id=%s&client_secret=%s&grant_type=client_credentials", c.clientID, c.clientSecret))))
 	if err != nil {
