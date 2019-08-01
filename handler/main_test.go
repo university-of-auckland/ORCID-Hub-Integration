@@ -30,7 +30,6 @@ func init() {
 	flag.BoolVar(&verbose, "verbose", false, "Print out the received responses.")
 	flag.BoolVar(&live, "live", false, "Run with the DEV/SANDBOX APIs.")
 	flag.Parse()
-	verbose = verbose || os.Getenv("VERBOSE") != ""
 }
 
 func isValidUUID(u string) bool {
