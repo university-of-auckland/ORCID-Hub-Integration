@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/university-of-auckland/ORCID-Hub-Integration.svg?branch=master)](https://travis-ci.org/university-of-auckland/ORCID-Hub-Integration)
+[![Go Report Card](https://goreportcard.com/badge/github.com/university-of-auckland/ORCID-Hub-Integration)](https://goreportcard.com/report/github.com/university-of-auckland/ORCID-Hub-Integration)
+
 # Swagger generated server
 
 Spring Boot Server 

@@ -66,6 +66,9 @@ func newTask() {
 	}
 	taskID = task.ID
 	taskCreatedAt, err = time.Parse("2006-01-02T15:04:05", task.CreatedAt)
+	if err != nil {
+		log.Errorf("failed to parse date %q: %s", task.CreatedAt, err.Error)
+	}
 	if verbose {
 		log.Infof("*** New affiliation task created (ID: %d, filename: %q)", task.ID, task.Filename)
 	}

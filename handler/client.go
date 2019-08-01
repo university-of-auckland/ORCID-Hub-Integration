@@ -1,4 +1,4 @@
-// RESTful API clietns supporting both APIKEY and Client Credential authenticaiton
+// RESTful API clients supporting both APIKEY and Client Credential authentication
 package main
 
 import (

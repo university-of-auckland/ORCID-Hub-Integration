@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	verboseFlag := flag.Bool("verbose", false, "Print out the recieved responses.")
+	verboseFlag := flag.Bool("verbose", false, "Print out the received responses.")
 	flag.Parse()
 	verbose = *verboseFlag || os.Getenv("VERBOSE") != ""
 }
