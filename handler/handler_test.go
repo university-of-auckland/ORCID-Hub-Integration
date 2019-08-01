@@ -83,31 +83,29 @@ func TestCore(t *testing.T) {
 
 func testTaskControl(t *testing.T) {
 
-	_, err := HandleRequest(
+	counter = 0
+	HandleRequest(
 		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
 		Event{Type: "PING"})
-	require.Nil(t, err)
 
 	taskRecordCount = 999
 
 	taskCreatedAt.Add(time.Hour)
-	_, err = HandleRequest(
+	HandleRequest(
 		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
 		Event{Type: "PING"})
-	require.Nil(t, err)
 
 	taskCreatedAt.Add(-2 * time.Hour)
-	_, err = HandleRequest(
+	HandleRequest(
 		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
 		Event{Type: "PING"})
-	require.Nil(t, err)
+
+	assert.Equal(t, 3, counter)
 }
 
 func testHandler(t *testing.T) {
 
-	_, err := HandleRequest(
-		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
-		Event{Subject: 1234})
+	_, err := (&Event{Subject: 1234}).handle()
 	require.NotNil(t, err)
 	assert.Contains(t, err.Error(), "hasn't granted")
 }
@@ -191,17 +189,17 @@ func testProcessRegistration(t *testing.T) {
 	withAnIncomleteTask = true
 
 	e = Event{EPPN: "rpaw053@auckland.ac.nz", ORCID: "0000-0003-1255-9023"}
-	output, err = e.process()
+	output, err = e.handle()
 	assert.NotEmpty(t, output)
 	assert.Nil(t, err)
 
 	e = Event{EPPN: "rcir178@auckland.ac.nz", ORCID: "0000-0001-8228-7153"}
-	output, err = e.process()
+	output, err = e.handle()
 	assert.NotEmpty(t, output)
 	assert.Nil(t, err)
 
 	e = Event{EPPN: "djim087@auckland.ac.nz", ORCID: "0000-0002-3008-0422"}
-	output, err = e.process()
+	output, err = e.handle()
 	assert.NotEmpty(t, output)
 	assert.Nil(t, err)
 
@@ -209,20 +207,20 @@ func testProcessRegistration(t *testing.T) {
 	taskID = 0
 
 	e.EPPN = "non-existing-upi-error@error.edu"
-	output, err = e.process()
+	output, err = e.handle()
 	assert.Empty(t, output)
 	assert.NotNil(t, err)
 }
 
 func TestHealthCheck(t *testing.T) {
 	var e = Event{Type: "PING"}
-	output, err := e.process()
+	output, err := e.handle()
 	assert.NotEmpty(t, output)
 	assert.Equal(t, "GNIP", output)
 	assert.Nil(t, err)
 
 	e = Event{Type: "ABCD1234"}
-	output, err = e.process()
+	output, err = e.handle()
 	assert.Empty(t, output)
 	assert.NotNil(t, err)
 }
@@ -323,32 +321,26 @@ func testProcessEmpUpdate(t *testing.T) {
 	var err error
 
 	taskRecordCount = 0
-	_, err = HandleRequest(
-		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
-		Event{Subject: 208013283})
+	_, err = (&Event{Subject: 208013283}).handle()
 	// t.Log(err)
 	assert.NotNil(t, err)
 	assert.Equal(t, 0, taskRecordCount)
 
-	_, err = HandleRequest(
-		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
-		Event{Subject: 484378182})
+	_, err = (&Event{Subject: 484378182}).handle()
 	assert.Nil(t, err)
 
 	taskRecordCount = 0
-	_, err = HandleRequest(
-		lambdacontext.NewContext(context.Background(), &lambdacontext.LambdaContext{}),
-		Event{
-			Records: []events.SQSMessage{
-				{Body: `{"subject":484378182}`},
-				{Body: `{"subject":477579437}`},
-				{Body: `{"subject":208013283}`},
-				{Body: `{"subject":987654321}`},
-				{Body: `{"subject":8524255}`},
-				{Body: `{"subject":350622514}`},
-				{Body: `{"subject":4306445}`},
-			},
-		})
+	_, err = (&Event{
+		Records: []events.SQSMessage{
+			{Body: `{"subject":484378182}`},
+			{Body: `{"subject":477579437}`},
+			{Body: `{"subject":208013283}`},
+			{Body: `{"subject":987654321}`},
+			{Body: `{"subject":8524255}`},
+			{Body: `{"subject":350622514}`},
+			{Body: `{"subject":4306445}`},
+		},
+	}).handle()
 	assert.True(t, taskRecordCount > 0, "The number of records should be > 0.")
 	t.Log(err)
 	assert.NotNil(t, err)

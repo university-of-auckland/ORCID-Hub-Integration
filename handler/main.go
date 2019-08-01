@@ -89,8 +89,42 @@ func setup() {
 	go setupTask()
 }
 
-// process performs the incoming message routing.
-func (e *Event) process() (string, error) {
+// handle performs the incoming message routing.
+func (e *Event) handle() (string, error) {
+
+	counter++
+	log.Infof("Event message #%d: %+v", counter, e)
+
+	if e.Records != nil {
+		var (
+			resp   []string
+			errors errorList
+		)
+
+		type restponse struct {
+			message string
+			err     error
+		}
+
+		output := make(chan restponse, len(e.Records))
+		for _, r := range e.Records {
+			var e Event
+			json.Unmarshal([]byte(r.Body), &e)
+
+			go func(e Event, o chan<- restponse) {
+				resp, err := e.handle()
+				o <- restponse{resp, err}
+			}(e, output)
+		}
+		for range e.Records {
+			r := <-output
+			if r.err != nil {
+				errors = append(errors, r.err)
+			}
+			resp = append(resp, r.message)
+		}
+		return strings.Join(resp, "; "), errors
+	}
 
 	if e.EPPN != "" || e.Subject != 0 || e.Type == "PING" {
 		setup()
@@ -234,47 +268,16 @@ func (el errorList) Error() string {
 
 // HandleRequest handle "AWS lambda" request with a single event message or
 // a batch of event messages.
-func HandleRequest(ctx context.Context, e Event) (string, error) {
+func HandleRequest(ctx context.Context, e Event) {
 
 	defer func() {
 		wg.Wait()
 		logger.Sync()
 	}()
-	counter++
-	log.Infof("Context: %+v, counter: %d", ctx, counter)
-	log.Infof("Event message: %#v", e)
 
-	if e.Records != nil {
-		var (
-			resp   []string
-			errors errorList
-		)
+	e.handle()
+	return
 
-		type restponse struct {
-			message string
-			err     error
-		}
-
-		output := make(chan restponse, len(e.Records))
-		for _, r := range e.Records {
-			var e Event
-			json.Unmarshal([]byte(r.Body), &e)
-
-			go func(e Event, o chan<- restponse) {
-				resp, err := e.process()
-				o <- restponse{resp, err}
-			}(e, output)
-		}
-		for range e.Records {
-			r := <-output
-			if r.err != nil {
-				errors = append(errors, r.err)
-			}
-			resp = append(resp, r.message)
-		}
-		return strings.Join(resp, "; "), errors
-	}
-	return e.process()
 }
 
 func main() {
