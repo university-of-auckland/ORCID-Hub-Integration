@@ -38,7 +38,7 @@ func setupAPIClients() {
 			oh.clientSecret = os.Getenv("CLIENT_SECRET")
 			oh.baseURL = OHBaseURL
 			err := oh.getAccessToken("oauth/token")
-			if err != nil {
+			if err != nil || oh.accessToken == "" {
 				log.Fatal("filed to authorize with the client credentials", zap.Error(err))
 			}
 			gotAccessTokenWG.Done()
