@@ -50,14 +50,10 @@ type Employment struct {
 // propagateToHub adds employment records to the current affiliation task.
 func (emp *Employment) propagateToHub(email, orcid string) (count int, err error) {
 
-	log.Debugf("EMP: %+v; %q, %q", emp, email, orcid)
 	count = len(emp.Job)
 	if count == 0 {
 		return 0, nil
 	}
-
-	wg.Add(1)
-	defer wg.Done()
 
 	records := make([]Record, count)
 	for i, job := range emp.Job {
@@ -83,5 +79,6 @@ func (emp *Employment) propagateToHub(email, orcid string) (count int, err error
 	taskRecordCountMutex.Lock()
 	taskRecordCount += count
 	taskRecordCountMutex.Unlock()
+
 	return count, nil
 }

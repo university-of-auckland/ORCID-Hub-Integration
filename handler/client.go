@@ -85,7 +85,7 @@ func (c *Client) execute(req *http.Request, resp interface{}) error {
 		return err
 	}
 	log.Debug("*****************")
-	log.Debug("URL:", req.URL, "/ \""+req.Method+"\":", req.URL.RequestURI())
+	log.Debugf("%s %q %d %q", req.Method, req.URL.RequestURI(), r.StatusCode, r.Status)
 	if resp != nil && r.StatusCode == http.StatusOK {
 		defer r.Body.Close()
 		body, err := ioutil.ReadAll(r.Body)
@@ -139,7 +139,7 @@ func (c *Client) do(method, url string, body interface{}, resp interface{}) erro
 	return c.execute(req, resp)
 }
 
-func (c *Client) put(url string, body interface{}, resp interface{}) (err error) {
+func (c *Client) put(url string, body interface{}, resp interface{}) error {
 	return c.do("PUT", url, body, resp)
 }
 

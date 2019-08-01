@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
@@ -166,9 +167,12 @@ func (e *Event) processEmpUpdate() (string, error) {
 		log.Fatal("failed to get employment record", zap.Error(err))
 	}
 
-	log.Debugf("EMP: %+v; TOKEN: %+v", emp, token)
-
-	go emp.propagateToHub(token.Email, token.ORCID)
+	// wg.Add(1)
+	// go func() {
+	// 	defer wg.Done()
+	// 	emp.propagateToHub(token.Email, token.ORCID)
+	// }()
+	emp.propagateToHub(token.Email, token.ORCID)
 
 	return "", nil
 }
@@ -291,6 +295,20 @@ func HandleRequest(ctx context.Context, e Event) {
 }
 
 func main() {
+	c := make(chan os.Signal, 1)
+
+	// Passing no signals to Notify means that
+	// all signals will be sent to the channel.
+	signal.Notify(c)
+
+	go func() {
+		for s := range c {
+			log.Info("=================== SIGNAL =============================================")
+			log.Info("Got signal:", s)
+			log.Info("=================== SIGNAL =============================================")
+			logger.Sync()
+		}
+	}()
 
 	lambda.Start(HandleRequest)
 	log.Info("=================== DONE =============================================")
