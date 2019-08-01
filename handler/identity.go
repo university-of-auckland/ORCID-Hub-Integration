@@ -41,6 +41,9 @@ func (id *Identity) GetORCID() string {
 // GetOrcidAccessToken gets the ORCID API token to verify that the user
 // has granted access to the university.
 func (id *Identity) GetOrcidAccessToken() (token Token, ok bool) {
+	if id.EmailAddress == "" || id.Upi == "" {
+		return
+	}
 	var tokens []Token
 	orcid := id.GetORCID()
 	if orcid != "" {

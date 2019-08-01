@@ -85,14 +85,15 @@ func setupTask() {
 		// Make sure the access token acquired
 		log.Debug("=======================================================================================")
 		gotAccessTokenWG.Wait()
-		oh.get("api/v1/tasks?type=AFFILIATION&staus=INACTIVE", &tasks)
+		oh.get("api/v1/tasks?type=AFFILIATION&status=INACTIVE", &tasks)
 		for _, t := range tasks {
-			log.Debugf("TASK: %#v", t)
-			if t.Status == "ACTIVE" || t.CompletedAt != "" || !strings.HasPrefix(t.Filename, taskFilenamePrefix) {
+			log.Debugf("TASK: %+v", t)
+			if t.Status == "ACTIVE" || t.Status == "RESET" || t.CompletedAt != "" || !strings.HasPrefix(t.Filename, taskFilenamePrefix) {
 				continue
 			}
 			createdAt, err := time.Parse("2006-01-02T15:04:05", t.CreatedAt)
 			if err != nil {
+				log.Error(err)
 				continue
 			}
 			if now.Sub(createdAt).Minutes() > 1 && len(t.Records) > 0 {

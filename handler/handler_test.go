@@ -107,7 +107,13 @@ func testHandler(t *testing.T) {
 
 	_, err := (&Event{Subject: 1234}).handle()
 	require.NotNil(t, err)
-	assert.Contains(t, err.Error(), "hasn't granted")
+	assert.Contains(t, err.Error(), "failed to retrieve the identity record")
+
+	_, err = (&Event{Subject: 8524255}).handle()
+	if !live {
+		require.NotNil(t, err)
+		assert.Contains(t, err.Error(), "hasn't granted access to the profile")
+	}
 }
 
 func testIdentityAPICient(t *testing.T) {
@@ -255,6 +261,7 @@ func testIdentityGetOrcidAccessToken(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	var id Identity
 	json.Unmarshal([]byte(`{
 		"emailAddress":"rcir178NOWAY@auckland.ac.nz",
@@ -277,6 +284,7 @@ func testIdentityGetOrcidAccessToken(t *testing.T) {
 				"type":"UID"
 			}
 		],
+		"id":123443,
 		"upi":"rcir178ABC"
    }`), &id)
 	token, ok := id.GetOrcidAccessToken()

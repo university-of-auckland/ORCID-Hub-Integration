@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -143,21 +144,29 @@ func (e *Event) handle() (string, error) {
 func (e *Event) processEmpUpdate() (string, error) {
 
 	var employeeID = strconv.Itoa(e.Subject)
-	identities := make(chan Identity)
-	employments := make(chan Employment)
 
 	// TODO: this can be doen sychroniously
-	go getIdentidy(identities, employeeID)
-	id := <-identities
-	token, ok := id.GetOrcidAccessToken()
+	var id Identity
+	err := api.get("identity/integrations/v3/identity/"+employeeID, &id)
+	if err != nil {
+		log.Fatal("failed to retrieve the identity record", zap.Error(err))
+	}
+	if id.Upi == "" {
+		return "", errors.New("failed to retrieve the identity record")
+	}
 
+	token, ok := id.GetOrcidAccessToken()
 	if !ok {
 		return "", fmt.Errorf("the user (ID: %s) hasn't granted access to the profile", employeeID)
 	}
 
-	// TODO: this can be doen sychroniously
-	go getEmp(employments, employeeID)
-	emp := <-employments
+	var emp Employment
+	err = api.get("employment/integrations/v1/employee/"+employeeID, &emp)
+	if err != nil {
+		log.Fatal("failed to get employment record", zap.Error(err))
+	}
+
+	log.Debugf("EMP: %+v; TOKEN: %+v", emp, token)
 
 	go emp.propagateToHub(token.Email, token.ORCID)
 
@@ -271,6 +280,7 @@ func (el errorList) Error() string {
 func HandleRequest(ctx context.Context, e Event) {
 
 	defer func() {
+		logger.Sync()
 		wg.Wait()
 		logger.Sync()
 	}()
