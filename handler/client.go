@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+
+	"go.uber.org/zap"
 )
 
 // RESTClient ...
@@ -23,6 +26,27 @@ type Client struct {
 	jsonBody                                             []byte
 }
 
+func setupAPIClients() {
+	if api.apiKey == "" {
+		api.apiKey = os.Getenv("API_KEY")
+		api.baseURL = APIBaseURL
+	}
+	if oh.accessToken == "" {
+		gotAccessTokenWG.Add(1)
+		go func() {
+			oh.clientID = os.Getenv("CLIENT_ID")
+			oh.clientSecret = os.Getenv("CLIENT_SECRET")
+			oh.baseURL = OHBaseURL
+			// oh.BaseURL = "http://127.0.0.1:5000"
+			err := oh.getAccessToken("oauth/token")
+			if err != nil {
+				log.Fatal("filed to authorize with the client credentials", zap.Error(err))
+			}
+			gotAccessTokenWG.Done()
+		}()
+	}
+}
+
 func (c *Client) getAccessToken(url string) error {
 	var token struct {
 		AccessToken string `json:"access_token"`
@@ -31,6 +55,7 @@ func (c *Client) getAccessToken(url string) error {
 		Scope       string `json:"scope"`
 	}
 	url = c.baseURL + "/" + url
+	log.Debug("URL: ", url)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(fmt.Sprintf(
 		"client_id=%s&client_secret=%s&grant_type=client_credentials", c.clientID, c.clientSecret))))
 	if err != nil {
@@ -63,7 +88,7 @@ func (c *Client) execute(req *http.Request, resp interface{}) error {
 	}
 	log.Debug("*****************")
 	log.Debug("URL:", req.URL, "/ \""+req.Method+"\":", req.URL.RequestURI())
-	if r.StatusCode == http.StatusOK {
+	if resp != nil && r.StatusCode == http.StatusOK {
 		defer r.Body.Close()
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -93,6 +118,9 @@ func (c *Client) get(url string, resp interface{}) error {
 
 func (c *Client) prepare(method, url string, body interface{}) (req *http.Request, err error) {
 	url = c.baseURL + "/" + url
+	if body == nil {
+		return http.NewRequest(method, url, nil)
+	}
 	switch body.(type) {
 	case string:
 		c.jsonBody = []byte(body.(string))

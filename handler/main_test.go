@@ -15,6 +15,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,6 +31,11 @@ func init() {
 	flag.BoolVar(&live, "live", false, "Run with the DEV/SANDBOX APIs.")
 	flag.Parse()
 	verbose = *verboseFlag || os.Getenv("VERBOSE") != ""
+}
+
+func isValidUUID(u string) bool {
+	_, err := uuid.Parse(u)
+	return err == nil
 }
 
 func setupTests(t *testing.T) {
@@ -646,6 +652,8 @@ func TestCore(t *testing.T) {
 	if !live {
 		setupTests(t)
 		defer teardownTests(t)
+	} else {
+		setupAPIClients()
 	}
 
 	t.Run("TaskControl", testTaskControl)
@@ -757,6 +765,15 @@ func testProcessRegistration(t *testing.T) {
 		output string
 	)
 
+	setupAPIClients()
+	gotAccessTokenWG.Wait()
+	if live {
+		// Remove the existing ORCID iDs
+		for _, upi := range []string{"rpaw053", "rcir178", "djim087"} {
+			api.do("DELETE", "identity/integrations/v3/identity/"+upi+"/identifier/ORCID", nil, nil)
+		}
+	}
+
 	withAnIncomleteTask = true
 
 	e = Event{EPPN: "rpaw053@auckland.ac.nz", ORCID: "0000-0003-1255-9023"}
@@ -857,22 +874,34 @@ func testIdentityGetOrcidAccessToken(t *testing.T) {
 	id.Emails[0].Email = "rad42@mailinator.com"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	assert.True(t, isValidUUID(token.AccessToken))
+	if !live {
+		assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	}
 
 	id.EmailAddress = "rcir178@auckland.ac.nz"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	assert.True(t, isValidUUID(token.AccessToken))
+	if !live {
+		assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	}
 
 	id.Upi = "rcir178"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	assert.True(t, isValidUUID(token.AccessToken))
+	if !live {
+		assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	}
 
 	id.ExtIds[0].Type = "ORCID"
 	token, ok = id.GetOrcidAccessToken()
 	assert.True(t, ok)
-	assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	assert.True(t, isValidUUID(token.AccessToken))
+	if !live {
+		assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
+	}
 }
 
 func testProcessEmpUpdate(t *testing.T) {

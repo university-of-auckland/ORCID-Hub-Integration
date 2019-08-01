@@ -16,6 +16,7 @@ import (
 
 	"github.com/dougEfresh/lambdazap"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -31,6 +32,7 @@ var (
 	verbose              bool
 	wg                   sync.WaitGroup
 
+	loggingLevel zapcore.Level
 	lambdazapper *lambdazap.LambdaLogContext
 	logger       *zap.Logger
 	log          *zap.SugaredLogger
@@ -47,11 +49,34 @@ var (
 
 func init() {
 	godotenv.Load()
-	if verbose || strings.Contains(os.Getenv("ENV"), "dev") {
-		logger, _ = zap.NewDevelopment()
+
+	isDevelopment := strings.Contains(os.Getenv("ENV"), "dev")
+
+	if verbose || isDevelopment {
+		loggingLevel = zap.DebugLevel
 	} else {
-		logger, _ = zap.NewProduction()
+		loggingLevel = zap.InfoLevel
 	}
+	logger, _ = zap.Config{
+		Level:       zap.NewAtomicLevelAt(zap.DebugLevel),
+		Development: isDevelopment,
+		Encoding:    "console",
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "T",
+			LevelKey:       "L",
+			NameKey:        "N",
+			CallerKey:      "C",
+			MessageKey:     "M",
+			StacktraceKey:  "S",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.CapitalLevelEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeDuration: zapcore.StringDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		},
+		OutputPaths:      []string{"stderr"},
+		ErrorOutputPaths: []string{"stderr"},
+	}.Build()
 	if os.Getenv("_LAMBDA_SERVER_PORT") != "" {
 		lambdazapper = lambdazap.New().With(lambdazap.AwsRequestID)
 		logger.With(lambdazapper.NonContextValues()...)
@@ -60,24 +85,7 @@ func init() {
 }
 
 func setup() {
-	if api.apiKey == "" {
-		api.apiKey = os.Getenv("API_KEY")
-		api.baseURL = APIBaseURL
-	}
-	if oh.accessToken == "" {
-		gotAccessTokenWG.Add(1)
-		go func() {
-			oh.clientID = os.Getenv("CLIENT_ID")
-			oh.clientSecret = os.Getenv("CLIENT_SECRET")
-			oh.baseURL = OHBaseURL
-			// oh.BaseURL = "http://127.0.0.1:5000"
-			err := oh.getAccessToken("oauth/token")
-			if err != nil {
-				log.Fatal("filed to authorize with the client credentials", zap.Error(err))
-			}
-			gotAccessTokenWG.Done()
-		}()
-	}
+	setupAPIClients()
 	go setupTask()
 }
 
