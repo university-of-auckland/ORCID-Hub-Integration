@@ -8,8 +8,11 @@ env: GO111MODULE=on
 before_install:
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
+  - go get golang.org/x/lint/golint
 
 script:
+  - go vet ./handler
+  - golint ./handler
   - go test ./... -run TestHealthCheck
   - go test -cover -covermode=count -coverprofile coverage.out  ./... -args -verbose
 
