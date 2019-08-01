@@ -21,26 +21,32 @@ http://localhost:8080/
 
 Change default port value in application.properties
 
-### AWS Lambda base event handlder
+# AWS Lambda base event handlder
 
 a sample Lambda...
 It can be triggered either by SQS or API Gateway directly.
 
-##### Event Message Flow
+### Event Message Flow
 ![ScreenShot](/handler/flow.png?raw=true "Message Flow")
 
 
-#### Building
+## Building
 
 ```
 go build -o main . && upx main && zip main.zip main
 ```
 
-#### Testing
+## Testing
 
 ```sh
+
 export API_KEY=... CLIENT_ID=... CLIENT_SECRET=...
 go test -v .
+# more verbose:
+go test -v . -args -verbose
+# with 'live server' instead of using the mock:
+go test -v . -args -live
+
 ```
 
 Or create **.env**-file with environment variables.
