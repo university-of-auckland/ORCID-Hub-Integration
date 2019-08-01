@@ -212,7 +212,6 @@ func setupTests(t *testing.T) {
 			switch uid {
 			case "jken016", "8524255":
 				io.WriteString(w, `{
-    "dob": "1967-03-18",
     "emailAddress": "jeff.kennedy@auckland.ac.nz",
     "emails": [
         {
@@ -274,8 +273,6 @@ func setupTests(t *testing.T) {
         }
     ],
     "id": 8524255,
-    "primaryIdentity": true,
-    "resolved": true,
     "upi": "jken016"
 }`)
 			case "4306445", "yyan161":
@@ -301,22 +298,10 @@ func setupTests(t *testing.T) {
         }
     ],
     "id": 4306445,
-    "resolved": true,
     "upi": "yyan161"
 	}`)
 			case "rpaw053", "208013283":
 				io.WriteString(w, `{
-   "deceased":{
-      "dead":false
-   },
-   "disabilityInfo":{
-      "disabilities":[
-
-      ],
-      "isDisabled":false
-   },
-   "displayName":"Roshan Prakash ABC",
-   "dob":"1790-05-08",
    "emailAddress":"roshan_pawarasjdfkasdjfajs_@auckland.ac.nz",
    "emails":[
       {
@@ -446,6 +431,7 @@ func setupTests(t *testing.T) {
             "type": "UID"
         }
     ],
+	"id": 477579437,
     "upi": "djim087"
 }`)
 

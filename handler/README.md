@@ -11,20 +11,32 @@ a sample Lambda...
 It can be triggered either by SQS or API Gateway directly.
 
 ## Event Message Flow
-![ScreenShot](/flow.png?raw=true "Message Flow")
+![ScreenShot](/handler/flow.png?raw=true "Message Flow")
 
 
 # Building
 
 ```
-go build . && upx consumer && zip consumer.zip consumer
+go build -o main . && upx main && zip main.zip main
 ```
 
 # Testing
 
-```
+```sh
 export API_KEY=... CLIENT_ID=... CLIENT_SECRET=...
 go test -v .
 ```
 
 Or create **.env**-file with environment variables.
+
+```ini
+
+# Copy this file to '.env'-file and change values
+# ORCID Hub API client credentials:
+CLIENT_ID=...
+CLIENT_SECRET=...
+# UoA API Key:
+API_KEY=...
+
+```
+
