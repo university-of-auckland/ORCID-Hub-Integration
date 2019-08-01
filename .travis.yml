@@ -9,12 +9,12 @@ before_install:
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
   - go get golang.org/x/lint/golint
+  - go get github.com/rakyll/gotest
 
 script:
   - go vet ./handler
   - golint ./handler
-  - go test ./... -run TestHealthCheck
-  - go test -v -cover -covermode=count -coverprofile coverage.out  ./...
+  - gotest -v -cover -covermode=count -coverprofile coverage.out  ./...
 
 after_success:
   - $GOPATH/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN

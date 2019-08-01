@@ -5,10 +5,13 @@ go 1.12
 require (
 	github.com/aws/aws-lambda-go v1.11.1
 	github.com/dougEfresh/lambdazap v0.0.0-20180327213147-ad7d89679c77
+	github.com/fatih/color v1.7.0 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/joho/godotenv v1.3.0
+	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/goveralls v0.0.2 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
+	github.com/rakyll/gotest v0.0.0-20180125184505-86f0749cd8cc // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.2.2
 	go.uber.org/atomic v1.4.0 // indirect
