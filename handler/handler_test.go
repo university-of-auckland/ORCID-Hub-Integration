@@ -194,17 +194,17 @@ func testProcessRegistration(t *testing.T) {
 
 	withAnIncomleteTask = true
 
-	e = Event{EPPN: "rpaw053@auckland.ac.nz", ORCID: "0000-0003-1255-9023"}
+	e = Event{Type: "CREATED", EPPN: "rpaw053@auckland.ac.nz", ORCID: "0000-0003-1255-9023"}
 	output, err = e.handle()
 	assert.NotEmpty(t, output)
 	assert.Nil(t, err)
 
-	e = Event{EPPN: "rcir178@auckland.ac.nz", ORCID: "0000-0001-8228-7153"}
+	e = Event{Type: "CREATED", EPPN: "rcir178@auckland.ac.nz", ORCID: "0000-0001-8228-7153"}
 	output, err = e.handle()
 	assert.NotEmpty(t, output)
 	assert.Nil(t, err)
 
-	e = Event{EPPN: "djim087@auckland.ac.nz", ORCID: "0000-0002-3008-0422"}
+	e = Event{Type: "CREATED", EPPN: "djim087@auckland.ac.nz", ORCID: "0000-0002-3008-0422"}
 	output, err = e.handle()
 	assert.NotEmpty(t, output)
 	assert.Nil(t, err)

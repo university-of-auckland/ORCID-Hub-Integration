@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 	"unicode"
 
@@ -101,6 +102,7 @@ func (e *Event) handle() (string, error) {
 		var (
 			resp   []string
 			errors errorList
+			events []Event
 		)
 
 		type restponse struct {
@@ -108,7 +110,21 @@ func (e *Event) handle() (string, error) {
 			err     error
 		}
 
-		output := make(chan restponse, len(e.Records))
+		for _, r := range e.Records {
+			var e Event
+			json.Unmarshal([]byte(r.Body), &e)
+
+			if e.Subject != 0 || (e.EPPN != "" && e.Type == "CREATED") {
+				events = append(events, e)
+			}
+		}
+
+		if len(events) < 1 {
+			return "", nil
+		}
+
+		output := make(chan restponse, len(events))
+
 		for _, r := range e.Records {
 			var e Event
 			json.Unmarshal([]byte(r.Body), &e)
@@ -119,16 +135,16 @@ func (e *Event) handle() (string, error) {
 			}(e, output)
 		}
 		for range e.Records {
-			r := <-output
-			if r.err != nil {
-				errors = append(errors, r.err)
+			rr := <-output
+			if rr.err != nil {
+				errors = append(errors, rr.err)
 			}
-			resp = append(resp, r.message)
+			resp = append(resp, rr.message)
 		}
 		return strings.Join(resp, "; "), errors
 	}
 
-	if e.EPPN != "" || e.Subject != 0 || e.Type == "PING" {
+	if (e.EPPN != "" && e.Type == "CREATED") || e.Subject != 0 || e.Type == "PING" {
 		setup()
 		if e.EPPN != "" {
 			return e.processUserRegistration()
@@ -295,21 +311,18 @@ func HandleRequest(ctx context.Context, e Event) {
 }
 
 func main() {
-	c := make(chan os.Signal, 1)
-
-	// Passing no signals to Notify means that
-	// all signals will be sent to the channel.
-	signal.Notify(c)
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGPIPE)
 
 	go func() {
-		for s := range c {
-			log.Info("=================== SIGNAL =============================================")
-			log.Info("Got signal:", s)
-			log.Info("=================== SIGNAL =============================================")
+		<-sc
+		if taskID != 0 {
+			log.Info("====================== SIGPIPE ======================================================")
+			log.Infof("task (ID: %d) activated", taskID)
+			log.Info("====================== SIGPIPE ======================================================")
 			logger.Sync()
 		}
 	}()
 
 	lambda.Start(HandleRequest)
-	log.Info("=================== DONE =============================================")
 }
