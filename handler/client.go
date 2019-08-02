@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sync"
 
 	"go.uber.org/zap"
 )
@@ -26,11 +27,16 @@ type Client struct {
 	jsonBody                                             []byte
 }
 
+var accessTokenIsOnTheWay sync.Mutex
+
 func setupAPIClients() {
 	if api.apiKey == "" {
 		api.apiKey = os.Getenv("API_KEY")
 		api.baseURL = APIBaseURL
 	}
+
+	// Ensure that two guys don't try both to get a token (data race)
+	accessTokenIsOnTheWay.Lock()
 	if oh.accessToken == "" {
 		gotAccessTokenWG.Add(1)
 		go func() {
@@ -44,6 +50,7 @@ func setupAPIClients() {
 			gotAccessTokenWG.Done()
 		}()
 	}
+	accessTokenIsOnTheWay.Unlock()
 }
 
 func (c *Client) getAccessToken(url string) error {
