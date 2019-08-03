@@ -47,10 +47,12 @@ func setupAPIClients() {
 			if err != nil || oh.accessToken == "" {
 				log.Fatal("filed to authorize with the client credentials", zap.Error(err))
 			}
+			accessTokenIsOnTheWay.Unlock()
 			gotAccessTokenWG.Done()
 		}()
+	} else {
+		accessTokenIsOnTheWay.Unlock()
 	}
-	accessTokenIsOnTheWay.Unlock()
 }
 
 func (c *Client) getAccessToken(url string) error {

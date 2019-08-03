@@ -46,6 +46,9 @@ go test -v .
 go test -v . -args -verbose
 # with 'live server' instead of using the mock:
 go test -v . -args -live
+# to get coverage report (user "-tags test" to exclude Lambda specific bits from the coverage):
+gotest ./... -tags test -cover -coverprofile coverage.out  ; go tool cover -html=coverage.out -o coverage.html
+
 
 ```
 
