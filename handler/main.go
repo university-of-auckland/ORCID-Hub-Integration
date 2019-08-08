@@ -1,4 +1,4 @@
-//+build !test,aws
+//+build !test,!heroku
 
 package main
 
