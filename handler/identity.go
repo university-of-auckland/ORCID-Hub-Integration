@@ -18,7 +18,7 @@ type Identity struct {
 	ExtIds []struct {
 		ID   string `json:"id"`
 		Type string `json:"type"`
-	} `json:"extIds"`
+	} `json:"extIds,omitempty"`
 	ID  int    `json:"id"`
 	Upi string `json:"upi"`
 }

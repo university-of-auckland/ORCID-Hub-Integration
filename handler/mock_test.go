@@ -57,6 +57,17 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 
 
 ]`)
+			} else if id == "dthn666@auckland.ac.nz" {
+				io.WriteString(w, `[{
+				"access_token":"ecf16b31-7777-4ba2-ae55-e97fb90e211a", 
+				"email":"dthn666@mailinator.com", 
+				"eppn":"66666666@auckland.ac.nz", 
+				"expires_in":631138518, 
+				"issue_time":"2069-07-18T03:13:35", 
+				"orcid":"0000-0001-8888-7153", 
+				"refresh_token":"a6c9da20-31be-8888-9faa-73f1d92fac45",
+				"scopes":"/read-limited"
+			}]`)
 			} else {
 				w.WriteHeader(http.StatusNotFound)
 				io.WriteString(w, `{"error": "User with specified identifier 'rcir178ABC@auckland.ac.nz' not found."}`)

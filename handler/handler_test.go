@@ -121,6 +121,18 @@ func testTaskControl(t *testing.T) {
 	}
 	assert.Equal(t, 7, counter)
 
+	// Corener cases:
+	malformatResponse = true
+	taskSetUpWG.Add(1)
+	(&Task{ID: 123456}).activateTask()
+	taskSetUpWG.Add(1)
+	oldLogFata := log.Fatal
+	logFatal = func(args ...interface{}) { return }
+	newTask()
+	logFatal = oldLogFata
+	taskSetUpWG.Wait()
+	malformatResponse = false
+
 }
 
 func testHandler(t *testing.T) {
@@ -190,10 +202,27 @@ func testEmploymentAPICient(t *testing.T) {
 	c.baseURL = APIBaseURL
 
 	var emp Employment
-	err := c.get("rcir178", &emp)
+	err := c.get("employment/integrations/v1/employee/rcir178", &emp)
 	if err != nil {
 		t.Error(err)
 	}
+
+	count, err := emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153")
+	assert.NotZero(t, count)
+	assert.Nil(t, err)
+
+	// malformated message:
+	malformatResponse = true
+	count, err = emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153")
+	assert.Zero(t, count)
+	assert.NotNil(t, err)
+	malformatResponse = false
+
+	// no jobs
+	emp.Job = nil
+	count, err = emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153")
+	assert.Zero(t, count)
+	assert.NotNil(t, err)
 }
 
 func testAccessToken(t *testing.T) {
@@ -211,8 +240,17 @@ func testAccessToken(t *testing.T) {
 	err = c.getAccessToken("oauth/token")
 	assert.NotNil(t, err)
 	assert.Empty(t, c.accessToken)
-	malformatResponse = false
 
+	// malformated message
+	at := oh.accessToken
+	oldLogFata := log.Fatal
+	logFatal = func(args ...interface{}) { return }
+	oh.accessToken = ""
+	setupAPIClients()
+	gotAccessTokenWG.Wait()
+	oh.accessToken = at
+	logFatal = oldLogFata
+	malformatResponse = false
 }
 
 func testGetOrcidToken(t *testing.T) {
@@ -231,6 +269,13 @@ func testGetOrcidToken(t *testing.T) {
 	err := c.get("api/v1/tokens/rad42@mailinator.com", &tokens)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, tokens)
+
+	malformatResponse = true
+	tokens = nil
+	err = c.get("api/v1/tokens/rad42@mailinator.com", &tokens)
+	assert.NotNil(t, err)
+	assert.Empty(t, tokens)
+	malformatResponse = false
 }
 
 func testProcessRegistration(t *testing.T) {
@@ -273,6 +318,18 @@ func testProcessRegistration(t *testing.T) {
 	output, err = e.handle()
 	assert.Empty(t, output)
 	assert.NotNil(t, err)
+
+	// malformatted messages:
+	malformatResponse = true
+	oldLogFata := log.Fatal
+	logFatal = func(args ...interface{}) { return }
+	e = Event{Type: "CREATED", EPPN: "djim087@auckland.ac.nz", ORCID: "0000-0002-3008-0422"}
+	output, err = e.handle()
+	assert.Empty(t, output)
+	assert.NotNil(t, err)
+	taskSetUpWG.Wait()
+	logFatal = oldLogFata
+	malformatResponse = false
 }
 
 func testHealthCheck(t *testing.T) {
@@ -314,6 +371,18 @@ func TestIdentityGetORCID(t *testing.T) {
       }
    ]}`), &id)
 	assert.Equal(t, "1234-1234-1234-ABCD", id.GetORCID())
+
+	json.Unmarshal([]byte(`{
+   "extIds":[
+      {
+         "id":"2121820801328312",
+         "type":"IDCard"
+      }
+   ]}`), &id)
+	assert.Equal(t, "", id.GetORCID())
+
+	json.Unmarshal([]byte(`{}`), &id)
+	assert.Equal(t, "", id.GetORCID())
 }
 
 func testIdentityGetOrcidAccessToken(t *testing.T) {
@@ -383,6 +452,18 @@ func testIdentityGetOrcidAccessToken(t *testing.T) {
 	if !live {
 		assert.Equal(t, "ecf16b31-ad54-4ba2-ae55-e97fb90e211a", token.AccessToken)
 	}
+
+	// no update scope
+	id.Upi = "dthn666"
+	id.ExtIds = nil
+	token, ok = id.GetOrcidAccessToken()
+	assert.False(t, ok)
+
+	// malformated message
+	malformatResponse = true
+	token, ok = id.GetOrcidAccessToken()
+	assert.False(t, ok)
+	malformatResponse = false
 }
 
 func testProcessEmpUpdate(t *testing.T) {

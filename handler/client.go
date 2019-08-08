@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"os"
 	"sync"
-
-	"go.uber.org/zap"
 )
 
 // RESTClient ...
@@ -45,7 +43,7 @@ func setupAPIClients() {
 			oh.baseURL = OHBaseURL
 			err := oh.getAccessToken("oauth/token")
 			if err != nil || oh.accessToken == "" {
-				log.Fatal("filed to authorize with the client credentials", zap.Error(err))
+				logFatal("filed to authorize with the client credentials", err)
 			}
 			accessTokenIsOnTheWay.Unlock()
 			gotAccessTokenWG.Done()

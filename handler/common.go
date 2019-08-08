@@ -152,7 +152,6 @@ func (e *Event) processEmpUpdate() (string, error) {
 
 	var employeeID = strconv.Itoa(e.Subject)
 
-	// TODO: this can be doen sychroniously
 	var id Identity
 	err := api.get("identity/integrations/v3/identity/"+employeeID, &id)
 	if err != nil {
@@ -188,7 +187,7 @@ func getIdentidy(output chan<- Identity, upiOrID string) {
 	var id Identity
 	err := api.get("identity/integrations/v3/identity/"+upiOrID, &id)
 	if err != nil {
-		log.Fatal("failed to retrieve the identity record", zap.Error(err))
+		logFatal("failed to retrieve the identity record", err)
 	}
 	output <- id
 }
@@ -198,7 +197,7 @@ func getEmp(output chan<- Employment, upiOrID string) {
 	var emp Employment
 	err := api.get("employment/integrations/v1/employee/"+upiOrID, &emp)
 	if err != nil {
-		log.Fatal("failed to get employment record", zap.Error(err))
+		logFatal("failed to get employment record", err)
 	}
 	output <- emp
 }
@@ -265,11 +264,10 @@ func (e *Event) processUserRegistration() (string, error) {
 	}
 
 	count, err := emp.propagateToHub(id.EmailAddress, e.ORCID)
-	if err != nil {
-		return "", err
-	}
+	taskRecordCountMutex.Lock()
 	taskRecordCount += count
-	return fmt.Sprintf("%#v", id), nil
+	taskRecordCountMutex.Unlock()
+	return fmt.Sprintf("%#v", id), err
 }
 
 type errorList []error

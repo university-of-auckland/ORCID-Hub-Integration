@@ -59,12 +59,16 @@ func (t *Task) activateTask() {
 
 }
 
+// for testing
+var logFatal = log.Fatal
+
 func newTask() {
+	defer taskSetUpWG.Done()
 	taskFilename := taskFilenamePrefix + strconv.FormatInt(time.Now().Unix(), 36) + ".json"
 	var task = Task{Filename: taskFilename, Type: "AFFILIATION", Records: []Record{}}
 	err := oh.post("api/v1/affiliations?filename="+taskFilename, task, &task)
 	if err != nil {
-		log.Fatal("failed to create a new affiliation task", err)
+		logFatal("failed to create a new affiliation task", err)
 	}
 	taskID = task.ID
 	taskCreatedAt, err = time.Parse("2006-01-02T15:04:05", task.CreatedAt)
@@ -72,7 +76,6 @@ func newTask() {
 		log.Errorf("failed to parse date %q: %s", task.CreatedAt, err)
 	}
 	log.Debugf("*** New affiliation task created (ID: %d, filename: %q)", task.ID, task.Filename)
-	taskSetUpWG.Done()
 }
 
 // Either get the task ID or activate outstanding tasks and start a new one

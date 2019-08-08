@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"strconv"
 )
 
@@ -52,7 +53,7 @@ func (emp *Employment) propagateToHub(email, orcid string) (count int, err error
 
 	count = len(emp.Job)
 	if count == 0 {
-		return 0, nil
+		return 0, errors.New("no job entries")
 	}
 
 	records := make([]Record, count)
@@ -71,14 +72,19 @@ func (emp *Employment) propagateToHub(email, orcid string) (count int, err error
 	// Make sure the task set-up is comlete
 	taskSetUpWG.Wait()
 
-	var task Task
+	var (
+		task   Task
+		errors errorList
+	)
 	err = oh.patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
 	if err != nil {
 		log.Error("failed to update the taks: ", err)
+		errors = append(errors, err)
+		count--
 	}
 	taskRecordCountMutex.Lock()
 	taskRecordCount += count
 	taskRecordCountMutex.Unlock()
 
-	return count, nil
+	return count, errors
 }
