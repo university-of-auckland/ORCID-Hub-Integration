@@ -51,7 +51,7 @@ type Record struct {
 func (t *Task) activateTask() {
 	var task Task
 	log.Debugf("Activate the task %q (ID: %d)", t.Filename, t.ID)
-	err := oh.put("api/v1/tasks/"+strconv.Itoa(t.ID), map[string]string{"status": "ACTIVE"}, &task)
+	err := oh.patch("api/v1/tasks/"+strconv.Itoa(t.ID), map[string]string{"status": "ACTIVE"}, &task)
 	if err != nil {
 		log.Errorf("ERROR: Failed to activate task %d: %q", t.ID, err)
 	}

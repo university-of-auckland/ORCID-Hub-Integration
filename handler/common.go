@@ -140,6 +140,7 @@ func (e *Event) handle() (string, error) {
 		} else if e.Subject != 0 {
 			return e.processEmpUpdate()
 		} else if e.Type == "PING" { // Heartbeat Check
+			taskSetUpWG.Wait()
 			return "GNIP", nil
 		}
 	}
