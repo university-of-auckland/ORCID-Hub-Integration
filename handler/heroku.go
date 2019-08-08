@@ -25,7 +25,16 @@ func main() {
 			fmt.Fprintf(rw, `{"error": %q}`, err.Error())
 			return
 		}
-		e.handle()
+		msg, err := e.handle()
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(rw, `{"error": %q}`, err.Error())
+		}
+		if msg != "" {
+			fmt.Fprintf(rw, `{"message": %q}`, msg)
+		} else {
+			rw.WriteHeader(http.StatusNoContent)
+		}
 	})
 	log.Infof("Listening on %s...\n", addr)
 	if err := http.ListenAndServe(addr, nil); err != nil {
