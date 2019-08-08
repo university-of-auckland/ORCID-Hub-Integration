@@ -117,8 +117,10 @@ func testTaskControl(t *testing.T) {
 		withAnIncomleteTask = o.v2
 
 		(&Event{Type: "PING"}).handle()
+		assert.NotEqual(t, 0, taskID)
 	}
 	assert.Equal(t, 7, counter)
+
 }
 
 func testHandler(t *testing.T) {
