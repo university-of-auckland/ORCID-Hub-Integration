@@ -1,4 +1,4 @@
-//+build !test
+//+build !test,aws
 
 package main
 
@@ -47,6 +47,7 @@ func init() {
 		sc := make(chan os.Signal, 1)
 		signal.Notify(sc, syscall.SIGPIPE, syscall.SIGKILL, syscall.SIGTERM)
 
+	TASK_HANDLING:
 		for {
 			select {
 			case <-time.Tick(time.Minute * 10):
@@ -63,8 +64,11 @@ func init() {
 					go (&Task{ID: taskID}).activateTask()
 					taskSetUpWG.Done()
 				}
-				break
+				log.Info("service terminated")
+				break TASK_HANDLING
 			}
 		}
+		close(sc)
+		logger.Sync()
 	}()
 }
