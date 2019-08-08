@@ -1,10 +1,3 @@
-provider "aws" {
-  profile  = "default"
-	version  = "~> 2.22"
-  region   = "ap-southeast-2"
-}
-
-
 resource "aws_iam_role" "orcidhub_integration_role" {
   name = "orcidhub_integration_role"
 
