@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	server                         *httptest.Server
-	withTasks, withAnIncomleteTask bool
-	live                           bool
+	server                                            *httptest.Server
+	malformatResponse, withTasks, withAnIncomleteTask bool
+	live                                              bool
 )
 
 func init() {
@@ -162,12 +162,25 @@ func testIdentityAPICient(t *testing.T) {
 	c.get("identity/integrations/v3/identity/rcir178", &id)
 	assert.NotEqual(t, 0, id.ID)
 
+	err := c.post("identity/integrations/v3/identity/rcir178", `{"test": 1234}`, &id)
+	assert.Nil(t, err)
+
+	err = c.post("identity/integrations/v3/identity/rcir178", t.Log, &id)
+	assert.NotNil(t, err)
+
 	var idNotFound Identity
-	err := c.get("identity/integrations/v3/identity/rad42", &idNotFound)
+	err = c.get("identity/integrations/v3/identity/rad42", &idNotFound)
 	if err != nil {
 		t.Error(err)
 	}
 	assert.Equal(t, 0, idNotFound.ID)
+
+	malformatResponse = true
+	id.ID = 0
+	c.get("identity/integrations/v3/identity/rcir178", &id)
+	assert.Equal(t, 0, id.ID)
+	malformatResponse = false
+
 }
 
 func testEmploymentAPICient(t *testing.T) {
@@ -192,6 +205,14 @@ func testAccessToken(t *testing.T) {
 	err := c.getAccessToken("oauth/token")
 	assert.Nil(t, err)
 	assert.NotEmpty(t, c.accessToken)
+
+	malformatResponse = true
+	c.accessToken = ""
+	err = c.getAccessToken("oauth/token")
+	assert.NotNil(t, err)
+	assert.Empty(t, c.accessToken)
+	malformatResponse = false
+
 }
 
 func testGetOrcidToken(t *testing.T) {
@@ -445,7 +466,30 @@ func testProcessMixed(t *testing.T) {
 	}).handle()
 	assert.True(t, taskRecordCount == 3, "The number of records should be 3, got: %d.", taskRecordCount)
 	t.Log(err)
+
+	counter = 0
 	assert.NotNil(t, err)
+	_, err = (&Event{
+		Records: []events.SQSMessage{
+			{Body: `{"subject":484378182}`},
+			{Body: `{"subject":477579437}`},
+		},
+	}).handle()
+	assert.NotNil(t, err)
+	assert.Equal(t, 3, counter)
+
+	malformatResponse = true
+	counter = 0
+	assert.NotNil(t, err)
+	_, err = (&Event{
+		Records: []events.SQSMessage{
+			{Body: `{"unknown":ABC484378182}`},
+			{Body: `{"unknown":ABC477579437}`},
+		},
+	}).handle()
+	assert.Nil(t, err)
+	assert.Equal(t, 1, counter)
+	malformatResponse = false
 }
 
 func TestIsValidUPIAndID(t *testing.T) {

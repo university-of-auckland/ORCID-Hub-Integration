@@ -620,5 +620,8 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			io.WriteString(w, fmt.Sprintf("%q NOT FOUND!", ru))
 		}
+		if malformatResponse {
+			io.WriteString(w, "~~~RUBISH~~~")
+		}
 	})
 }
