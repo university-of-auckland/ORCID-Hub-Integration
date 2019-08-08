@@ -38,6 +38,6 @@ func main() {
 	})
 	log.Infof("Listening on %s...\n", addr)
 	if err := http.ListenAndServe(addr, nil); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
