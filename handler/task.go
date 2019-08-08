@@ -41,7 +41,7 @@ type Record struct {
 	Orcid               string `json:"orcid,omitempty"`
 	Organisation        string `json:"organisation,omitempty"`
 	ProcessedAt         string `json:"processed-at,omitempty"`
-	PutCode             string `json:"put-code,omitempty"`
+	PutCode             int    `json:"put-code,omitempty"`
 	Role                string `json:"role,omitempty"`
 	StartDate           string `json:"start-date,omitempty"`
 	State               string `json:"state,omitempty"`
