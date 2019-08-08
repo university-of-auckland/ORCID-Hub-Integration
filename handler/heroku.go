@@ -32,8 +32,6 @@ func main() {
 		}
 		if msg != "" {
 			fmt.Fprintf(rw, `{"message": %q}`, msg)
-		} else {
-			rw.WriteHeader(http.StatusNoContent)
 		}
 	})
 	log.Infof("Listening on %s...\n", addr)
