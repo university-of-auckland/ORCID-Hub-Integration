@@ -5,8 +5,6 @@ package main
 import (
 	"context"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/aws/aws-lambda-go/lambda"
 
@@ -37,19 +35,6 @@ func main() {
 		logger.With(lambdazapper.NonContextValues()...)
 		log = logger.Sugar()
 	}
-
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGPIPE)
-
-	go func() {
-		<-sc
-		if taskID != 0 {
-			log.Info("====================== SIGPIPE ======================================================")
-			log.Infof("task (ID: %d) activated", taskID)
-			log.Info("====================== SIGPIPE ======================================================")
-			logger.Sync()
-		}
-	}()
 
 	lambda.Start(HandleRequest)
 }

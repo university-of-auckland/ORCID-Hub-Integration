@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 	"unicode"
 
@@ -75,6 +77,31 @@ func init() {
 		ErrorOutputPaths: []string{"stderr"},
 	}.Build()
 	log = logger.Sugar()
+
+	go func() {
+		sc := make(chan os.Signal, 1)
+		signal.Notify(sc, syscall.SIGPIPE, syscall.SIGKILL, syscall.SIGTERM)
+
+		for {
+			select {
+			case <-time.Tick(time.Minute * 10):
+				if taskID != 0 && taskRecordCount > 0 && time.Now().Sub(taskCreatedAt).Minutes() > taskRetentionMin {
+					taskSetUpWG.Add(1)
+					go (&Task{ID: taskID}).activateTask()
+					taskSetUpWG.Add(1)
+					go newTask()
+					taskSetUpWG.Done()
+				}
+			case <-sc:
+				if taskID != 0 && taskRecordCount > 0 && time.Now().Sub(taskCreatedAt).Minutes() > taskRetentionMin {
+					taskSetUpWG.Add(1)
+					go (&Task{ID: taskID}).activateTask()
+					taskSetUpWG.Done()
+				}
+				break
+			}
+		}
+	}()
 }
 
 func setup() {
