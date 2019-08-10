@@ -33,6 +33,8 @@ var (
 	loggingLevel zapcore.Level
 	logger       *zap.Logger
 	log          *zap.SugaredLogger
+	// for testing/mocking
+	logFatal func(args ...interface{})
 )
 
 const taskFilenamePrefix = "UOA-OH-INTEGRATION-TASK-"
@@ -75,6 +77,7 @@ func init() {
 		ErrorOutputPaths: []string{"stderr"},
 	}.Build()
 	log = logger.Sugar()
+	logFatal = log.Fatal
 
 }
 

@@ -13,23 +13,36 @@ It can be triggered either by SQS or API Gateway directly.
 
 ## Building
 
+To deploy on AWS Lambda:
+
 ```
-go build -o main . && upx main && zip main.zip main
+go build -o main ./handler/ && upx main && zip main.zip main
 ```
+
+Docker image:
+
+```sh 
+
+docker build -t handler . 
+
+```
+
 
 ## Testing
 
 ```sh
 
 export API_KEY=... CLIENT_ID=... CLIENT_SECRET=...
-go test -v .
+gotest -v .
+
 # more verbose:
-go test -v . -args -verbose
+gotest -v . -args -verbose
+
 # with 'live server' instead of using the mock:
-go test -v . -args -live
+gotest -v . -args -live
+
 # to get coverage report (user "-tags test" to exclude Lambda specific bits from the coverage):
 gotest ./... -tags test -cover -coverprofile coverage.out  ; go tool cover -html=coverage.out -o coverage.html
-
 
 ```
 
@@ -43,6 +56,16 @@ CLIENT_ID=...
 CLIENT_SECRET=...
 # UoA API Key:
 API_KEY=...
+# PORT on which to server the handler (only for Docker)
+PORT=5000
 
 ```
 
+## Runing Docker
+
+```sh 
+
+# you need to create **.env** file...
+docker run -it --env-file .env -p "5050:5050" handler
+
+```

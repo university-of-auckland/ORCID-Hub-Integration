@@ -1,4 +1,4 @@
-module github.com/nad2000/consumer
+module ORCID-Hub-Integration
 
 go 1.12
 

@@ -1,3 +1,12 @@
 .docker_build/
 .env
 bin/
+
+.terraform/                            
+cover.*
+coverage.*
+main.zip                               
+main                                   
+tags                                   
+terraform.tfstate                      
+terraform.tfstate.backup               

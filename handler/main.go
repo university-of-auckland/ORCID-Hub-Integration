@@ -1,4 +1,4 @@
-//+build !test,!heroku
+//+build !test,!heroku,!container
 
 package main
 
@@ -37,6 +37,7 @@ func main() {
 		lambdazapper = lambdazap.New().With(lambdazap.AwsRequestID)
 		logger.With(lambdazapper.NonContextValues()...)
 		log = logger.Sugar()
+		logFatal = log.Fatal
 	}
 
 	lambda.Start(HandleRequest)

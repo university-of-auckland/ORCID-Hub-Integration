@@ -59,9 +59,6 @@ func (t *Task) activateTask() {
 
 }
 
-// for testing
-var logFatal = log.Fatal
-
 func newTask() {
 	defer taskSetUpWG.Done()
 	taskFilename := taskFilenamePrefix + strconv.FormatInt(time.Now().Unix(), 36) + ".json"

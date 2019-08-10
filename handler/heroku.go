@@ -1,4 +1,4 @@
-//+build !test,heroku
+//+build !test,heroku !test,container
 
 package main
 
@@ -10,6 +10,9 @@ import (
 )
 
 func main() {
+	for _, e := range os.Environ() {
+		log.Info(e)
+	}
 	port := os.Getenv("PORT")
 	if port == "" {
 		log.Fatal("$PORT not set")
