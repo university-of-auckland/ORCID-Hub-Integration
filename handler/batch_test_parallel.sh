@@ -1,4 +1,6 @@
-xargs -P 100 -L 1 -i -t curl -v -H "Content-Type: application/json" -X POST -d "{\"subject\":{}}" https://415mdw939a.execute-api.ap-southeast-2.amazonaws.com/prod/v1/enqueue <<EOF
+export URL=${1:-https://415mdw939a.execute-api.ap-southeast-2.amazonaws.com/prod/v1/enqueue}
+
+xargs -P 100 -L 1 -i -t curl -v -H "Content-Type: application/json" -d "{\"subject\":{}}" $URL <<EOF
 4306445
 484378182
 477579437
