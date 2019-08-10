@@ -78,7 +78,6 @@ func init() {
 	}.Build()
 	log = logger.Sugar()
 	logFatal = log.Fatal
-
 }
 
 func setup() {
