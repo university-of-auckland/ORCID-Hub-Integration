@@ -8,7 +8,7 @@ type Event struct {
 	EPPN    string `json:"eppn"`
 	Email   string `json:"email"`
 	ORCID   string `json:"orcid"`
-	Subject int    `json:"subject"`
+	Subject int    `json:"subject,string"`
 	Type    string `json:"type"`
 	URL     string `json:"url"`
 	// SQS Message if used SQS

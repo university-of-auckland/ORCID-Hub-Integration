@@ -18,7 +18,7 @@ var lambdazapper *lambdazap.LambdaLogContext
 
 // Response - lambda response
 type Response struct {
-	Message string `json:"message"`
+	Message string `json:"message,omitempty"`
 	Retry   bool   `json:"retry"`
 }
 
@@ -33,7 +33,10 @@ func HandleRequest(ctx context.Context, e Event) (Response, error) {
 	}()
 
 	message, err := e.handle()
-	return Response{Message: message, Retry: false}, err
+	if err != nil {
+		message += ": " + err.Error()
+	}
+	return Response{Message: message, Retry: err != nil}, err
 
 }
 
