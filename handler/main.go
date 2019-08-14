@@ -16,9 +16,15 @@ import (
 
 var lambdazapper *lambdazap.LambdaLogContext
 
+// Response - lambda response
+type Response struct {
+	Message string `json:"message"`
+	Retry   bool   `json:"retry"`
+}
+
 // HandleRequest handle "AWS lambda" request with a single event message or
 // a batch of event messages.
-func HandleRequest(ctx context.Context, e Event) {
+func HandleRequest(ctx context.Context, e Event) (Response, error) {
 
 	defer func() {
 		logger.Sync()
@@ -26,8 +32,8 @@ func HandleRequest(ctx context.Context, e Event) {
 		logger.Sync()
 	}()
 
-	e.handle()
-	return
+	message, err := e.handle()
+	return Response{Message: message, Retry: false}, err
 
 }
 
