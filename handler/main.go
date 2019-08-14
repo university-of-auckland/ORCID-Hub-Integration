@@ -34,10 +34,13 @@ func HandleRequest(ctx context.Context, e Event) (Response, error) {
 
 	message, err := e.handle()
 	if err != nil {
-		message += ": " + err.Error()
+		if message != "" {
+			message += ": " + err.Error()
+		} else {
+			message = err.Error()
+		}
 	}
-	return Response{Message: message, Retry: err != nil}, err
-
+	return Response{Message: message, Retry: err != nil}, nil
 }
 
 func main() {

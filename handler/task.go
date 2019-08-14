@@ -9,7 +9,10 @@ import (
 
 var taskSetUpWG sync.WaitGroup
 
-const taskRetentionMin = 5
+const (
+	taskRetentionMin = 5
+	batchSize        = 12
+)
 
 // Task - ORCID Hub affiliation registration batch task
 type Task struct {
@@ -96,7 +99,7 @@ func setupTask() {
 				log.Error(err)
 				continue
 			}
-			if now.Sub(createdAt).Minutes() > taskRetentionMin && len(t.Records) > 0 {
+			if now.Sub(createdAt).Minutes() > taskRetentionMin && len(t.Records) > batchSize {
 				taskSetUpWG.Add(1)
 				go t.activateTask()
 				continue
@@ -109,7 +112,7 @@ func setupTask() {
 		taskSetUpWG.Add(1)
 		go newTask()
 
-	} else if now.Sub(taskCreatedAt).Minutes() > taskRetentionMin && taskRecordCount > 0 {
+	} else if now.Sub(taskCreatedAt).Minutes() > taskRetentionMin && taskRecordCount > batchSize {
 		var task = Task{ID: taskID}
 		taskSetUpWG.Add(1)
 		go task.activateTask()
