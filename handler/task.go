@@ -9,11 +9,6 @@ import (
 
 var taskSetUpWG sync.WaitGroup
 
-const (
-	taskRetentionMin = 5
-	batchSize        = 12
-)
-
 // Task - ORCID Hub affiliation registration batch task
 type Task struct {
 	ID          int      `json:"id,omitempty"`

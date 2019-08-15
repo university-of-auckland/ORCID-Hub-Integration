@@ -17,27 +17,33 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const (
+	taskFilenamePrefix      = "UOA-OH-INTEGRATION-TASK-"
+	defaultTaskRetentionMin = 5.0
+	defaultBatchSize        = 12
+)
+
 var (
 	api                  Client
+	batchSize            = defaultBatchSize
 	counter              int
 	gotAccessTokenWG     sync.WaitGroup
+	log                  *zap.SugaredLogger
+	logger               *zap.Logger
+	loggingLevel         zapcore.Level
 	oh                   Client
 	taskCreatedAt        time.Time
 	taskID               int
 	taskRecordCount      int
 	taskRecordCountMutex sync.Mutex
+	taskRetentionMin     = defaultTaskRetentionMin
 	updateOrcidWG        sync.WaitGroup
 	verbose              bool
 	wg                   sync.WaitGroup
 
-	loggingLevel zapcore.Level
-	logger       *zap.Logger
-	log          *zap.SugaredLogger
 	// for testing/mocking
 	logFatal func(args ...interface{})
 )
-
-const taskFilenamePrefix = "UOA-OH-INTEGRATION-TASK-"
 
 var (
 	// APIBaseURL is the UoA API base URL
@@ -45,6 +51,15 @@ var (
 	// OHBaseURL is the ORCID Hub API base URL
 	OHBaseURL = "https://dev.orcidhub.org.nz"
 )
+
+func getenvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
+	}
+	return defaultValue
+}
 
 func init() {
 	godotenv.Load()

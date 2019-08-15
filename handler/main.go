@@ -16,15 +16,15 @@ import (
 
 var lambdazapper *lambdazap.LambdaLogContext
 
-// Response - lambda response
-type Response struct {
-	Message string `json:"message,omitempty"`
-	Retry   bool   `json:"retry"`
-}
+// // Response - lambda response
+// type Response struct {
+// 	Message string `json:"message,omitempty"`
+// 	Retry   bool   `json:"retry"`
+// }
 
 // HandleRequest handle "AWS lambda" request with a single event message or
 // a batch of event messages.
-func HandleRequest(ctx context.Context, e Event) (Response, error) {
+func HandleRequest(ctx context.Context, e Event) (message string, err error) {
 
 	defer func() {
 		logger.Sync()
@@ -32,15 +32,16 @@ func HandleRequest(ctx context.Context, e Event) (Response, error) {
 		logger.Sync()
 	}()
 
-	message, err := e.handle()
-	if err != nil {
-		if message != "" {
-			message += ": " + err.Error()
-		} else {
-			message = err.Error()
-		}
-	}
-	return Response{Message: message, Retry: err != nil}, nil
+	message, err = e.handle()
+	// if err != nil {
+	// 	if message != "" {
+	// 		message += ": " + err.Error()
+	// 	} else {
+	// 		message = err.Error()
+	// 	}
+	// }
+	// return Response{Message: message, Retry: err != nil}, err
+	return message, err
 }
 
 func main() {

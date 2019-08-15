@@ -25,6 +25,9 @@ func init() {
 	flag.BoolVar(&verbose, "verbose", false, "Print out the received responses.")
 	flag.BoolVar(&live, "live", false, "Run with the DEV/SANDBOX APIs.")
 	flag.Parse()
+
+	taskRetentionMin = 1
+	batchSize = 1
 }
 
 func isValidUUID(u string) bool {
@@ -192,6 +195,9 @@ func testIdentityAPICient(t *testing.T) {
 	c.get("identity/integrations/v3/identity/rcir178", &id)
 	assert.Equal(t, 0, id.ID)
 	malformatResponse = false
+
+	err = c.do("POST", "identity/integrations/v3/identity/rcir178", nil, &id)
+	assert.Nil(t, err)
 
 }
 
@@ -482,13 +488,13 @@ func testProcessEmpUpdate(t *testing.T) {
 	taskRecordCount = 0
 	_, err = (&Event{
 		Records: []events.SQSMessage{
-			{Body: `{"subject":484378182}`},
-			{Body: `{"subject":477579437}`},
-			{Body: `{"subject":208013283}`},
-			{Body: `{"subject":987654321}`},
-			{Body: `{"subject":8524255}`},
-			{Body: `{"subject":350622514}`},
-			{Body: `{"subject":4306445}`},
+			{Body: `{"subject":"484378182"}`},
+			{Body: `{"subject":"477579437"}`},
+			{Body: `{"subject":"208013283"}`},
+			{Body: `{"subject":"987654321"}`},
+			{Body: `{"subject":"8524255"}`},
+			{Body: `{"subject":"350622514"}`},
+			{Body: `{"subject":"4306445"}`},
 		},
 	}).handle()
 	assert.True(t, taskRecordCount > 0, "The number of records should be > 0.")
@@ -503,8 +509,8 @@ func testProcessMixed(t *testing.T) {
 	taskRecordCount = 0
 	_, err = (&Event{
 		Records: []events.SQSMessage{
-			{Body: `{"subject":484378182}`},
-			{Body: `{"subject":477579437}`},
+			{Body: `{"subject":"484378182"}`},
+			{Body: `{"subject":"477579437"}`},
 			{Body: `{
 				"orcid": "0000-0001-8228-7153", 
 				"url": "https://sandbox.orcid.org/0000-0001-8228-7153", 
@@ -512,9 +518,9 @@ func testProcessMixed(t *testing.T) {
 				"email": "rad42@mailinator.com", 
 				"eppn": "rcir178@auckland.ac.nz"
 			}`},
-			{Body: `{"subject":208013283}`},
-			{Body: `{"subject":66666666}`},
-			{Body: `{"subject":77777777}`},
+			{Body: `{"subject":"208013283"}`},
+			{Body: `{"subject":"66666666"}`},
+			{Body: `{"subject":"77777777"}`},
 			{Body: `{
 				"orcid": "0000-0001-6666-7153", 
 				"url": "https://sandbox.orcid.org/0000-0001-6666-7153", 
@@ -531,8 +537,8 @@ func testProcessMixed(t *testing.T) {
 				"email": "dthn7777mailinator.com", 
 				"eppn": "dthn7777auckland.ac.nz"
 			}`},
-			{Body: `{"subject":987654321}`},
-			{Body: `{"subject":8524255}`},
+			{Body: `{"subject":"987654321"}`},
+			{Body: `{"subject":"8524255"}`},
 			{Body: `{
 				"orcid": "0000-0001-8228-7153", 
 				"url": "https://sandbox.orcid.org/0000-0001-8228-7153", 
@@ -541,8 +547,8 @@ func testProcessMixed(t *testing.T) {
 				"email": "rad42@mailinator.com", 
 				"eppn": "rcir178@auckland.ac.nz"
 			}`},
-			{Body: `{"subject":350622514}`},
-			{Body: `{"subject":4306445}`},
+			{Body: `{"subject":"350622514"}`},
+			{Body: `{"subject":"4306445"}`},
 		},
 	}).handle()
 	assert.True(t, taskRecordCount == 3, "The number of records should be 3, got: %d.", taskRecordCount)
@@ -552,8 +558,8 @@ func testProcessMixed(t *testing.T) {
 	assert.NotNil(t, err)
 	_, err = (&Event{
 		Records: []events.SQSMessage{
-			{Body: `{"subject":484378182}`},
-			{Body: `{"subject":477579437}`},
+			{Body: `{"subject":"484378182"}`},
+			{Body: `{"subject":"477579437"}`},
 		},
 	}).handle()
 	assert.NotNil(t, err)
