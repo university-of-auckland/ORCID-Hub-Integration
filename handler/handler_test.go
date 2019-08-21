@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -88,6 +89,7 @@ func TestCore(t *testing.T) {
 	t.Run("ProcessEmpUpdate", testProcessEmpUpdate)
 	t.Run("ProcessMixed", testProcessMixed)
 	t.Run("HealthCheck", testHealthCheck)
+	// t.Run("MalformatedPayload", testMalformatedPayload)
 }
 
 func testTaskControl(t *testing.T) {
@@ -96,7 +98,6 @@ func testTaskControl(t *testing.T) {
 	(&Event{Type: "PING"}).handle()
 
 	taskRecordCount = 999
-
 	taskCreatedAt.Add(time.Hour)
 	(&Event{Type: "PING"}).handle()
 
@@ -109,12 +110,11 @@ func testTaskControl(t *testing.T) {
 		v1 bool
 		v2 bool
 	}{
-		{false, false},
-		{false, true},
-		{true, false},
 		{true, true},
+		{true, false},
+		{false, true},
+		{false, false},
 	} {
-		taskSetUpWG.Wait()
 		taskID = 0
 		withTasks = o.v1
 		withAnIncomleteTask = o.v2
@@ -123,19 +123,23 @@ func testTaskControl(t *testing.T) {
 		assert.NotEqual(t, 0, taskID)
 	}
 	assert.Equal(t, 7, counter)
+}
 
-	// Corener cases:
-	malformatResponse = true
-	taskSetUpWG.Add(1)
-	(&Task{ID: 123456}).activateTask()
-	taskSetUpWG.Add(1)
+func testMalformatedPayload(t *testing.T) {
+	var fatalCallCount int
 	oldLogFata := log.Fatal
-	logFatal = func(args ...interface{}) { return }
-	newTask()
+	logFatal = func(args ...interface{}) { fatalCallCount++; t.Log("*** FATAL: ", args) }
+	malformatResponse = true
+
+	taskSetUpWG.Add(2)
+	(&Task{ID: 123456}).activate(&taskSetUpWG)
+
+	newTask(&taskSetUpWG)
 	logFatal = oldLogFata
 	taskSetUpWG.Wait()
-	malformatResponse = false
 
+	malformatResponse = false
+	assert.Equal(t, 3, fatalCallCount)
 }
 
 func testHandler(t *testing.T) {
@@ -213,20 +217,21 @@ func testEmploymentAPICient(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153")
+	var wg sync.WaitGroup
+	count, err := emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153", &wg)
 	assert.NotZero(t, count)
 	assert.Nil(t, err)
 
 	// malformated message:
 	malformatResponse = true
-	count, err = emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153")
+	count, err = emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153", &wg)
 	assert.Zero(t, count)
 	assert.NotNil(t, err)
 	malformatResponse = false
 
 	// no jobs
 	emp.Job = nil
-	count, err = emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153")
+	count, err = emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153", &wg)
 	assert.Zero(t, count)
 	assert.NotNil(t, err)
 }
@@ -241,16 +246,17 @@ func testAccessToken(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, c.accessToken)
 
+	// malformated message
+	oldLogFata := log.Fatal
+	logFatal = func(args ...interface{}) {}
+
 	malformatResponse = true
 	c.accessToken = ""
 	err = c.getAccessToken("oauth/token")
 	assert.NotNil(t, err)
 	assert.Empty(t, c.accessToken)
 
-	// malformated message
 	at := oh.accessToken
-	oldLogFata := log.Fatal
-	logFatal = func(args ...interface{}) { return }
 	oh.accessToken = ""
 	setupAPIClients()
 	gotAccessTokenWG.Wait()
@@ -328,7 +334,8 @@ func testProcessRegistration(t *testing.T) {
 	// malformatted messages:
 	malformatResponse = true
 	oldLogFata := log.Fatal
-	logFatal = func(args ...interface{}) { return }
+	logFatal = func(args ...interface{}) {}
+
 	e = Event{Type: "CREATED", EPPN: "djim087@auckland.ac.nz", ORCID: "0000-0002-3008-0422"}
 	output, err = e.handle()
 	assert.Empty(t, output)
@@ -507,6 +514,7 @@ func testProcessMixed(t *testing.T) {
 	var err error
 
 	taskRecordCount = 0
+	withAnIncomleteTask = true
 	_, err = (&Event{
 		Records: []events.SQSMessage{
 			{Body: `{"subject":"484378182"}`},
@@ -551,11 +559,12 @@ func testProcessMixed(t *testing.T) {
 			{Body: `{"subject":"4306445"}`},
 		},
 	}).handle()
+
 	assert.True(t, taskRecordCount == 3, "The number of records should be 3, got: %d.", taskRecordCount)
-	t.Log(err)
+	assert.NotNil(t, err)
+	t.Log(malformatResponse, withTasks, withAnIncomleteTask, "----------------------------------")
 
 	counter = 0
-	assert.NotNil(t, err)
 	_, err = (&Event{
 		Records: []events.SQSMessage{
 			{Body: `{"subject":"484378182"}`},

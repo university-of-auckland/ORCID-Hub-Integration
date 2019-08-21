@@ -6,6 +6,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -46,26 +47,25 @@ func init() {
 		sc := make(chan os.Signal, 1)
 		signal.Notify(sc, syscall.SIGPIPE, syscall.SIGKILL, syscall.SIGTERM)
 
+		var wg sync.WaitGroup
 	TASK_HANDLING:
 		for {
 			select {
 			case <-time.Tick(time.Minute * 10):
-				if taskID != 0 && taskRecordCount > 0 && time.Now().Sub(taskCreatedAt).Minutes() > taskRetentionMin {
-					taskSetUpWG.Add(1)
-					go (&Task{ID: taskID}).activateTask()
-					taskSetUpWG.Add(1)
-					go newTask()
-					taskSetUpWG.Done()
+				if taskID != 0 && taskRecordCount > batchSize && time.Now().Sub(taskCreatedAt).Minutes() > taskRetentionMin {
+					wg.Add(2)
+					go (&Task{ID: taskID}).activate(&wg)
+					go newTask(&wg)
 				}
 			case <-sc:
-				if taskID != 0 && taskRecordCount > 0 && time.Now().Sub(taskCreatedAt).Minutes() > taskRetentionMin {
-					taskSetUpWG.Add(1)
-					go (&Task{ID: taskID}).activateTask()
-					taskSetUpWG.Done()
+				if taskID != 0 && taskRecordCount > batchSize && time.Now().Sub(taskCreatedAt).Minutes() > taskRetentionMin {
+					wg.Add(1)
+					go (&Task{ID: taskID}).activate(&wg)
 				}
 				log.Info("service terminated")
 				break TASK_HANDLING
 			}
+			wg.Wait()
 		}
 		close(sc)
 		logger.Sync()

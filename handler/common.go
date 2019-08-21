@@ -95,11 +95,10 @@ func init() {
 	logFatal = log.Fatal
 }
 
-func setup() {
+func setup(wg *sync.WaitGroup) {
 	setupAPIClients()
 
-	taskSetUpWG.Add(1)
-	go setupTask()
+	go setupTask(wg)
 }
 
 // handle performs the incoming message routing.
@@ -150,14 +149,18 @@ func (e *Event) handle() (string, error) {
 		return strings.Join(resp, "; "), errors
 	}
 
+	var setUpWG sync.WaitGroup
+
 	if (e.EPPN != "" && e.Type == "CREATED") || e.Subject != 0 || e.Type == "PING" {
-		setup()
+		setUpWG.Add(1)
+		go setup(&setUpWG)
+
 		if e.EPPN != "" {
-			return e.processUserRegistration()
+			return e.processUserRegistration(&setUpWG)
 		} else if e.Subject != 0 {
-			return e.processEmpUpdate()
+			return e.processEmpUpdate(&setUpWG)
 		} else if e.Type == "PING" { // Heartbeat Check
-			taskSetUpWG.Wait()
+			setUpWG.Wait()
 			return "GNIP", nil
 		}
 	}
@@ -165,14 +168,14 @@ func (e *Event) handle() (string, error) {
 }
 
 // processEmpUpdate handles the employer update event.
-func (e *Event) processEmpUpdate() (string, error) {
+func (e *Event) processEmpUpdate(wg *sync.WaitGroup) (string, error) {
 
 	var employeeID = strconv.Itoa(e.Subject)
 
 	var id Identity
 	err := api.get("identity/integrations/v3/identity/"+employeeID, &id)
 	if err != nil {
-		log.Fatal("failed to retrieve the identity record", zap.Error(err))
+		log.Fatal("failed to retrieve the identity record", err)
 	}
 	if id.Upi == "" {
 		return "", errors.New("failed to retrieve the identity record")
@@ -189,12 +192,7 @@ func (e *Event) processEmpUpdate() (string, error) {
 		log.Fatal("failed to get employment record", zap.Error(err))
 	}
 
-	// wg.Add(1)
-	// go func() {
-	// 	defer wg.Done()
-	// 	emp.propagateToHub(token.Email, token.ORCID)
-	// }()
-	emp.propagateToHub(token.Email, token.ORCID)
+	emp.propagateToHub(token.Email, token.ORCID, wg)
 
 	return "", nil
 }
@@ -251,7 +249,7 @@ func isValidID(uid string) bool {
 }
 
 // processUserRegistration handles the user registration/ORCID account linking on the Hub.
-func (e *Event) processUserRegistration() (string, error) {
+func (e *Event) processUserRegistration(wg *sync.WaitGroup) (string, error) {
 
 	parts := strings.Split(e.EPPN, "@")
 	upi := parts[0]
@@ -280,7 +278,7 @@ func (e *Event) processUserRegistration() (string, error) {
 		return "", fmt.Errorf("no Identity for %q (%s, %s) or employment records", e.EPPN, e.Email, e.ORCID)
 	}
 
-	count, err := emp.propagateToHub(id.EmailAddress, e.ORCID)
+	count, err := emp.propagateToHub(id.EmailAddress, e.ORCID, wg)
 	taskRecordCountMutex.Lock()
 	taskRecordCount += count
 	taskRecordCountMutex.Unlock()

@@ -46,19 +46,19 @@ type Record struct {
 	Status              string `json:"status,omitempty"`
 }
 
-func (t *Task) activateTask() {
+func (t *Task) activate(wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	var task Task
 	log.Debugf("Activate the task %q (ID: %d)", t.Filename, t.ID)
 	err := oh.patch("api/v1/tasks/"+strconv.Itoa(t.ID), map[string]string{"status": "ACTIVE"}, &task)
 	if err != nil {
 		log.Errorf("ERROR: Failed to activate task %d: %q", t.ID, err)
 	}
-	taskSetUpWG.Done()
-
 }
 
-func newTask() {
-	defer taskSetUpWG.Done()
+func newTask(wg *sync.WaitGroup) {
+
 	taskFilename := taskFilenamePrefix + strconv.FormatInt(time.Now().Unix(), 36) + ".json"
 	var task = Task{Filename: taskFilename, Type: "AFFILIATION", Records: []Record{}}
 	err := oh.post("api/v1/affiliations?filename="+taskFilename, task, &task)
@@ -71,13 +71,16 @@ func newTask() {
 		log.Errorf("failed to parse date %q: %s", task.CreatedAt, err)
 	}
 	log.Debugf("*** New affiliation task created (ID: %d, filename: %q)", task.ID, task.Filename)
+
+	wg.Done()
 }
 
 // Either get the task ID or activate outstanding tasks and start a new one
-func setupTask() {
+func setupTask(wg *sync.WaitGroup) {
 
-	defer taskSetUpWG.Done()
 	now := time.Now()
+
+	var taskSwitchingWG sync.WaitGroup
 	if taskID == 0 {
 		var tasks []Task
 		// Make sure the access token acquired
@@ -95,8 +98,8 @@ func setupTask() {
 				continue
 			}
 			if now.Sub(createdAt).Minutes() > taskRetentionMin && len(t.Records) > batchSize {
-				taskSetUpWG.Add(1)
-				go t.activateTask()
+				taskSwitchingWG.Add(1)
+				go t.activate(&taskSwitchingWG)
 				continue
 			}
 			taskID = t.ID
@@ -104,15 +107,16 @@ func setupTask() {
 			taskRecordCount = len(t.Records)
 			goto FOUND_TASK
 		}
-		taskSetUpWG.Add(1)
-		go newTask()
+		taskSwitchingWG.Add(1)
+		go newTask(&taskSwitchingWG)
 
 	} else if now.Sub(taskCreatedAt).Minutes() > taskRetentionMin && taskRecordCount > batchSize {
-		var task = Task{ID: taskID}
-		taskSetUpWG.Add(1)
-		go task.activateTask()
-		taskSetUpWG.Add(1)
-		go newTask()
+		log.Debug(now.Sub(taskCreatedAt).Minutes(), taskRetentionMin, taskRecordCount, batchSize)
+		taskSwitchingWG.Add(2)
+		go (&Task{ID: taskID}).activate(&taskSwitchingWG)
+		go newTask(&taskSwitchingWG)
 	}
 FOUND_TASK:
+	taskSwitchingWG.Wait()
+	wg.Done()
 }

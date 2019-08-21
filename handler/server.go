@@ -15,7 +15,7 @@ func main() {
 		log.Fatal("$PORT not set")
 	}
 	addr := ":" + port
-	http.HandleFunc("/v1/enqueue", func(rw http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/handle", func(rw http.ResponseWriter, req *http.Request) {
 		rw.Header().Set("Content-Type", "application/json")
 		var e Event
 		decoder := json.NewDecoder(req.Body)
