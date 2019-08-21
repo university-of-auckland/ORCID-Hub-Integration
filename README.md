@@ -8,8 +8,7 @@ a sample Lambda...
 It can be triggered either by SQS or API Gateway directly.
 
 ### Event Message Flow
-![ScreenShot](/handler/flow.png?raw=true "Message Flow")
-
+![ScreenShot](https://wiki.auckland.ac.nz/rest/gliffy/1.0/embeddedDiagrams/223c4818-415f-4cd2-971d-951f0728ff53.png "Message Flow")
 
 ## Building
 
