@@ -37,13 +37,13 @@ resource "null_resource" "kong-api-cleanup" {
 					-H 'apikey: ${var.apikey}'
 EOT
   }
-}
+
 
 # Kafka connector: Kafka -> Webhook Kong entry point
 resource "null_resource" "connector" {
   provisioner "local-exec" {
       command = <<EOT
-        curl  -v > connection-orcidhub-setup.log \
+        curl -v > connection-orcidhub-setup.log \
 					-X POST https://api.dev.auckland.ac.nz/service/kafka-connect/v2/connectors/ \
 					-H 'Content-Type: application/json' \
 					-H 'Accept: application/json' \
