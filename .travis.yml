@@ -2,7 +2,7 @@ language: go
 
 go:
   - 1.12.x
-  # - master
+  - master
 
 env: GO111MODULE=on
 before_install:
