@@ -10,6 +10,8 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/goveralls v0.0.2 // indirect
+	github.com/onsi/ginkgo v1.9.0
+	github.com/onsi/gomega v1.6.0
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/rakyll/gotest v0.0.0-20180125184505-86f0749cd8cc // indirect
 	github.com/sirupsen/logrus v1.4.2
