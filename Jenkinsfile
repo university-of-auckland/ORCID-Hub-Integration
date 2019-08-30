@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment {
+        PATH = "$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
+    }
 
     stages {
         stage('Build') {
