@@ -1,11 +1,11 @@
 #/bin/env sh
 
-export GOPATH="${WORKSPACE}"
-export GOROOT="${GOPATH}/go"
+export GOPATH="${WORKSPACE}/.go"
+export GOROOT="${WORKSPACE}/go"
 PATH="${GOROOT}/bin:$PATH"
 
-cd "${WORKSPACE}"
 LATEST=$(curl https://golang.org/VERSION?m=text)
+mkdir -p "$GOPATH"
 if ! -d "$GOROOT" ; then
   # Download the latest stable build
   wget https://dl.google.com/go/$LATEST.linux-amd64.tar.gz
