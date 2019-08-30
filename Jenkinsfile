@@ -13,7 +13,6 @@ pipeline {
         }
         stage('Test') {
             steps {
-		sh '
                 echo '=== Testing..'
 		sh 'gotest -v ./...'
             }
