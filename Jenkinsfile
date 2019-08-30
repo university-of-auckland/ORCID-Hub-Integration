@@ -4,17 +4,21 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Building..'
+	    	echo '=== Install/Upgrade'
+		sh '.jenkins/install.sh'
+                echo '=== Building..'
+		sh 'go version'
             }
         }
         stage('Test') {
             steps {
-                echo 'Testing..'
+                echo '=== Testing..'
             }
         }
         stage('Deploy') {
             steps {
-                echo 'Deploying....'
+                echo '=== Deploying....'
+                echo 'Stay Tunded....'
             }
         }
     }
