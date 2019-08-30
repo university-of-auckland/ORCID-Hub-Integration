@@ -25,32 +25,28 @@ type Client struct {
 	jsonBody                                             []byte
 }
 
-var accessTokenIsOnTheWay sync.Mutex
+var accessTokenMutex sync.Mutex
 
-func setupAPIClients() {
+func setupAPIClients() (err error) {
 	if api.apiKey == "" {
 		api.apiKey = os.Getenv("API_KEY")
 		api.baseURL = APIBaseURL
 	}
 
 	// Ensure that two guys don't try both to get a token (data race)
-	accessTokenIsOnTheWay.Lock()
+	accessTokenMutex.Lock()
+	defer accessTokenMutex.Unlock()
+
 	if oh.accessToken == "" {
-		gotAccessTokenWG.Add(1)
-		go func() {
-			oh.clientID = os.Getenv("CLIENT_ID")
-			oh.clientSecret = os.Getenv("CLIENT_SECRET")
-			oh.baseURL = OHBaseURL
-			err := oh.getAccessToken("oauth/token")
-			if err != nil || oh.accessToken == "" {
-				logFatal("filed to authorize with the client credentials", err)
-			}
-			accessTokenIsOnTheWay.Unlock()
-			gotAccessTokenWG.Done()
-		}()
-	} else {
-		accessTokenIsOnTheWay.Unlock()
+		oh.clientID = os.Getenv("CLIENT_ID")
+		oh.clientSecret = os.Getenv("CLIENT_SECRET")
+		oh.baseURL = OHBaseURL
+		err = oh.getAccessToken("oauth/token")
+		if err != nil || oh.accessToken == "" {
+			log.Error("filed to authorize with the client credentials", err)
+		}
 	}
+	return
 }
 
 func (c *Client) getAccessToken(url string) error {

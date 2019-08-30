@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -67,13 +66,7 @@ func TestCore(t *testing.T) {
 
 	if !live {
 		setupTests(t)
-		defer func() {
-			gotAccessTokenWG.Wait()
-			taskSetUpWG.Wait()
-			wg.Wait()
-
-			teardownTests(t)
-		}()
+		defer teardownTests(t)
 	} else {
 		setupAPIClients()
 	}
@@ -131,12 +124,9 @@ func testMalformatedPayload(t *testing.T) {
 	logFatal = func(args ...interface{}) { fatalCallCount++; t.Log("*** FATAL: ", args) }
 	malformatResponse = true
 
-	taskSetUpWG.Add(2)
-	(&Task{ID: 123456}).activate(&taskSetUpWG)
-
-	newTask(&taskSetUpWG)
+	(&Task{ID: 123456}).activate()
+	newTask()
 	logFatal = oldLogFata
-	taskSetUpWG.Wait()
 
 	malformatResponse = false
 	assert.Equal(t, 3, fatalCallCount)
@@ -217,21 +207,20 @@ func testEmploymentAPICient(t *testing.T) {
 		t.Error(err)
 	}
 
-	var wg sync.WaitGroup
-	count, err := emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153", &wg)
+	count, err := emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153")
 	assert.NotZero(t, count)
 	assert.Nil(t, err)
 
 	// malformated message:
 	malformatResponse = true
-	count, err = emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153", &wg)
+	count, err = emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153")
 	assert.Zero(t, count)
 	assert.NotNil(t, err)
 	malformatResponse = false
 
 	// no jobs
 	emp.Job = nil
-	count, err = emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153", &wg)
+	count, err = emp.propagateToHub("rcir178@auckland.ac.nz", "0000-0001-8228-7153")
 	assert.Zero(t, count)
 	assert.NotNil(t, err)
 }
@@ -259,7 +248,6 @@ func testAccessToken(t *testing.T) {
 	at := oh.accessToken
 	oh.accessToken = ""
 	setupAPIClients()
-	gotAccessTokenWG.Wait()
 	oh.accessToken = at
 	logFatal = oldLogFata
 	malformatResponse = false
@@ -298,7 +286,6 @@ func testProcessRegistration(t *testing.T) {
 	)
 
 	setupAPIClients()
-	gotAccessTokenWG.Wait()
 	if live {
 		// Remove the existing ORCID iDs
 		for _, upi := range []string{"rpaw053", "rcir178", "djim087"} {
@@ -340,7 +327,6 @@ func testProcessRegistration(t *testing.T) {
 	output, err = e.handle()
 	assert.Empty(t, output)
 	assert.NotNil(t, err)
-	taskSetUpWG.Wait()
 	logFatal = oldLogFata
 	malformatResponse = false
 }

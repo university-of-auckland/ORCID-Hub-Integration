@@ -27,13 +27,13 @@ var (
 	api                  Client
 	batchSize            = defaultBatchSize
 	counter              int
-	gotAccessTokenWG     sync.WaitGroup
 	log                  *zap.SugaredLogger
 	logger               *zap.Logger
 	loggingLevel         zapcore.Level
 	oh                   Client
 	taskCreatedAt        time.Time
 	taskID               int
+	taskIDMutex          sync.Mutex
 	taskRecordCount      int
 	taskRecordCountMutex sync.Mutex
 	taskRetentionMin     = defaultTaskRetentionMin
@@ -95,10 +95,12 @@ func init() {
 	logFatal = log.Fatal
 }
 
-func setup(wg *sync.WaitGroup) {
-	setupAPIClients()
-
-	go setupTask(wg)
+func setup() (err error) {
+	err = setupAPIClients()
+	if err != nil {
+		return
+	}
+	return setupTask()
 }
 
 // handle performs the incoming message routing.
@@ -149,18 +151,14 @@ func (e *Event) handle() (string, error) {
 		return strings.Join(resp, "; "), errors
 	}
 
-	var setUpWG sync.WaitGroup
-
 	if (e.EPPN != "" && e.Type == "CREATED") || e.Subject != 0 || e.Type == "PING" {
-		setUpWG.Add(1)
-		go setup(&setUpWG)
+		setup()
 
 		if e.EPPN != "" {
-			return e.processUserRegistration(&setUpWG)
+			return e.processUserRegistration()
 		} else if e.Subject != 0 {
-			return e.processEmpUpdate(&setUpWG)
+			return e.processEmpUpdate()
 		} else if e.Type == "PING" { // Heartbeat Check
-			setUpWG.Wait()
 			return "GNIP", nil
 		}
 	}
@@ -168,7 +166,7 @@ func (e *Event) handle() (string, error) {
 }
 
 // processEmpUpdate handles the employer update event.
-func (e *Event) processEmpUpdate(wg *sync.WaitGroup) (string, error) {
+func (e *Event) processEmpUpdate() (string, error) {
 
 	var employeeID = strconv.Itoa(e.Subject)
 
@@ -192,7 +190,7 @@ func (e *Event) processEmpUpdate(wg *sync.WaitGroup) (string, error) {
 		log.Fatal("failed to get employment record", zap.Error(err))
 	}
 
-	emp.propagateToHub(token.Email, token.ORCID, wg)
+	emp.propagateToHub(token.Email, token.ORCID)
 
 	return "", nil
 }
@@ -249,7 +247,7 @@ func isValidID(uid string) bool {
 }
 
 // processUserRegistration handles the user registration/ORCID account linking on the Hub.
-func (e *Event) processUserRegistration(wg *sync.WaitGroup) (string, error) {
+func (e *Event) processUserRegistration() (string, error) {
 
 	parts := strings.Split(e.EPPN, "@")
 	upi := parts[0]
@@ -278,7 +276,7 @@ func (e *Event) processUserRegistration(wg *sync.WaitGroup) (string, error) {
 		return "", fmt.Errorf("no Identity for %q (%s, %s) or employment records", e.EPPN, e.Email, e.ORCID)
 	}
 
-	count, err := emp.propagateToHub(id.EmailAddress, e.ORCID, wg)
+	count, err := emp.propagateToHub(id.EmailAddress, e.ORCID)
 	taskRecordCountMutex.Lock()
 	taskRecordCount += count
 	taskRecordCountMutex.Unlock()

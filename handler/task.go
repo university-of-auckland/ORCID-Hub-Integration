@@ -3,11 +3,8 @@ package main
 import (
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
-
-var taskSetUpWG sync.WaitGroup
 
 // Task - ORCID Hub affiliation registration batch task
 type Task struct {
@@ -46,9 +43,7 @@ type Record struct {
 	Status              string `json:"status,omitempty"`
 }
 
-func (t *Task) activate(wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (t *Task) activate() {
 	var task Task
 	log.Debugf("Activate the task %q (ID: %d)", t.Filename, t.ID)
 	err := oh.patch("api/v1/tasks/"+strconv.Itoa(t.ID), map[string]string{"status": "ACTIVE"}, &task)
@@ -57,7 +52,7 @@ func (t *Task) activate(wg *sync.WaitGroup) {
 	}
 }
 
-func newTask(wg *sync.WaitGroup) {
+func newTask() {
 
 	taskFilename := taskFilenamePrefix + strconv.FormatInt(time.Now().Unix(), 36) + ".json"
 	var task = Task{Filename: taskFilename, Type: "AFFILIATION", Records: []Record{}}
@@ -71,52 +66,46 @@ func newTask(wg *sync.WaitGroup) {
 		log.Errorf("failed to parse date %q: %s", task.CreatedAt, err)
 	}
 	log.Debugf("*** New affiliation task created (ID: %d, filename: %q)", task.ID, task.Filename)
-
-	wg.Done()
 }
 
 // Either get the task ID or activate outstanding tasks and start a new one
-func setupTask(wg *sync.WaitGroup) {
+func setupTask() (err error) {
+
+	taskIDMutex.Lock()
+	defer taskIDMutex.Unlock()
 
 	now := time.Now()
-
-	var taskSwitchingWG sync.WaitGroup
 	if taskID == 0 {
 		var tasks []Task
 		// Make sure the access token acquired
 		log.Debug("=======================================================================================")
-		gotAccessTokenWG.Wait()
 		oh.get("api/v1/tasks?type=AFFILIATION&status=INACTIVE", &tasks)
 		for _, t := range tasks {
 			log.Debugf("TASK: %+v", t)
 			if t.Status == "ACTIVE" || t.Status == "RESET" || t.CompletedAt != "" || !strings.HasPrefix(t.Filename, taskFilenamePrefix) {
 				continue
 			}
-			createdAt, err := time.Parse("2006-01-02T15:04:05", t.CreatedAt)
+			var createdAt time.Time
+			createdAt, err = time.Parse("2006-01-02T15:04:05", t.CreatedAt)
 			if err != nil {
 				log.Error(err)
-				continue
+				return
 			}
 			if now.Sub(createdAt).Minutes() > taskRetentionMin && len(t.Records) > batchSize {
-				taskSwitchingWG.Add(1)
-				go t.activate(&taskSwitchingWG)
+				t.activate()
 				continue
 			}
 			taskID = t.ID
 			taskCreatedAt = createdAt
 			taskRecordCount = len(t.Records)
-			goto FOUND_TASK
+			return
 		}
-		taskSwitchingWG.Add(1)
-		go newTask(&taskSwitchingWG)
+		newTask()
 
 	} else if now.Sub(taskCreatedAt).Minutes() > taskRetentionMin && taskRecordCount > batchSize {
 		log.Debug(now.Sub(taskCreatedAt).Minutes(), taskRetentionMin, taskRecordCount, batchSize)
-		taskSwitchingWG.Add(2)
-		go (&Task{ID: taskID}).activate(&taskSwitchingWG)
-		go newTask(&taskSwitchingWG)
+		(&Task{ID: taskID}).activate()
+		newTask()
 	}
-FOUND_TASK:
-	taskSwitchingWG.Wait()
-	wg.Done()
+	return
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"strconv"
-	"sync"
 )
 
 // Employment API empoyment-v1 response message.
@@ -50,7 +49,7 @@ type Employment struct {
 }
 
 // propagateToHub adds employment records to the current affiliation task.
-func (emp *Employment) propagateToHub(email, orcid string, wg *sync.WaitGroup) (count int, err error) {
+func (emp *Employment) propagateToHub(email, orcid string) (count int, err error) {
 
 	count = len(emp.Job)
 	if count == 0 {
@@ -71,7 +70,6 @@ func (emp *Employment) propagateToHub(email, orcid string, wg *sync.WaitGroup) (
 		}
 	}
 	// Make sure the task set-up is comlete
-	wg.Wait()
 
 	var (
 		task   Task

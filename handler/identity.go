@@ -48,7 +48,6 @@ func (id *Identity) GetOrcidAccessToken() (token Token, ok bool) {
 	orcid := id.GetORCID()
 
 	if orcid != "" {
-		gotAccessTokenWG.Wait()
 		err := oh.get("api/v1/tokens/"+orcid, &tokens)
 		if err != nil {
 			log.Error(err)
@@ -57,7 +56,6 @@ func (id *Identity) GetOrcidAccessToken() (token Token, ok bool) {
 		}
 	}
 	if id.Upi != "" || id.EmailAddress != "" || id.Emails != nil {
-		gotAccessTokenWG.Wait()
 		otherIDs := make([]string, len(id.Emails)+2)
 		otherIDs[0] = id.Upi + "@auckland.ac.nz"
 		otherIDs[1] = id.EmailAddress
