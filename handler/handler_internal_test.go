@@ -1,3 +1,5 @@
+//+build test
+
 package main
 
 import (
@@ -28,6 +30,13 @@ func init() {
 
 	taskRetentionMin = 1
 	batchSize = 1
+}
+
+func getenv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
 
 func isValidUUID(u string) bool {

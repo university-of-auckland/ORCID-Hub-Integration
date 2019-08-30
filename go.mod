@@ -8,7 +8,9 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dougEfresh/lambdazap v0.0.0-20180327213147-ad7d89679c77
 	github.com/fatih/color v1.7.0 // indirect
+	github.com/google/pprof v0.0.0-20190723021845-34ac40c74b70
 	github.com/google/uuid v1.1.1
+	github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6 // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
@@ -23,7 +25,8 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0
 	golang.org/dl v0.0.0-20190829154251-82a15e2f2ead // indirect
-	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472 // indirect
+	golang.org/x/arch v0.0.0-20190815191158-8a70ba74b3a1
+	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
 	golang.org/x/sys v0.0.0-20190830080133-08d80c9d36de // indirect
