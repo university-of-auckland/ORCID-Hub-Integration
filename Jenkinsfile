@@ -8,18 +8,22 @@ pipeline {
     }
 
     stages {
-        stage('Build') {
+        stage('Setup') {
             steps {
-	    	echo '=== Install/Upgrade'
 		sh '.jenkins/install.sh'
-		sh 'go version'
-		sh 'go get -u golang.org/x/tools/cmd/cover github.com/mattn/goveralls golang.org/x/lint/golint github.com/rakyll/gotest'
-		sh 'go build -o main ./handler/ && upx main && zipit'
             }
         }
         stage('Test') {
             steps {
 		sh 'gotest -tags test ./handler/...'
+            }
+        }
+        stage('Build') {
+            steps {
+		sh 'go vet ./handler'
+		sh 'golint ./handler'
+		sh 'go get -u golang.org/x/tools/cmd/cover github.com/mattn/goveralls golang.org/x/lint/golint github.com/rakyll/gotest'
+		sh 'go build -o main ./handler/ && upx main && zipit'
             }
         }
         stage('Deploy') {
