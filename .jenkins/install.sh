@@ -23,3 +23,10 @@ if [ ! -x "${WORKSPACE}/bin/upx" ] ; then
   wget -q https://github.com/upx/upx/releases/download/v${LATEST_UPX}/upx-${LATEST_UPX}-amd64_linux.tar.xz
   tar xf upx-${LATEST_UPX}-amd64_linux.tar.xz --strip=1 -C "${WORKSPACE}/bin" --wildcards '*/upx'
 fi
+
+# 7z
+if [ ! -x "${WORKSPACE}/bin/7z" ] ; then 
+  wget -q https://sourceforge.net/projects/p7zip/files/p7zip/16.02/p7zip_16.02_x86_linux_bin.tar.bz2/download -O p7zip_16.02_x86_linux_bin.tar.bz2
+  tar xvf p7zip_16.02_x86_linux_bin.tar.bz2 --strip=1 --wildcards '*/bin'
+fi
+
