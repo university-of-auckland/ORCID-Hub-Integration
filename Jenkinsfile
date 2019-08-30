@@ -13,7 +13,7 @@ pipeline {
 		sh '.jenkins/install.sh'
 		sh 'go version'
 		sh 'go get -u golang.org/x/tools/cmd/cover github.com/mattn/goveralls golang.org/x/lint/golint github.com/rakyll/gotest'
-		sh 'go build -o main ./handler/ && upx main && 7z a main.zip main'
+		sh 'go build -o main ./handler/ && upx main && zipit'
             }
         }
         stage('Test') {

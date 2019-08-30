@@ -24,9 +24,8 @@ if [ ! -x "${WORKSPACE}/bin/upx" ] ; then
   tar xf upx-${LATEST_UPX}-amd64_linux.tar.xz --strip=1 -C "${WORKSPACE}/bin" --wildcards '*/upx'
 fi
 
-# 7z
-if [ ! -x "${WORKSPACE}/bin/7z" ] ; then 
-  wget -q https://sourceforge.net/projects/p7zip/files/p7zip/16.02/p7zip_16.02_x86_linux_bin.tar.bz2/download -O p7zip_16.02_x86_linux_bin.tar.bz2
-  tar xvf p7zip_16.02_x86_linux_bin.tar.bz2 --strip=1 --wildcards '*/bin'
+# zip
+if [ ! -x "${WORKSPACE}/bin/zipit" ] ; then 
+  go build -o "${WORKSPACE}/bin/zipit" .jenkins/zipit.go
 fi
 
