@@ -13,6 +13,7 @@ before_install:
 
 script:
   - go vet ./handler
+  - go vet -tags=test ./handler
   - golint ./handler
   - gotest -v -tags test -cover -covermode=count -coverprofile coverage.out  ./...
 
