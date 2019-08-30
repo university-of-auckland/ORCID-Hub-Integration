@@ -18,7 +18,7 @@ pipeline {
         }
         stage('Test') {
             steps {
-		sh 'gotest -tags test -v ./handler/...'
+		sh 'gotest -tags test ./handler/...'
             }
         }
         stage('Deploy') {
