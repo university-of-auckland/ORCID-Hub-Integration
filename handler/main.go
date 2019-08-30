@@ -4,17 +4,25 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/kms"
 
 	"github.com/dougEfresh/lambdazap"
 )
 
-var lambdazapper *lambdazap.LambdaLogContext
+var (
+	kmsClient    *kms.KMS
+	lambdazapper *lambdazap.LambdaLogContext
+	isLambda     bool
+)
 
 // HandleRequest handle "AWS lambda" request with a single event message or
 // a batch of event messages.
@@ -31,7 +39,7 @@ func HandleRequest(ctx context.Context, e Event) (string, error) {
 
 func main() {
 
-	if os.Getenv("_LAMBDA_SERVER_PORT") != "" {
+	if isLambda {
 		lambdazapper = lambdazap.New().With(lambdazap.AwsRequestID)
 		logger.With(lambdazapper.NonContextValues()...)
 		log = logger.Sugar()
@@ -42,6 +50,11 @@ func main() {
 }
 
 func init() {
+
+	isLambda = os.Getenv("_LAMBDA_SERVER_PORT") != ""
+	if isLambda {
+		kmsClient = kms.New(session.New())
+	}
 	go func() {
 		sc := make(chan os.Signal, 1)
 		signal.Notify(sc, syscall.SIGPIPE, syscall.SIGKILL, syscall.SIGTERM)
@@ -65,4 +78,30 @@ func init() {
 		close(sc)
 		logger.Sync()
 	}()
+}
+
+func getenv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		log.Debug("KEY: ", key, ", VALUE: ", value)
+		// unecrypted or looks unencrypted
+		if !isLambda || len(value) < 40 || !strings.Contains(value, "+") {
+			return value
+		}
+		// Decrypt secrets:
+		decodedBytes, err := base64.StdEncoding.DecodeString(value)
+		if err != nil {
+			panic(err)
+		}
+		input := &kms.DecryptInput{
+			CiphertextBlob: decodedBytes,
+		}
+		response, err := kmsClient.Decrypt(input)
+		if err != nil {
+			panic(err)
+		}
+		// Plaintext is a byte array, so convert to string
+		value = string(response.Plaintext[:])
+		return value
+	}
+	return defaultValue
 }

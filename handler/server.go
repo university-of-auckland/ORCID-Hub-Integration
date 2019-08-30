@@ -9,6 +9,13 @@ import (
 	"os"
 )
 
+func getenv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {

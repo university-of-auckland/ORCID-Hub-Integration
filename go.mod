@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/aws/aws-lambda-go v1.11.1
+	github.com/aws/aws-sdk-go v1.23.12
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dougEfresh/lambdazap v0.0.0-20180327213147-ad7d89679c77
 	github.com/fatih/color v1.7.0 // indirect
