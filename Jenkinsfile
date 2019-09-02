@@ -13,6 +13,7 @@ pipeline {
         stage('Setup') {
             steps {
 		sh '.jenkins/install.sh'
+		sh 'go env'
             }
         }
         stage('Test') {

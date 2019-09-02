@@ -15,7 +15,7 @@ if [ ! -d "$GOROOT" ] ; then
 fi
 
 # Upgrade if there is one
-go get -u golang.org/dl/$LATEST
+[[ $(go version | grep -o '1\.[0-9]*\.[0-9]*') != "$LATEST" ]] && go get -u golang.org/dl/$LATEST
 
 # UPX (optional)
 if [ ! -x "${WORKSPACE}/bin/upx" ] ; then 
@@ -29,3 +29,4 @@ if [ ! -x "${WORKSPACE}/bin/zipit" ] ; then
   go build -o "${WORKSPACE}/bin/zipit" .jenkins/zipit.go
 fi
 
+go env
