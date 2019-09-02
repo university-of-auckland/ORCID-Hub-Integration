@@ -11,6 +11,7 @@ pipeline {
         stage('Setup') {
             steps {
 		sh '.jenkins/install.sh'
+		ls 'ls -Ra'
 		sh 'env'
 		sh 'go env'
             }
