@@ -1,10 +1,10 @@
 pipeline {
     agent {label("uoa-buildtools-small")}
     environment {
-        GOPATH = "\"$WORKSPACE/.go\""
+        GOPATH = "$WORKSPACE/.go"
 	CGO_ENABLED = "0"
 	GO111MODULE = "on"
-        PATH = "\"$WORKSPACE/.go/bin\":\"$WORKSPACE/bin\":\"$WORKSPACE/go/bin\":$PATH"
+        PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
     }
 
     stages {
