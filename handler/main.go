@@ -80,6 +80,8 @@ func init() {
 	}()
 }
 
+// getenv returns enviroment variable value if it's defined
+// or the default. If the value is encrypted, it will depcrypt it first.
 func getenv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		log.Debug("KEY: ", key, ", VALUE: ", value)
