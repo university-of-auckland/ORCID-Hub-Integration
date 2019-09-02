@@ -32,12 +32,12 @@ pipeline {
         echo 'Stay Tunded....'
       }
     }
+  }
 
-    post {
-      always {
-        archiveArtifacts artifacts: 'mail.zip', fingerprint: true
-          junit 'tests.xml'
-      }
+  post {
+    always {
+    archiveArtifacts artifacts: 'mail.zip', fingerprint: true
+      junit 'tests.xml'
     }
   }
 }
