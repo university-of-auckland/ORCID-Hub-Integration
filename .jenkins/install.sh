@@ -14,8 +14,10 @@ if [ ! -d "$GOROOT" ] ; then
   rm -f $LATEST.linux-amd64.*
 fi
 
+get -u golang.org/x/tools/cmd/cover github.com/mattn/goveralls golang.org/x/lint/golint github.com/rakyll/gotest
+
 # Upgrade if there is one
-[ "$(go version | grep -o '1\.[0-9]*\.[0-9]*')" != "$LATEST" ] && go get -u golang.org/dl/$LATEST
+[ "$(go version | cut -d' ' -f3)" != "$LATEST" ] && go get -u golang.org/dl/$LATEST
 
 # UPX (optional)
 if [ ! -x "${WORKSPACE}/bin/upx" ] ; then 
