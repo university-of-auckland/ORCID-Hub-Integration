@@ -15,29 +15,24 @@ pipeline {
     }
     stage('Test') {
       steps {
-        sh 'gotest -tags test ./handler/...'
-          sh 'gotestsum --junitfile tests.xml -- -v -tags test ./handler/...'
+        // sh 'gotest -tags test ./handler/...'
+        sh 'gotestsum --junitfile tests.xml -- -v -tags test ./handler/...'
+        junit 'tests.xml'
       }
     }
     stage('Build') {
       steps {
         sh 'go vet ./handler'
-          sh 'go vet -tags test ./handler'
-          sh 'golint ./handler'
-          sh 'go build -o main ./handler/ && upx main && zipit'
+        sh 'go vet -tags test ./handler'
+        sh 'golint ./handler'
+        sh 'go build -o main ./handler/ && upx main && zipit'
+        archiveArtifacts artifacts: 'main.zip', fingerprint: true
       }
     }
     stage('Deploy') {
       steps {
         echo 'Stay Tunded....'
       }
-    }
-  }
-
-  post {
-    always {
-    archiveArtifacts artifacts: 'main.zip', fingerprint: true
-      junit 'tests.xml'
     }
   }
 }
