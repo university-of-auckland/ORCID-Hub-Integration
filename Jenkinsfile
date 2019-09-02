@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-    	label("uoa-buildtools-small")
-    }
+    agent {label("uoa-buildtools-small")}
     environment {
         GOPATH = "./.go"
 	CGO_ENABLED = "0"
