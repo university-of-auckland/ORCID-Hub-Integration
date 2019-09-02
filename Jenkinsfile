@@ -36,7 +36,7 @@ pipeline {
 
   post {
     always {
-    archiveArtifacts artifacts: 'mail.zip', fingerprint: true
+    archiveArtifacts artifacts: 'main.zip', fingerprint: true
       junit 'tests.xml'
     }
   }
