@@ -14,7 +14,11 @@ if [ ! -d "$GOROOT" ] ; then
   rm -f $LATEST.linux-amd64.*
 fi
 
-go get golang.org/x/tools/cmd/cover github.com/mattn/goveralls golang.org/x/lint/golint github.com/rakyll/gotest
+go get \
+  golang.org/x/tools/cmd/cover \
+  github.com/mattn/goveralls \
+  golang.org/x/lint/golint \
+  gotest.tools/gotestsum
 
 # Upgrade if there is one
 [ "$(go version | cut -d' ' -f3)" != "$LATEST" ] && go get -u golang.org/dl/$LATEST

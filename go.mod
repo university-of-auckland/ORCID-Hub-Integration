@@ -12,7 +12,6 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6 // indirect
 	github.com/joho/godotenv v1.3.0
-	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/mattn/goveralls v0.0.2
 	github.com/onsi/ginkgo v1.9.0
@@ -20,7 +19,8 @@ require (
 	github.com/pborman/uuid v1.2.0 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/rakyll/gotest v0.0.0-20180125184505-86f0749cd8cc
-	github.com/stretchr/testify v1.2.2
+	github.com/stretchr/testify v1.3.0
+	github.com/tebeka/go2xunit v1.4.10 // indirect
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0
@@ -32,4 +32,5 @@ require (
 	golang.org/x/sys v0.0.0-20190830080133-08d80c9d36de // indirect
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/tools v0.0.0-20190830082254-f340ed3ae274
+	gotest.tools/gotestsum v0.3.5 // indirect
 )
