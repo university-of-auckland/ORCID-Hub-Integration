@@ -3,10 +3,10 @@ pipeline {
     	label("uoa-buildtools-small")
     }
     environment {
-        GOPATH = "$WORKSPACE/.go"
+        GOPATH = "./.go"
 	CGO_ENABLED = "0"
 	GO111MODULE = "on"
-        PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
+        PATH = "./.go/bin:./bin:./go/bin:$PATH"
     }
 
     stages {
