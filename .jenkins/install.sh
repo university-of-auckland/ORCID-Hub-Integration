@@ -14,7 +14,7 @@ if [ ! -d "$GOROOT" ] ; then
   rm -f $LATEST.linux-amd64.*
 fi
 
-go get -u golang.org/x/tools/cmd/cover github.com/mattn/goveralls golang.org/x/lint/golint github.com/rakyll/gotest
+go get golang.org/x/tools/cmd/cover github.com/mattn/goveralls golang.org/x/lint/golint github.com/rakyll/gotest
 
 # Upgrade if there is one
 [ "$(go version | cut -d' ' -f3)" != "$LATEST" ] && go get -u golang.org/dl/$LATEST
@@ -30,5 +30,3 @@ fi
 if [ ! -x "${WORKSPACE}/bin/zipit" ] ; then 
   go build -o "${WORKSPACE}/bin/zipit" .jenkins/zipit.go
 fi
-
-go env
