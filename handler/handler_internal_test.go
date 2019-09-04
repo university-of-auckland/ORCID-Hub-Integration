@@ -23,7 +23,7 @@ var (
 	live                                              bool
 )
 
-func init() {
+func TestMain(m *testing.M) {
 	flag.BoolVar(&verbose, "verbose", false, "Print out the received responses.")
 	flag.BoolVar(&live, "live", false, "Run with the DEV/SANDBOX APIs.")
 	flag.Parse()
