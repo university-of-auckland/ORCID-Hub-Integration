@@ -30,6 +30,8 @@ func TestMain(m *testing.M) {
 
 	taskRetentionMin = 1
 	batchSize = 1
+
+	os.Exit(m.Run())
 }
 
 func getenv(key, defaultValue string) string {
