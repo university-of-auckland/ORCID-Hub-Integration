@@ -1,5 +1,5 @@
 resource "aws_lambda_function" "ORCIDHUB_INTEGRATION" {
-  filename         = "main.zip"
+  filename         = "../main.zip"
   function_name    = "ORCIDHUB_INTEGRATION"
   role             = "${aws_iam_role.ORCIDHUB_INTEGRATION_API_role.arn}"
   handler          = "main"
@@ -22,7 +22,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
   function_name = "${aws_lambda_function.ORCIDHUB_INTEGRATION.function_name}"
   principal     = "apigateway.amazonaws.com"
 
-  source_arn    = "arn:aws:execute-api:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.ORCIDHUB_INTEGRATION_API.id}/*/${aws_api_gateway_method.ORCIDHUB_INTEGRATION_API_Method.http_method}${aws_api_gateway_resource.ORCIDHUB_INTEGRATION_API_Resource1_1.path}"
+  source_arn    = "arn:aws:execute-api:${var.REGION}:${var.ACCOUNT_ID}:${aws_api_gateway_rest_api.ORCIDHUB_INTEGRATION_API.id}/*/${aws_api_gateway_method.ORCIDHUB_INTEGRATION_API_Method.http_method}${aws_api_gateway_resource.ORCIDHUB_INTEGRATION_API_Resource1_1.path}"
 }
 
 

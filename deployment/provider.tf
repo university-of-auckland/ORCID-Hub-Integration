@@ -1,4 +1,5 @@
-provider "aws" { 
-   profile = "${var.ACCOUNT}" 
-	 region = "${var.AWS_REGION}"
+provider "aws" {
+  profile = "default"
+  region = var.REGION
 }
+

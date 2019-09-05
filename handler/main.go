@@ -88,7 +88,7 @@ func init() {
 func getenv(key, defaultValue string) string {
 	var value string
 	if isLambda && (key == "APIKEY" || key == "CLIENT_ID" || key == "CLIENT_SECRET") {
-		keyname := "ORCIDHUB_INTEGRATION_LAMBDA_" + key
+		keyname := "ORCIDHUB_INTEGRATION_" + key
 		log.Debugf("Reading parameter %q", keyname)
 		withDecryption := true
 		param, err := ssmClient.GetParameter(
