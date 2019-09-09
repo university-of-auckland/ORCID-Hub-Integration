@@ -30,9 +30,7 @@ func setupAPIClients() (err error) {
 	if api.apiKey == "" {
 		api.apiKey = getenv("API_KEY", "")
 		api.baseURL = APIBaseURL
-		if verbose {
-			log.Debug("API_KEY: ", api.apiKey)
-		}
+		log.Debug("API_KEY: ", api.apiKey)
 	}
 
 	// Ensure that two guys don't try both to get a token (data race)
@@ -42,10 +40,8 @@ func setupAPIClients() (err error) {
 	if oh.accessToken == "" {
 		oh.clientID = getenv("CLIENT_ID", "")
 		oh.clientSecret = getenv("CLIENT_SECRET", "")
-		if verbose {
-			log.Debug("CLIENT_ID: ", oh.clientID)
-			log.Debug("CLIENT_SECRET: ", oh.clientSecret)
-		}
+		log.Debug("CLIENT_ID: ", oh.clientID)
+		log.Debug("CLIENT_SECRET: ", oh.clientSecret)
 		oh.baseURL = OHBaseURL
 		err = oh.getAccessToken("oauth/token")
 		if err != nil || oh.accessToken == "" {
