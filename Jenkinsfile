@@ -8,21 +8,21 @@ pipeline {
   }
 
   stages {
-    stage('Setup') {
+    stage('SETUP') {
       steps {
         sh '.jenkins/install.sh'
 	sh 'go version'
 	sh 'go env'
       }
     }
-    stage('Test') {
+    stage('TEST') {
       steps {
         // sh 'gotest -tags test ./handler/...'
         sh 'gotestsum --junitfile tests.xml -- -v -tags test ./handler/...'
         junit 'tests.xml'
       }
     }
-    stage('Build') {
+    stage('BUILD') {
       steps {
         sh 'go vet ./handler'
         sh 'go vet -tags test ./handler'
@@ -31,9 +31,19 @@ pipeline {
         archiveArtifacts artifacts: 'main.zip', fingerprint: true
       }
     }
-    stage('Deploy') {
+
+    stage('AWS Credential Grab') {
+      steps{
+        print "☯ Authenticating with AWS with $USERNAME"
+        withCredentials([usernamePassword(credentialsId:"aws-user-sandbox", passwordVariable: 'password', usernameVariable: 'username'), string(credentialsId: "aws-token-sandbox", variable: 'token')]) {
+          sh "python3 /home/jenkins/aws_saml_login.py --idp iam.auckland.ac.nz --user $USERNAME --password $PASSWORD --token $TOKEN --profile 'orcidhub-integration-workspaces'"
+        }
+      }
+    }
+
+    stage('DEPLOY') {
       steps {
-        echo 'Stay Tunded....'
+	sh "aws lambda update-function-code --function-name consume --publish --zip-file fileb://$WORKSPACE/main.zip"
       }
     }
   }
