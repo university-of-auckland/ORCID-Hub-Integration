@@ -31,19 +31,17 @@ pipeline {
         archiveArtifacts artifacts: 'main.zip', fingerprint: true
       }
     }
-
     stage('AWS Credential Grab') {
       steps{
-        print "☯ Authenticating with AWS with $USERNAME"
+        print "☯ Authenticating with AWS"
         withCredentials([usernamePassword(credentialsId:"aws-user-sandbox", passwordVariable: 'password', usernameVariable: 'username'), string(credentialsId: "aws-token-sandbox", variable: 'token')]) {
           sh "python3 /home/jenkins/aws_saml_login.py --idp iam.auckland.ac.nz --user $USERNAME --password $PASSWORD --token $TOKEN --profile 'orcidhub-integration-workspaces'"
         }
       }
     }
-
     stage('DEPLOY') {
       steps {
-	sh "aws lambda update-function-code --function-name consume --publish --zip-file fileb://$WORKSPACE/main.zip"
+	sh "aws lambda update-function-code --function-name consume --publish --zip-file fileb://$WORKSPACE/main.zip --profile=orcidhub-integration-workspaces"
       }
     }
   }
