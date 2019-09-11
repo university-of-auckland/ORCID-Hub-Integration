@@ -41,7 +41,7 @@ pipeline {
     }
     stage('DEPLOY') {
       steps {
-	sh "aws lambda update-function-code --function-name consume --publish --zip-file fileb://$WORKSPACE/main.zip --profile=orcidhub-integration-workspaces"
+	sh "aws lambda update-function-code --function-name consume --publish --zip-file 'fileb://$WORKSPACE/main.zip' --profile=orcidhub-integration-workspaces"
       }
     }
   }
