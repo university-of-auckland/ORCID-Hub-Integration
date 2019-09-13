@@ -224,6 +224,148 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 					}
 				]
 			}`)
+		case strings.HasPrefix(ru, "/service/service/student/integrations/v1/student/"):
+			parts := strings.Split(ru, "/")
+			uid := parts[7]
+			switch uid {
+			case "dthn666", "66666666", "dthn777", "77777777", "484378182", "4306445":
+				io.WriteString(w, `[]`)
+			case "jken016", "8524255":
+				io.WriteString(w, `[
+					{
+						"id": "8524255",
+						"studentDegNbr": "01",
+						"degreeCode": "MSC-DG",
+						"degreeDesc": "MSc",
+						"degAcadCareer": "UC01",
+						"degreeConferDate": "1990-05-03T12:00:00.000Z",
+						"honorsPrefix": " ",
+						"honorsSuffix": "H1",
+						"degAcadDegreeStatus": "A",
+						"prospectusCode": "AU0408",
+						"degreePlans": [
+						{
+							"acadPlanCode": "PSYC-MSC",
+							"acadPlanDesc": "Psychology",
+							"dgpAcadCareer": "UC01",
+							"studentCareerNbr": 1,
+							"dgpAcadDegreeStatus": "A",
+							"degreeStatusDate": "2001-02-22T11:00:00.000Z",
+							"acadProgCode": "MSC",
+							"acadProgGroupCode": 30,
+							"acadProgGroup": "Degree",
+							"acadProgLevelCode": "40",
+							"acadProgLevel": "Postgraduate",
+							"acadOrgCode": "SCIFAC",
+							"acadGroupDesc": "Science"
+						}
+						]
+					},
+					{
+						"id": "8524255",
+						"studentDegNbr": "02",
+						"degreeCode": "BSC-DG",
+						"degreeDesc": "BSc",
+						"degAcadCareer": "UC01",
+						"degreeConferDate": "1989-05-03T12:00:00.000Z",
+						"honorsPrefix": " ",
+						"honorsSuffix": " ",
+						"degAcadDegreeStatus": "A",
+						"prospectusCode": "AU0087",
+						"degreePlans": [
+						{
+							"acadPlanCode": "PSYC-BSC",
+							"acadPlanDesc": "Psychology",
+							"dgpAcadCareer": "UC01",
+							"studentCareerNbr": 2,
+							"dgpAcadDegreeStatus": "A",
+							"degreeStatusDate": "2001-02-22T11:00:00.000Z",
+							"acadProgCode": "BSC",
+							"acadProgGroupCode": 30,
+							"acadProgGroup": "Degree",
+							"acadProgLevelCode": "20",
+							"acadProgLevel": "Undergraduate",
+							"acadOrgCode": "SCIFAC",
+							"acadGroupDesc": "Science"
+						}
+						]
+					}
+				]`)
+			case "208013283":
+				io.WriteString(w, `[
+					{
+						"id": "208013283",
+						"studentDegNbr": "01",
+						"degreeCode": "MESTU-DG",
+						"degreeDesc": "MEngSt",
+						"degAcadCareer": "UC01",
+						"degreeConferDate": "2016-09-26T11:00:00.000Z",
+						"honorsPrefix": " ",
+						"honorsSuffix": " ",
+						"degAcadDegreeStatus": "A",
+						"prospectusCode": "AU4067",
+						"degreePlans": [
+							{
+								"acadPlanCode": "SOFT-MESTU",
+								"acadPlanDesc": "Software Engineering",
+								"dgpAcadCareer": "UC01",
+								"studentCareerNbr": 0,
+								"dgpAcadDegreeStatus": "A",
+								"degreeStatusDate": "2016-10-02T11:00:00.000Z",
+								"acadProgCode": "MESTU",
+								"acadProgGroupCode": 30,
+								"acadProgGroup": "Degree",
+								"acadProgLevelCode": "40",
+								"acadProgLevel": "Postgraduate",
+								"acadOrgCode": "ENGFAC",
+								"acadGroupDesc": "Engineering"
+							}
+						]
+					}
+				]`)
+			case "477579437", "djim087":
+				io.WriteString(w, `[
+					{
+						"id": "477579437",
+						"studentDegNbr": "01",
+						"degreeCode": "BEHON-DG",
+						"degreeDesc": "BE(Hons)",
+						"degAcadCareer": "UC01",
+						"degreeConferDate": "2019-05-02T12:00:00.000Z",
+						"honorsPrefix": " ",
+						"honorsSuffix": "H22",
+						"degAcadDegreeStatus": "A",
+						"prospectusCode": " ",
+						"degreePlans": [
+							{
+								"acadPlanCode": "ELEC-BEHON",
+								"acadPlanDesc": "Electrical and Electronic Eng",
+								"dgpAcadCareer": "UC01",
+								"studentCareerNbr": 0,
+								"dgpAcadDegreeStatus": "A",
+								"degreeStatusDate": "2019-05-09T12:00:00.000Z",
+								"acadProgCode": "BEHON",
+								"acadProgGroupCode": 30,
+								"acadProgGroup": "Degree",
+								"acadProgLevelCode": "20",
+								"acadProgLevel": "Undergraduate",
+								"acadOrgCode": "ENGFAC",
+								"acadGroupDesc": "Engineering"
+							}
+						]
+					}
+				]`)
+			default:
+				w.WriteHeader(http.StatusBadRequest)
+				io.WriteString(w, `{
+					"timestamp": "2019-09-13T04:21:11.049Z",
+					"status": 400,
+					"error": "Bad Request",
+					"message": "Incorrect or not supported id: `+uid+`",
+					"path": "/student/`+uid+`/degree/"
+				}`)
+			}
+
 		case strings.HasPrefix(ru, "/service/identity/integrations/v3/identity/"):
 			var uid = strings.TrimPrefix(ru, "/service/identity/integrations/v3/identity/")
 			switch uid {

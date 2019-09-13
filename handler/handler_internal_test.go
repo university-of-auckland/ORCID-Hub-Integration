@@ -88,6 +88,7 @@ func TestCore(t *testing.T) {
 	t.Run("IdentityGetOrcidAccessToken", testIdentityGetOrcidAccessToken)
 	t.Run("AccessToken", testAccessToken)
 	t.Run("IdentityAPICient", testIdentityAPICient)
+	t.Run("StudentAPICient", testStudentAPICient)
 	t.Run("EmploymentAPICient", testEmploymentAPICient)
 	t.Run("ProcessRegistration", testProcessRegistration)
 	t.Run("ProcessEmpUpdate", testProcessEmpUpdate)
@@ -203,6 +204,54 @@ func testIdentityAPICient(t *testing.T) {
 
 	err = c.do("POST", "identity/integrations/v3/identity/rcir178", nil, &id)
 	assert.Nil(t, err)
+
+}
+
+func testStudentAPICient(t *testing.T) {
+	var c Client
+	// c.ApiKey = os.Getenv("API_KEY")
+	// c.BaseURL = "https://api.dev.auckland.ac.nz"
+
+	c.baseURL = APIBaseURL
+	var degrees Degrees
+
+	c.get("service/student/integrations/v1/student/208013283/degree/", &degrees)
+	assert.Equal(t, 1, len(degrees))
+
+	c.get("service/student/integrations/v1/student/477579437/degree/", &degrees)
+	assert.Equal(t, 1, len(degrees))
+
+	c.get("service/student/integrations/v1/student/8524255/degree/", &degrees)
+	assert.Equal(t, 2, len(degrees))
+
+	c.get("service/student/integrations/v1/student/484378182/degree/", &degrees)
+	assert.Equal(t, 0, len(degrees))
+
+	c.get("service/student/integrations/v1/student/9999999/degree/", &degrees)
+	assert.Equal(t, 0, len(degrees))
+
+	// err := c.post("identity/integrations/v3/identity/rcir178", `{"test": 1234}`, &id)
+	// err := c.post("identity/integrations/v3/identity/rcir178", `{"test": 1234}`, &id)
+	// assert.Nil(t, err)
+
+	// err = c.post("identity/integrations/v3/identity/rcir178", t.Log, &id)
+	// assert.NotNil(t, err)
+
+	// var idNotFound Identity
+	// err = c.get("identity/integrations/v3/identity/rad42", &idNotFound)
+	// if err != nil {
+	// 	t.Error(err)
+	// }
+	// assert.Equal(t, 0, idNotFound.ID)
+
+	// malformatResponse = true
+	// id.ID = 0
+	// c.get("identity/integrations/v3/identity/rcir178", &id)
+	// assert.Equal(t, 0, id.ID)
+	// malformatResponse = false
+
+	// err = c.do("POST", "identity/integrations/v3/identity/rcir178", nil, &id)
+	// assert.Nil(t, err)
 
 }
 

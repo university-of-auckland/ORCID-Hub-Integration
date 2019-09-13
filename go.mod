@@ -12,14 +12,14 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6 // indirect
 	github.com/joho/godotenv v1.3.0
-	github.com/mattn/go-isatty v0.0.4 // indirect
+	github.com/labstack/gommon v0.3.0
 	github.com/mattn/goveralls v0.0.2
 	github.com/onsi/ginkgo v1.9.0
 	github.com/onsi/gomega v1.6.0
 	github.com/pborman/uuid v1.2.0 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/rakyll/gotest v0.0.0-20180125184505-86f0749cd8cc
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.4.0
 	github.com/tebeka/go2xunit v1.4.10 // indirect
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
