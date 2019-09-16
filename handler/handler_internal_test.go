@@ -143,8 +143,8 @@ func testMalformatedPayload(t *testing.T) {
 	(&Task{ID: 123456}).activate()
 	newTask()
 
-	logFatal = log.Fatal
 	malformatResponse = false
+	logFatal = log.Fatal
 	assert.Equal(t, 1, fatalCallCount)
 }
 
@@ -296,8 +296,8 @@ func testAccessToken(t *testing.T) {
 	setupAPIClients()
 	oh.accessToken = at
 
-	logFatal = log.Fatal
 	malformatResponse = false
+	logFatal = log.Fatal
 }
 
 func testGetOrcidToken(t *testing.T) {
@@ -371,6 +371,7 @@ func testProcessRegistration(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// malformatted messages:
+	wg.Wait()
 	logFatal = func(args ...interface{}) {}
 	malformatResponse = true
 
@@ -379,9 +380,9 @@ func testProcessRegistration(t *testing.T) {
 	assert.Empty(t, output)
 	assert.NotNil(t, err)
 
-	logFatal = log.Fatal
-
+	wg.Wait()
 	malformatResponse = false
+	// logFatal = log.Fatal
 }
 
 func testHealthCheck(t *testing.T) {
@@ -613,7 +614,6 @@ func testProcessMixed(t *testing.T) {
 		assert.True(t, taskRecordCount == 6, "The number of records should be 6, got: %d.", taskRecordCount)
 	}
 	assert.NotNil(t, err)
-	t.Log(malformatResponse, withTasks, withAnIncomleteTask, "----------------------------------")
 
 	counter = 0
 	_, err = (&Event{
@@ -625,6 +625,7 @@ func testProcessMixed(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, 3, counter)
 
+	logFatal = func(args ...interface{}) {}
 	malformatResponse = true
 	counter = 0
 	assert.NotNil(t, err)
@@ -637,6 +638,7 @@ func testProcessMixed(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 1, counter)
 	malformatResponse = false
+	logFatal = log.Fatal
 }
 
 func TestIsValidUPIAndID(t *testing.T) {
