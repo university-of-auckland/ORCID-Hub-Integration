@@ -180,8 +180,14 @@ func (e *Event) processEmpUpdate() (string, error) {
 	if err != nil {
 		log.Fatal("failed to get employment record", zap.Error(err))
 	}
-
 	emp.propagateToHub(token.Email, token.ORCID)
+
+	var degrees Degrees
+	err = api.get("student/integrations/v1/student/"+employeeID+"/degree/", &degrees)
+	if err != nil {
+		log.Fatal("failed to get degree records", err)
+	}
+	degrees.propagateToHub(token.Email, token.ORCID)
 
 	return "", nil
 }
@@ -204,6 +210,15 @@ func getEmp(output chan<- Employment, upiOrID string) {
 		logFatal("failed to get employment record", err)
 	}
 	output <- emp
+}
+
+func getDegrees(output chan<- Degrees, upiOrID string) {
+	var degrees Degrees
+	err := api.get("student/integrations/v1/student/"+upiOrID+"/degree/", &degrees)
+	if err != nil {
+		logFatal("failed to get degree record", err)
+	}
+	output <- degrees
 }
 
 // isValidUPI validates UPI
@@ -238,7 +253,7 @@ func isValidID(uid string) bool {
 }
 
 // processUserRegistration handles the user registration/ORCID account linking on the Hub.
-func (e *Event) processUserRegistration() (string, error) {
+func (e *Event) processUserRegistration() (restponse string, err error) {
 
 	parts := strings.Split(e.EPPN, "@")
 	upi := parts[0]
@@ -248,29 +263,40 @@ func (e *Event) processUserRegistration() (string, error) {
 	log.Info("UPI: ", upi)
 
 	var (
-		id  Identity
-		emp Employment
+		id      Identity
+		emp     Employment
+		degrees Degrees
 	)
 	identities := make(chan Identity)
 	employments := make(chan Employment)
+	degreesChan := make(chan Degrees)
 
 	go getIdentidy(identities, upi)
 	go getEmp(employments, upi)
+	go getDegrees(degreesChan, upi)
 
 	id = <-identities
-	if id.ID != 0 {
-		go id.updateOrcid(e.ORCID)
+	if id.ID == 0 {
+		return "", fmt.Errorf("Missing identity reocord for Subject ID: %d", e.Subject)
 	}
+	go id.updateOrcid(e.ORCID)
+
 	emp = <-employments
-
-	if id.ID == 0 || emp.Job == nil {
-		return "", fmt.Errorf("no Identity for %q (%s, %s) or employment records", e.EPPN, e.Email, e.ORCID)
+	if id.ID == 0 && emp.Job == nil {
+		_, err := emp.propagateToHub(id.EmailAddress, e.ORCID)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 
-	count, err := emp.propagateToHub(id.EmailAddress, e.ORCID)
-	taskRecordCountMutex.Lock()
-	taskRecordCount += count
-	taskRecordCountMutex.Unlock()
+	degrees = <-degreesChan
+	if len(degrees) > 0 {
+		_, err := emp.propagateToHub(id.EmailAddress, e.ORCID)
+		if err != nil {
+			log.Error(err)
+		}
+	}
+
 	return fmt.Sprintf("%#v", id), err
 }
 

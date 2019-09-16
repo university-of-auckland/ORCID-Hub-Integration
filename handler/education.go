@@ -1,5 +1,11 @@
 package main
 
+import (
+	"errors"
+	"strconv"
+	"strings"
+)
+
 // Degree API student-v1 degree response message.
 type Degree struct {
 	ID               string `json:"id"`
@@ -31,42 +37,42 @@ type Degree struct {
 
 type Degrees []Degree
 
-// // propagateToHub adds degree/education records to the current affiliation task.
-// func (degrees Degrees) propagateToHub(email, orcid string) (count int, err error) {
+// propagateToHub adds degree/education records to the current affiliation task.
+func (degrees Degrees) propagateToHub(email, orcid string) (count int, err error) {
 
-// 	count = len(degrees)
-// 	if count == 0 {
-// 		return 0, errors.New("no degree entry")
-// 	}
+	count = len(degrees)
+	if count == 0 {
+		return 0, errors.New("no degree entry")
+	}
 
-// 	records := make([]Record, count)
-// 	for i, d := range degrees {
-// 		records[i] = Record{
-// 			AffiliationType: "education",
-// 			Department:      ,
-// 			EndDate:         ,
-// 			ExternalID:      ,
-// 			Email:           email,
-// 			Orcid:           orcid,
-// 			Role:            ,
-// 			StartDate:       ,
-// 		}
-// 	}
-// 	// Make sure the task set-up is comlete
+	records := make([]Record, count)
+	for i, d := range degrees {
+		degreeName, ok := degreeCodes[strings.ToUpper(d.Desc)]
+		if !ok {
+			degreeName = d.Desc
+		}
+		date := strings.Split(d.ConferDate, "T")[0]
+		records[i] = Record{
+			AffiliationType: "education",
+			EndDate:         date,
+			StartDate:       date,
+			LocalID:         d.ID + "/" + d.StudentDegNbr,
+			Email:           email,
+			Orcid:           orcid,
+			Role:            degreeName,
+		}
+	}
+	// Make sure the task set-up is comlete
 
-// 	var (
-// 		task   Task
-// 		errors errorList
-// 	)
-// 	err = oh.patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
-// 	if err != nil {
-// 		log.Error("failed to update the taks: ", err)
-// 		errors = append(errors, err)
-// 		count--
-// 	}
-// 	taskRecordCountMutex.Lock()
-// 	taskRecordCount += count
-// 	taskRecordCountMutex.Unlock()
+	var task Task
+	err = oh.patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
+	if err != nil {
+		log.Error("failed to update the taks: ", err)
+		return
+	}
+	taskRecordCountMutex.Lock()
+	taskRecordCount += count
+	taskRecordCountMutex.Unlock()
 
-// 	return count, errors
-// }
+	return
+}

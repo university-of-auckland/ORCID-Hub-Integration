@@ -71,19 +71,15 @@ func (emp *Employment) propagateToHub(email, orcid string) (count int, err error
 	}
 	// Make sure the task set-up is comlete
 
-	var (
-		task   Task
-		errors errorList
-	)
+	var task Task
 	err = oh.patch("api/v1/affiliations/"+strconv.Itoa(taskID), Task{ID: taskID, Records: records}, &task)
 	if err != nil {
 		log.Error("failed to update the taks: ", err)
-		errors = append(errors, err)
-		count--
+		return
 	}
 	taskRecordCountMutex.Lock()
 	taskRecordCount += count
 	taskRecordCountMutex.Unlock()
 
-	return count, errors
+	return
 }

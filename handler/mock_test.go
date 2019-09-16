@@ -10,8 +10,6 @@ import (
 	"testing"
 )
 
-// http.HandlerFunc(
-
 func createMockHandler(t *testing.T) http.HandlerFunc {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -54,11 +52,19 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 				"refresh_token":"a6c9da20-31be-442a-9faa-73f1d92fac45",
 				"scopes":"/read-limited,/activities/update"
 			}]`)
+			} else if id == "roshan.pawar@auckland.ac.nz" || id == "0000-0003-1255-9023" || id == "rpaw053@auckland.ac.nz" {
+				io.WriteString(w, `[{
+				"access_token": "89537453-7d6c-41a1-b619-895374524b76",
+				"expires_in": 631138518,
+				"issue_time": "2033-08-01T08:00:13",
+				"refresh_token": "89537459-f057-477a-8a57-538953745f37",
+				"scopes": "/read-limited,/activities/update",
+				"email": "roshan.pawar@auckland.ac.nz",
+				"eppn": "rpaw053@auckland.ac.nz",
+				"orcid": "0000-0003-1255-9023"
+			}]`)
 			} else if id == "rcir178@auckland.ac.nz" {
-				io.WriteString(w, `[
-
-
-]`)
+				io.WriteString(w, `[]`)
 			} else if id == "dthn666@auckland.ac.nz" {
 				io.WriteString(w, `[{
 				"access_token":"ecf16b31-7777-4ba2-ae55-e97fb90e211a", 
@@ -224,9 +230,9 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 					}
 				]
 			}`)
-		case strings.HasPrefix(ru, "/service/service/student/integrations/v1/student/"):
+		case strings.HasPrefix(ru, "/service/student/integrations/v1/student/"):
 			parts := strings.Split(ru, "/")
-			uid := parts[7]
+			uid := parts[6]
 			switch uid {
 			case "dthn666", "66666666", "dthn777", "77777777", "484378182", "4306445":
 				io.WriteString(w, `[]`)
@@ -291,7 +297,7 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 						]
 					}
 				]`)
-			case "208013283":
+			case "208013283", "rpaw053":
 				io.WriteString(w, `[
 					{
 						"id": "208013283",
