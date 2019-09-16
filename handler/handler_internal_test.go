@@ -224,7 +224,7 @@ func testStudentAPICient(t *testing.T) {
 	var degrees Degrees
 
 	c.get("student/integrations/v1/student/208013283/degree/", &degrees)
-	assert.Equal(t, 1, len(degrees))
+	assert.Equal(t, 2, len(degrees))
 
 	c.get("student/integrations/v1/student/477579437/degree/", &degrees)
 	assert.Equal(t, 1, len(degrees))
@@ -237,6 +237,13 @@ func testStudentAPICient(t *testing.T) {
 
 	c.get("student/integrations/v1/student/9999999/degree/", &degrees)
 	assert.Equal(t, 0, len(degrees))
+
+	// malformated message:
+	c.get("student/integrations/v1/student/208013283/degree/", &degrees)
+	malformatResponse = true
+	_, err := degrees.propagateToHub("rpaw058@auckland.ac.nz", "0000-0003-1255-9023")
+	assert.NotNil(t, err)
+	malformatResponse = false
 
 }
 
@@ -532,7 +539,7 @@ func testProcessEmpUpdate(t *testing.T) {
 	(&Event{Subject: 208013283}).handle()
 	assert.Nil(t, err)
 	if !live {
-		assert.Equal(t, 5, taskRecordCount)
+		assert.Equal(t, 6, taskRecordCount)
 	}
 
 	_, err = (&Event{Subject: 484378182}).handle()
@@ -611,7 +618,7 @@ func testProcessMixed(t *testing.T) {
 	}).handle()
 
 	if !live {
-		assert.True(t, taskRecordCount == 6, "The number of records should be 6, got: %d.", taskRecordCount)
+		assert.True(t, taskRecordCount == 7, "The number of records should be 7, got: %d.", taskRecordCount)
 	}
 	assert.NotNil(t, err)
 

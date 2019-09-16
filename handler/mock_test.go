@@ -327,6 +327,35 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 								"acadGroupDesc": "Engineering"
 							}
 						]
+					},
+					{
+						"id": "208013283",
+						"studentDegNbr": "02",
+						"degreeCode": "MESTU-DG",
+						"degreeDesc": "MEngSt-NOT-EXISTING",
+						"degAcadCareer": "UC01",
+						"degreeConferDate": "2016-09-26T11:00:00.000Z",
+						"honorsPrefix": " ",
+						"honorsSuffix": " ",
+						"degAcadDegreeStatus": "A",
+						"prospectusCode": "AU4067",
+						"degreePlans": [
+							{
+								"acadPlanCode": "SOFT-MESTU",
+								"acadPlanDesc": "Software Engineering",
+								"dgpAcadCareer": "UC01",
+								"studentCareerNbr": 0,
+								"dgpAcadDegreeStatus": "A",
+								"degreeStatusDate": "2016-10-02T11:00:00.000Z",
+								"acadProgCode": "MESTU",
+								"acadProgGroupCode": 30,
+								"acadProgGroup": "Degree",
+								"acadProgLevelCode": "40",
+								"acadProgLevel": "Postgraduate",
+								"acadOrgCode": "ENGFAC",
+								"acadGroupDesc": "Engineering"
+							}
+						]
 					}
 				]`)
 			case "477579437", "djim087":
@@ -782,7 +811,7 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 			io.WriteString(w, fmt.Sprintf("%q NOT FOUND!", ru))
 		}
 		if malformatResponse {
-			io.WriteString(w, "~~~RUBISH~~~")
+			io.WriteString(w, "~~~THIS IS NOT SUPPOSED TO BE HERE~~~")
 		}
 	})
 }
