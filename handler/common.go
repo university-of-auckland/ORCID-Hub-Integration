@@ -164,7 +164,7 @@ func (e *Event) processEmpUpdate() (string, error) {
 	var id Identity
 	err := api.get("identity/integrations/v3/identity/"+employeeID, &id)
 	if err != nil {
-		log.Fatal("failed to retrieve the identity record", err)
+		logFatal("failed to retrieve the identity record", err)
 	}
 	if id.Upi == "" {
 		return "", errors.New("failed to retrieve the identity record")
@@ -178,14 +178,14 @@ func (e *Event) processEmpUpdate() (string, error) {
 	var emp Employment
 	err = api.get("employment/integrations/v1/employee/"+employeeID, &emp)
 	if err != nil {
-		log.Fatal("failed to get employment record", zap.Error(err))
+		logFatal("failed to get employment record", zap.Error(err))
 	}
 	emp.propagateToHub(token.Email, token.ORCID)
 
 	var degrees Degrees
 	err = api.get("student/integrations/v1/student/"+employeeID+"/degree/", &degrees)
 	if err != nil {
-		log.Fatal("failed to get degree records", err)
+		logFatal("failed to get degree records", err)
 	}
 	degrees.propagateToHub(token.Email, token.ORCID)
 
@@ -282,7 +282,7 @@ func (e *Event) processUserRegistration() (restponse string, err error) {
 	go id.updateOrcid(e.ORCID)
 
 	emp = <-employments
-	if id.ID == 0 && emp.Job == nil {
+	if emp.Job != nil {
 		_, err := emp.propagateToHub(id.EmailAddress, e.ORCID)
 		if err != nil {
 			log.Error(err)
@@ -291,7 +291,7 @@ func (e *Event) processUserRegistration() (restponse string, err error) {
 
 	degrees = <-degreesChan
 	if len(degrees) > 0 {
-		_, err := emp.propagateToHub(id.EmailAddress, e.ORCID)
+		_, err := degrees.propagateToHub(id.EmailAddress, e.ORCID)
 		if err != nil {
 			log.Error(err)
 		}

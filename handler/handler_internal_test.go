@@ -561,6 +561,21 @@ func testProcessEmpUpdate(t *testing.T) {
 	assert.True(t, taskRecordCount > 0, "The number of records should be > 0.")
 	t.Log(err)
 	assert.NotNil(t, err)
+
+	// Malformatted
+
+	logFatal = func(args ...interface{}) {}
+	malformatResponse = true
+	_, err = (&Event{
+		Records: []events.SQSMessage{
+			{Body: `{"subject":"484378182"}`},
+			{Body: `{"subject":"208013283"}`},
+			{Body: `{"subject":"4306445"}`},
+		},
+	}).handle()
+	malformatResponse = false
+	logFatal = log.Fatal
+
 }
 
 func testProcessMixed(t *testing.T) {
@@ -618,7 +633,7 @@ func testProcessMixed(t *testing.T) {
 	}).handle()
 
 	if !live {
-		assert.True(t, taskRecordCount == 7, "The number of records should be 7, got: %d.", taskRecordCount)
+		assert.True(t, taskRecordCount == 8, "The number of records should be 8, got: %d.", taskRecordCount)
 	}
 	assert.NotNil(t, err)
 
