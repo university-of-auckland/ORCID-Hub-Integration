@@ -29,7 +29,7 @@ type Record struct {
 	DisambiguatedSource string `json:"disambiguated-source,omitempty"`
 	Email               string `json:"email,omitempty"`
 	EndDate             string `json:"end-date,omitempty"`
-	ExternalID          string `json:"external-id,omitempty"`
+	LocalID             string `json:"local-id,omitempty"`
 	FirstName           string `json:"first-name,omitempty"`
 	IsActive            bool   `json:"is-active,omitempty"`
 	LastName            string `json:"last-name,omitempty"`

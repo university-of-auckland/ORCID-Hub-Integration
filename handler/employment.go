@@ -62,7 +62,7 @@ func (emp *Employment) propagateToHub(email, orcid string) (count int, err error
 			AffiliationType: "employment",
 			Department:      job.DepartmentDescription,
 			EndDate:         job.JobEndDate,
-			ExternalID:      job.PositionNumber,
+			LocalID:         job.PositionNumber,
 			Email:           email,
 			Orcid:           orcid,
 			Role:            job.PositionDescription,
