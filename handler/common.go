@@ -40,6 +40,7 @@ var (
 	updateOrcidWG        sync.WaitGroup
 	verbose              bool
 	wg                   sync.WaitGroup
+	env                  string
 
 	// for testing/mocking
 	logFatal func(args ...interface{})
@@ -55,6 +56,7 @@ var (
 func init() {
 	godotenv.Load()
 
+	env = getenv("ENV", "")
 	isDevelopment := strings.Contains(os.Getenv("ENV"), "dev")
 
 	if verbose || isDevelopment {
@@ -279,7 +281,14 @@ func (e *Event) processUserRegistration() (restponse string, err error) {
 	if id.ID == 0 {
 		return "", fmt.Errorf("Missing identity reocord for Subject ID: %d", e.Subject)
 	}
-	go id.updateOrcid(e.ORCID)
+	var orcidURI string
+	if env == "" {
+		orcidURI = "https://orcid.org/" + e.ORCID
+	} else {
+		orcidURI = "https://sandbox.orcid.org/" + e.ORCID
+	}
+
+	go id.updateOrcid(orcidURI)
 
 	emp = <-employments
 	if emp.Job != nil {
