@@ -12,7 +12,7 @@ $KONG/apis/$SERVICE/plugins -d "name=key-auth" -d "config.hide_credentials=true"
 
 # Consumer
 $KONG/consumers/$CONSUMER -X DELETE
-$KONG/consumers -d "username=orcidhub-integration" -d "custom_id=oide257"
+$KONG/consumers -d "username=orcidhub-integration" -d "custom_id=${SERVICE_ACCOUNT}"
 
 # curl http://localhost:8001/consumers/$CONSUMER/oauth2 -d "name=Auckland Transport" -d "client_id=$NAME" -d "redirect_uri=https://at.govt.nz/oauth2/uoa-callback"
 $KONG/consumers/$CONSUMER/acls -d "group=student-access"
@@ -22,7 +22,7 @@ $KONG/consumers/$CONSUMER/acls -d "group=identity-access"
 # $KONG/consumers/$CONSUMER/acls -d "group=kafka-rest-proxy-employment-access"
 # $KONG/consumers/$CONSUMER/acls -d "group=kafka-rest-proxy"
 # $KONG/consumers/$CONSUMER/acls -d "group=kafka-rest-access"
-# $KONG/consumers/$CONSUMER/acls -d "group=kafka-connect-api-access"
+$KONG/consumers/$CONSUMER/acls -d "group=kafka-connect-api-access"
 
 OUTPUT=$($KONG/consumers/$CONSUMER/key-auth -d '')
 APIKEY=$(sed 's/.*"key":"\([^"]*\).*$/\1/' <<<$OUTPUT)
@@ -30,8 +30,8 @@ APIKEY=$(sed 's/.*"key":"\([^"]*\).*$/\1/' <<<$OUTPUT)
 echo $APIKEY
 
 # Kafka connecotor
-$KC/$CONNECTOR -H "apikey: $APIKEY" -X DELETE
-$KC -H "apikey: $APIKEY" -H 'Content-Type: application/json' -H 'Accept: application/json' -d "@-" <<EOF
+$KC/$CONNECTOR -H apikey:$APIKEY -X DELETE
+$KC -H apikey:$APIKEY -H 'Content-Type: application/json' -H 'Accept: application/json' -d "@-" <<EOF
 {
         "name": "${CONNECTOR}",
         "config": {
