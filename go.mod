@@ -19,6 +19,7 @@ require (
 	github.com/pborman/uuid v1.2.0 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/rakyll/gotest v0.0.0-20180125184505-86f0749cd8cc
+	github.com/smartystreets/goconvey v0.0.0-20190731233626-505e41936337 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/tebeka/go2xunit v1.4.10 // indirect
 	go.uber.org/atomic v1.4.0 // indirect

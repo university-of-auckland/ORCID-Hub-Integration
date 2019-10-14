@@ -26,6 +26,9 @@ var (
 	isLambda     bool
 )
 
+// AwsPsPrefix - AWS Paramter Store parameter name prefix
+const AwsPsPrefix = "/ORCIDHUB-INTEGRATION-"
+
 // HandleRequest handle "AWS lambda" request with a single event message or
 // a batch of event messages.
 func HandleRequest(ctx context.Context, e Event) (string, error) {
@@ -53,6 +56,7 @@ func main() {
 
 func init() {
 
+	env = os.Getenv("ENV")
 	isLambda = os.Getenv("_LAMBDA_SERVER_PORT") != ""
 	if isLambda {
 		kmsClient = kms.New(session.New())
@@ -65,12 +69,14 @@ func init() {
 	TASK_HANDLING:
 		for {
 			select {
+			// every 10 min check if the current task can be submitted for processing
 			case <-time.Tick(time.Minute * 10):
 				if taskID != 0 && taskRecordCount > batchSize && time.Now().Sub(taskCreatedAt).Minutes() > taskRetentionMin {
 					(&Task{ID: taskID}).activate()
 					newTask()
 				}
 			case <-sc:
+				// activate the current task (if it might be activated) at the shutdown
 				if taskID != 0 && taskRecordCount > batchSize && time.Now().Sub(taskCreatedAt).Minutes() > taskRetentionMin {
 					(&Task{ID: taskID}).activate()
 				}
@@ -85,23 +91,25 @@ func init() {
 
 // getenv returns enviroment variable value if it's defined
 // or the default. If the value is encrypted, it will depcrypt it first.
-func getenv(key, defaultValue string) string {
-	var value string
-	// if isLambda && (key == "APIKEY" || key == "CLIENT_ID" || key == "CLIENT_SECRET") {
-	// 	keyname := "ORCIDHUB_INTEGRATION_" + key
-	// 	log.Debugf("Reading parameter %q", keyname)
-	// 	withDecryption := true
-	// 	param, err := ssmClient.GetParameter(
-	// 		&ssm.GetParameterInput{
-	// 			Name:           &keyname,
-	// 			WithDecryption: &withDecryption,
-	// 		})
-	// 	if err != nil {
-	// 		log.Errorf("Failed to retrieve parameter %q: %v", keyname, err)
-	// 	} else {
-	// 		value = *param.Parameter.Value
-	// 	}
-	// }
+func getenv(key, defaultValue string) (value string) {
+	if isLambda && (key == "APIKEY" || key == "CLIENT_ID" || key == "CLIENT_SECRET") {
+		keyname := AwsPsPrefix + key
+		if env != "" {
+			keyname = "/" + env + keyname
+		}
+		log.Debugf("Reading parameter %q", keyname)
+		withDecryption := true
+		param, err := ssmClient.GetParameter(
+			&ssm.GetParameterInput{
+				Name:           &keyname,
+				WithDecryption: &withDecryption,
+			})
+		if err != nil {
+			log.Errorf("Failed to retrieve parameter %q: %v", keyname, err)
+		} else {
+			value = *param.Parameter.Value
+		}
+	}
 	// attempt to use the environment variable
 	if value == "" {
 		value = os.Getenv(key)
@@ -116,14 +124,14 @@ func getenv(key, defaultValue string) string {
 		// Decrypt secrets:
 		decodedBytes, err := base64.StdEncoding.DecodeString(value)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		input := &kms.DecryptInput{
 			CiphertextBlob: decodedBytes,
 		}
 		response, err := kmsClient.Decrypt(input)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		// Plaintext is a byte array, so convert to string
 		value = string(response.Plaintext[:])

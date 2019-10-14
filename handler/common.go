@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -57,7 +56,7 @@ func init() {
 	godotenv.Load()
 
 	env = getenv("ENV", "")
-	isDevelopment := strings.Contains(os.Getenv("ENV"), "dev")
+	isDevelopment := strings.Contains(env, "dev")
 
 	if verbose || isDevelopment {
 		loggingLevel = zap.DebugLevel
