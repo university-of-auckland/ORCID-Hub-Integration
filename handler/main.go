@@ -1,4 +1,4 @@
-//+build !test,!heroku,!container
+//+build !test,!heroku,!container,!standalone
 
 package main
 
@@ -26,8 +26,8 @@ var (
 	isLambda     bool
 )
 
-// AwsPsPrefix - AWS Paramter Store parameter name prefix
-const AwsPsPrefix = "/ORCIDHUB-INTEGRATION-"
+// awsPsPrefix - AWS Paramter Store parameter name prefix
+const awsPsPrefix = "/ORCIDHUB-INTEGRATION-"
 
 // HandleRequest handle "AWS lambda" request with a single event message or
 // a batch of event messages.
@@ -93,7 +93,7 @@ func init() {
 // or the default. If the value is encrypted, it will depcrypt it first.
 func getenv(key, defaultValue string) (value string) {
 	if isLambda && (key == "APIKEY" || key == "CLIENT_ID" || key == "CLIENT_SECRET") {
-		keyname := AwsPsPrefix + key
+		keyname := awsPsPrefix + key
 		if env != "" {
 			keyname = "/" + env + keyname
 		}

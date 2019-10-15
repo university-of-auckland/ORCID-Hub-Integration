@@ -1,4 +1,4 @@
-//+build !test,heroku !test,container
+//+build !test,heroku !test,container !test,standalone
 
 package main
 
