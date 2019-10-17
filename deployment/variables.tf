@@ -9,3 +9,7 @@ variable "REGION" {
 }
 
 variable "KONG_APIKEY" {}
+
+variable "env" {
+	default = "dev"
+}
