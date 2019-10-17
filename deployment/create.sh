@@ -23,11 +23,11 @@ $KONG/consumers/$CONSUMER/acls -d "group=identity-access"
 # $KONG/consumers/$CONSUMER/acls -d "group=kafka-rest-proxy"
 # $KONG/consumers/$CONSUMER/acls -d "group=kafka-rest-access"
 $KONG/consumers/$CONSUMER/acls -d "group=kafka-connect-api-access"
+$KONG/consumers/$CONSUMER/key-auth -d "$APIKEY"
 
-OUTPUT=$($KONG/consumers/$CONSUMER/key-auth -d '')
-APIKEY=$(sed 's/.*"key":"\([^"]*\).*$/\1/' <<<$OUTPUT)
-
-echo $APIKEY
+# OUTPUT=$($KONG/consumers/$CONSUMER/key-auth -d '')
+# APIKEY=$(sed 's/.*"key":"\([^"]*\).*$/\1/' <<<$OUTPUT)
+# echo $APIKEY
 
 # Kafka connecotor
 $KC/$CONNECTOR -H apikey:$APIKEY -X DELETE

@@ -6,10 +6,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 [ -z "$KONG_APIKEY" ] && KONG_APIKEY=$2
 
 ENV=${ENV:-dev}
-if [ "$ENV" = "dev" ] ; then
-  SERVICE_BASE="https://api.dev.auckland.ac.nz/service"
-else
+if [ "$ENV" = "prod" ] ; then
   SERVICE_BASE="https://api.auckland.ac.nz/service"
+  [ -z "$OH_BASE"] && OH_BASE="https://orcidhub.org.nz"
+else
+  SERVICE_BASE="https://api.${ENV}.auckland.ac.nz/service"
+  [ -z "$OH_BASE"] && OH_BASE="https://${ENV}.orcidhub.org.nz"
 fi
 
 KONG="curl -H apikey:${KONG_APIKEY} ${SERVICE_BASE}/kong-loopback-api"
@@ -29,3 +31,10 @@ CONSUMER=orcidhub-integration
 CONNECTOR=connection-orcidhub
 
 SERVICE_ACCOUNT=oide257
+
+function get_oh_access_token() {
+  TOKEN=$(
+    curl -d "client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=client_credentials" $OH_BASE/oauth/token | 
+    sed 's/.*"access_token":\s*"\([^"]*\).*$/\1/');
+  echo $TOKEN;
+}
