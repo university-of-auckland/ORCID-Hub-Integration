@@ -18,8 +18,8 @@ import (
 
 const (
 	taskFilenamePrefix      = "UOA-OH-INTEGRATION-TASK-"
-	defaultTaskRetentionMin = 5.0
-	defaultBatchSize        = 12
+	defaultTaskRetentionMin = 10080.0
+	defaultBatchSize        = 400
 )
 
 var (

@@ -67,6 +67,7 @@ func (emp *Employment) propagateToHub(email, orcid string) (count int, err error
 			Orcid:           orcid,
 			Role:            job.PositionDescription,
 			StartDate:       job.JobStartDate,
+			IsActive:        true,
 		}
 	}
 	// Make sure the task set-up is comlete

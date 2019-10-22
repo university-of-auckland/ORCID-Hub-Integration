@@ -60,6 +60,7 @@ func (degrees Degrees) propagateToHub(email, orcid string) (count int, err error
 			Email:           email,
 			Orcid:           orcid,
 			Role:            degreeName,
+			IsActive:        true,
 		}
 	}
 	// Make sure the task set-up is comlete
