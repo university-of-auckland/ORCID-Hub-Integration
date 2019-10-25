@@ -7,6 +7,7 @@
 locals {
 	ENV = "${terraform.workspace == "default" ? "prod" : terraform.workspace}"
 	SP_PREFIX = "${terraform.workspace == "default" ? "/" : "/${terraform.workspace}/"}ORCIDHUB-INTEGRATION-"
+	VERBOSE = "${terraform.workspace == "dev"}"
 }
 
 
@@ -28,30 +29,27 @@ locals {
 }
 
 output "ENV" {
+	description = "Environment infered from the 'workspace'"
   value = "${local.ENV}"
 }
 
 output "SP_PREFIX" {
-  value = "${local.SP_PREFIX}"
+	value = "${local.SP_PREFIX}"
 }
 
 output "APIKEY" {
-	value = "${local.APIKEY}"
-	# sensitive = true
+	value = "${local.VERBOSE ? local.APIKEY : "*******"}"
 }
 
 output "CLIENT_ID" {
-	value = "${local.CLIENT_ID}"
-	# sensitive = true
+	value = "${local.VERBOSE ? local.CLIENT_ID : "*******"}"
 }
 
 output "CLIENT_SECRET" {
-	value = "${local.CLIENT_SECRET}"
-	# sensitive = true
+	value = "${local.VERBOSE ? local.CLIENT_SECRET : "*******"}"
 }
 
 output "KONG_APIKEY" {
-	value = "${local.KONG_APIKEY}"
-	# sensitive = true
+	value = "${local.VERBOSE ? local.KONG_APIKEY : "*******"}"
 }
 
