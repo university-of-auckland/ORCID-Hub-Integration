@@ -52,7 +52,7 @@ pipeline {
 	      // }
 	      // Provision and deploy the handler
 	      sh "terraform apply -auto-approve"
-	    // }
+	     }
 	  // } else {
 	    // // Deploy the handler to already provisioned environment
 	    // sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION --publish --zip-file 'fileb://$WORKSPACE/main.zip' --profile=orcidhub-integration-workspaces --region=ap-southeast-2"
