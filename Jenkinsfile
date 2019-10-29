@@ -49,7 +49,10 @@ pipeline {
              sh 'terraform version'
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
+               sh 'terraform version'
                sh "terraform init"
+               sh "terraform workspace list"
+               sh "terraform workspace new ${ENV} || terraform select ${ENV}"
 	      // if (env.RECREATE == 'true') {
 	          sh "terraform destroy -force"
 	      // }
