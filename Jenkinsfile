@@ -43,18 +43,20 @@ pipeline {
     stage('DEPLOY') {
       steps {
       	script {
-          sh "terraform init"
 	  // "destroy" provisioned environment 
-	  if (env.RECREATE == 'true') {
-	    sh "terraform destroy -force"
-	  }
-	  if (env.PROVISION == 'true') {
-	    // Provision and deploy the handler
-	    sh "terraform apply -auto-approve"
-	  } else {
-	    // Deploy the handler to already provisioned environment
-	    sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION --publish --zip-file 'fileb://$WORKSPACE/main.zip' --profile=orcidhub-integration-workspaces --region=ap-southeast-2"
-	  }
+	  // if (env.PROVISION == 'true') {
+	     dir("deployment") {
+               sh "terraform init"
+	      // if (env.RECREATE == 'true') {
+	          sh "terraform destroy -force"
+	      // }
+	      // Provision and deploy the handler
+	      sh "terraform apply -auto-approve"
+	    // }
+	  // } else {
+	    // // Deploy the handler to already provisioned environment
+	    // sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION --publish --zip-file 'fileb://$WORKSPACE/main.zip' --profile=orcidhub-integration-workspaces --region=ap-southeast-2"
+	  // }
 	}
       }
     }
