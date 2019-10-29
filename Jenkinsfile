@@ -8,7 +8,7 @@ pipeline {
   }
 
   stages {
-    stage('SETUP') {
+    /*stage('SETUP') {
       steps {
         sh '.jenkins/install.sh'
 	sh 'go version'
@@ -32,6 +32,7 @@ pipeline {
         archiveArtifacts artifacts: 'main.zip', fingerprint: true
       }
     }
+    */
     stage('AWS Credential Grab') {
       steps{
         print "☯ Authenticating with AWS"
