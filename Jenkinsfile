@@ -45,7 +45,8 @@ pipeline {
       	script {
 	  // "destroy" provisioned environment 
 	  // if (env.PROVISION == 'true') {
-             sh '.jenkins/install.sh'
+             sh 'terraform version'
+             sh '.jenkins/terraform.sh'
 	     dir("deployment") {
                sh "terraform init"
 	      // if (env.RECREATE == 'true') {
