@@ -1,5 +1,5 @@
 resource "aws_iam_role" "ORCIDHUB_INTEGRATION_API_role" {
-  name               = "ORCIDHUB_INTEGRATION_API_role"
+  name               = "ORCIDHUB_INTEGRATION_API_role${local.ENV == "" ? "" :"_${local.ENV}"}"
   path               = "/"
   assume_role_policy = <<EOF
 {
@@ -48,6 +48,7 @@ data "aws_iam_policy_document" "ORCIDHUB_INTEGRATION_API_policy" {
       "ssm:GetParameter",
     ]
     resources = [
+      // "arn:aws:ssm:ap-southeast-2:416527880812:parameter/ORCIDHUB_INTEGRATION_LAMBDA*",
       "arn:aws:ssm:ap-southeast-2:416527880812:parameter/ORCIDHUB_INTEGRATION_LAMBDA*",
     ]
   }

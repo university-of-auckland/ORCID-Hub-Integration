@@ -1,6 +1,6 @@
 resource "aws_lambda_function" "ORCIDHUB_INTEGRATION" {
   filename         = "../main.zip"
-  function_name    = "ORCIDHUB_INTEGRATION"
+  function_name    = "ORCIDHUB_INTEGRATION${local.ENV == "" ? "" :"_${local.ENV}"}"
   role             = "${aws_iam_role.ORCIDHUB_INTEGRATION_API_role.arn}"
   handler          = "main"
   timeout          = "30"
