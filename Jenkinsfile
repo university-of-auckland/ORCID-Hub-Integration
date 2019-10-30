@@ -37,7 +37,6 @@ pipeline {
       steps{
         print "☯ Authenticating with AWS"
         withCredentials([usernamePassword(credentialsId:"aws-user-sandbox", passwordVariable: 'password', usernameVariable: 'username'), string(credentialsId: "aws-token-sandbox", variable: 'token')]) {
-          // sh "python3 /home/jenkins/aws_saml_login.py --idp iam.auckland.ac.nz --user $USERNAME --password $PASSWORD --token $TOKEN --profile 'orcidhub-integration-workspaces'"
           sh "python3 /home/jenkins/aws_saml_login.py --idp iam.auckland.ac.nz --user $USERNAME --password $PASSWORD --token $TOKEN --profile 'default'"
         }
       }
@@ -54,17 +53,17 @@ pipeline {
                sh "terraform init"
                // sh "terraform plan -no-color"
                sh "terraform workspace new ${ENV} || terraform select ${ENV}"
-               // sh "terraform refresh -no-color"
-               // sh "terraform plan -no-color"
+               sh "terraform refresh -no-color"
+               sh "terraform plan -no-color -out ${ENV}.plan"
 	      // if (env.RECREATE == 'true') {
 	          sh "terraform destroy -no-color -force -refresh=true"
 	      // }
 	      // Provision and deploy the handler
-	      sh "terraform apply -no-color -auto-approve -refresh=true"
+	      sh "terraform apply ${ENV}.plan -no-color -auto-approve -refresh=true"
 	     }
 	  // } else {
 	    // // Deploy the handler to already provisioned environment
-	    // sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION --publish --zip-file 'fileb://$WORKSPACE/main.zip' --profile=orcidhub-integration-workspaces --region=ap-southeast-2"
+	    // sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION --publish --zip-file 'fileb://$WORKSPACE/main.zip' --region=ap-southeast-2"
 	  // }
 	}
       }
