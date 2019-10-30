@@ -52,12 +52,14 @@ pipeline {
 	     dir("deployment") {
                sh 'terraform version'
                sh "terraform init"
+               sh "terraform refresh -no-color"
+               sh "terraform plan -no-color"
                sh "terraform workspace new ${ENV} || terraform select ${ENV}"
 	      // if (env.RECREATE == 'true') {
-	          sh "terraform destroy -force"
+	          sh "terraform destroy -no-color -force"
 	      // }
 	      // Provision and deploy the handler
-	      sh "terraform apply -auto-approve"
+	      sh "terraform apply -no-color -auto-approve"
 	     }
 	  // } else {
 	    // // Deploy the handler to already provisioned environment
