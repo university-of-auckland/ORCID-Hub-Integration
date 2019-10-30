@@ -59,7 +59,8 @@ pipeline {
 	          sh "terraform destroy -no-color -force -refresh=true"
 	      // }
 	      // Provision and deploy the handler
-	      sh "terraform apply ${ENV}.plan -no-color -auto-approve -refresh=true"
+	      // sh "terraform apply ${ENV}.plan -no-color -auto-approve -refresh=true"
+	      sh "terraform apply ${ENV}.plan -no-color"
 	     }
 	  // } else {
 	    // // Deploy the handler to already provisioned environment
