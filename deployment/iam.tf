@@ -20,7 +20,7 @@ EOF
 }
 
 resource "aws_iam_policy" "ORCIDHUB_INTEGRATION_API_policy" {
-  name   = "ORCIDHUB_INTEGRATION_API_policy"
+  name   = "ORCIDHUB_INTEGRATION_API_policy${local.ENV == "" ? "" :"_${local.ENV}"}"
   path   = "/"
   policy = data.aws_iam_policy_document.ORCIDHUB_INTEGRATION_API_policy.json
 }
@@ -49,7 +49,7 @@ data "aws_iam_policy_document" "ORCIDHUB_INTEGRATION_API_policy" {
     ]
     resources = [
       // "arn:aws:ssm:ap-southeast-2:416527880812:parameter/ORCIDHUB_INTEGRATION_LAMBDA*",
-      "arn:aws:ssm:ap-southeast-2:416527880812:parameter/ORCIDHUB_INTEGRATION_LAMBDA*",
+      "arn:aws:ssm:ap-southeast-2:*",
     ]
   }
   statement {
@@ -57,7 +57,8 @@ data "aws_iam_policy_document" "ORCIDHUB_INTEGRATION_API_policy" {
       "kms:*",
     ]
     resources = [
-      "arn:aws:kms:ap-southeast-2:416527880812:key/ab267594-0f5b-45aa-83be-16a076b2041c",
+      // "arn:aws:kms:ap-southeast-2:416527880812:key/ab267594-0f5b-45aa-83be-16a076b2041c",
+      "arn:aws:kms:ap-southeast-2:*",
     ]
   }
 }
