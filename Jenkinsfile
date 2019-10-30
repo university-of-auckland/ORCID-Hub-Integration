@@ -52,9 +52,9 @@ pipeline {
 	     dir("deployment") {
                sh 'terraform version'
                sh "terraform init"
-               sh "terraform refresh -no-color"
-               sh "terraform plan -no-color"
+               // sh "terraform plan -no-color"
                sh "terraform workspace new ${ENV} || terraform select ${ENV}"
+               sh "terraform refresh -no-color"
 	      // if (env.RECREATE == 'true') {
 	          sh "terraform destroy -no-color -force"
 	      // }
