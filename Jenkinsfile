@@ -37,7 +37,9 @@ pipeline {
       steps{
         print "☯ Authenticating with AWS"
         withCredentials([usernamePassword(credentialsId:"aws-user-sandbox", passwordVariable: 'password', usernameVariable: 'username'), string(credentialsId: "aws-token-sandbox", variable: 'token')]) {
-          sh "python3 /home/jenkins/aws_saml_login.py --idp iam.auckland.ac.nz --user $USERNAME --password $PASSWORD --token $TOKEN --profile 'orcidhub-integration-workspaces'"
+	  print "USER: ${USERNAME}"
+          // sh "python3 /home/jenkins/aws_saml_login.py --idp iam.auckland.ac.nz --user $USERNAME --password $PASSWORD --token $TOKEN --profile 'orcidhub-integration-workspaces'"
+          sh "python3 /home/jenkins/aws_saml_login.py --idp iam.auckland.ac.nz --user $USERNAME --password $PASSWORD --token $TOKEN
         }
       }
     }
@@ -51,7 +53,6 @@ pipeline {
 	     dir("deployment") {
                sh 'terraform version'
                sh "terraform init"
-               sh "terraform workspace list"
                sh "terraform workspace new ${ENV} || terraform select ${ENV}"
 	      // if (env.RECREATE == 'true') {
 	          sh "terraform destroy -force"
