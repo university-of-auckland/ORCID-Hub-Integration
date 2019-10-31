@@ -1,7 +1,8 @@
 resource "aws_iam_role" "ORCIDHUB_INTEGRATION_API_role" {
-  name               = "ORCIDHUB_INTEGRATION_API_role${local.ENV == "" ? "" :"_${local.ENV}"}"
-  path               = "/"
-  assume_role_policy = <<EOF
+  name                  = "ORCIDHUB_INTEGRATION_API_role${local.ENV == "" ? "" :"_${local.ENV}"}"
+  path                  = "/"
+	force_detach_policies = true
+  assume_role_policy    = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [

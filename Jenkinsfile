@@ -8,6 +8,12 @@ pipeline {
   }
 
   stages {
+    // Imports artifacts if build was previously successful
+    stage('Import Artifacts') {
+      steps {
+        copyArtifacts filter: '*, */*, */**/*', fingerprintArtifacts: true, optional: true, projectName: 'jenkins-sample-pipeline', selector: lastSuccessful()
+      }
+    }
     /*stage('SETUP') {
       steps {
         sh '.jenkins/install.sh'
@@ -70,6 +76,12 @@ pipeline {
 	  // }
 	}
       }
+    }
+    // Archive what was achieved, even if unsuccessful so the next run understands even partial components
+    stage('Archive Artifacts') {
+      steps {
+        archiveArtifacts artifacts: '*,*/**/*,*/*', excludes: '.gitignore,*.tf,*.tfvars,tfplan,*.exe', onlyIfSuccessful: false
+       }
     }
   }
 }

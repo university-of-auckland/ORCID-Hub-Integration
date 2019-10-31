@@ -3,7 +3,6 @@
 # 	version  = "~> 2.22"
 #   region   = "ap-southeast-2"
 # }
-
 locals {
 	ENV = "${terraform.workspace == "default" ? "prod" : terraform.workspace}"
 	SP_PREFIX = "${terraform.workspace == "default" ? "/" : "/${terraform.workspace}/"}ORCIDHUB-INTEGRATION-"

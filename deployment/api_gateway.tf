@@ -49,17 +49,16 @@ resource "aws_api_gateway_integration_response" "integration_response_200" {
   resource_id       = aws_api_gateway_resource.ORCIDHUB_INTEGRATION_API_Resource_Call.id
   rest_api_id       = aws_api_gateway_rest_api.ORCIDHUB_INTEGRATION_API.id
   status_code       = aws_api_gateway_method_response.response_200.status_code
-  selection_pattern = "-"
+  # selection_pattern = "-"
   response_templates = {
     "application/json" = <<EOF
-                        #set($msg = $input.path('$')) 
-                          {
-                            #if($msg != '')
-                              "message" : "$msg",
-                            #end
-                              "retry" : false
-                          }
-  
+        #set($msg = $input.path('$')) 
+        {
+          #if($msg != '')
+            "message" : "$msg",
+          #end
+            "retry" : false
+        }
 EOF
 
   }
@@ -71,14 +70,13 @@ resource "aws_api_gateway_integration_response" "integration_response_400" {
   resource_id       = aws_api_gateway_resource.ORCIDHUB_INTEGRATION_API_Resource_Call.id
   rest_api_id       = aws_api_gateway_rest_api.ORCIDHUB_INTEGRATION_API.id
   status_code       = aws_api_gateway_method_response.response_400.status_code
-  selection_pattern = ".+"
+  selection_pattern = "[^2].+"
   response_templates = {
     "application/json" = <<EOF
-                        {
-                          "message" : "$input.path('$.errorMessage')",
-                          "retry" : true
-                        }
-  
+        {
+          "message" : "$input.path('$.errorMessage')",
+          "retry" : true
+        }
 EOF
 
   }
