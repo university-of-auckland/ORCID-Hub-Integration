@@ -11,7 +11,7 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: '*, */*, */**/*', fingerprintArtifacts: true, optional: true, projectName: 'jenkins-sample-pipeline', selector: lastSuccessful()
+        copyArtifacts filter: '*, */*, */**/*', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
       }
     }
     /*stage('SETUP') {
