@@ -10,6 +10,7 @@ pipeline {
       TF_CLI_ARGS = "-no-color"
       TF_CLI_ARGS_input = "false"
       TF_CLI_ARGS_refresh = "true"
+      JAVA_OPTS = "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
   }
 
   stages {

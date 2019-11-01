@@ -35,6 +35,7 @@ type Degree struct {
 	} `json:"degreePlans"`
 }
 
+// Degrees - array of degrees
 type Degrees []Degree
 
 // propagateToHub adds degree/education records to the current affiliation task.
