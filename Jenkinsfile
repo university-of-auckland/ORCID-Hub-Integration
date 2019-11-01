@@ -53,23 +53,23 @@ pipeline {
       	script {
 	  // "destroy" provisioned environment 
 	  // if (env.PROVISION == 'true') {
-             sh 'terraform version'
+             // sh 'terraform version'
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
 	       // workaround to remove a role if it exists:
 	       sh './purge.sh' 
-               sh 'terraform version'
                sh "terraform init"
                // sh "terraform plan -no-color"
                sh "terraform workspace new ${ENV} || terraform select ${ENV}"
-               sh "terraform refresh -no-color"
-               sh "terraform plan -no-color -out ${ENV}.plan"
+               // sh "terraform refresh -no-color"
+               // sh "terraform plan -no-color -out ${ENV}.plan"
 	      // if (env.RECREATE == 'true') {
-	          sh "terraform destroy -no-color -force -refresh=true"
+	      sh "terraform destroy -no-color -force -refresh=true"
 	      // }
 	      // Provision and deploy the handler
 	      // sh "terraform apply ${ENV}.plan -no-color -auto-approve -refresh=true"
-	      sh "terraform apply ${ENV}.plan -no-color"
+	      // sh "terraform apply ${ENV}.plan -no-color"
+	      sh "terraform apply -no-color -input=false"
 	     }
 	  // } else {
 	    // // Deploy the handler to already provisioned environment
