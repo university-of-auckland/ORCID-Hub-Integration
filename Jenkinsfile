@@ -7,7 +7,8 @@ pipeline {
       PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
       AWS_DEFAULT_REGION = "ap-southeast-2"
       TF_INPUT = "0"
-      TF_CLI_ARGS = "-no-color -input=false"
+      TF_CLI_ARGS = "-no-color"
+      TF_CLI_ARGS_input = "false"
   }
 
   stages {
