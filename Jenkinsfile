@@ -5,7 +5,9 @@ pipeline {
       CGO_ENABLED = "0"
       GO111MODULE = "on"
       PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
-      AWS_DEFAULT_REGION="ap-southeast-2"
+      AWS_DEFAULT_REGION = "ap-southeast-2"
+      TF_INPUT = "0"
+      TF_CLI_ARGS = "-no-color -input=false"
   }
 
   stages {
@@ -60,7 +62,7 @@ pipeline {
 	       sh './purge.sh' 
                sh "terraform init || true"
                // sh "terraform plan -no-color"
-               sh "terraform workspace new ${ENV} || terraform select ${ENV} || true"
+               sh "terraform workspace new ${ENV} || terraform workspace select ${ENV} || true"
                // sh "terraform refresh -no-color"
                // sh "terraform plan -no-color -out ${ENV}.plan"
 	      // if (env.RECREATE == 'true') {
