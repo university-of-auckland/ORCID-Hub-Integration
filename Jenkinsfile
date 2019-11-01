@@ -16,7 +16,7 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: '.go/**,go/**,bin/**,terraform.tfstate.d/**,terraform.tfstate', finrerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
+        copyArtifacts filter: '.go/**,go/**,bin/**,terraform.tfstate.d/**,terraform.tfstate', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
       }
     }
     /*stage('SETUP') {
