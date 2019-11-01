@@ -56,7 +56,7 @@ pipeline {
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
 	       // workaround to remove a role if it exists:
-	       sh 'aws iam delete-role --role-name ORCIDHUB_INTEGRATION_API_role$([ "$ENV" != "prod" ] && echo _$ENV)' 
+	       sh './purge.sh' 
                sh 'terraform version'
                sh "terraform init"
                // sh "terraform plan -no-color"

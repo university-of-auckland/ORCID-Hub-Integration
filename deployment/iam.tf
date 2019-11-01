@@ -22,7 +22,7 @@ EOF
 
 resource "aws_iam_policy" "ORCIDHUB_INTEGRATION_API_policy" {
   name   = "ORCIDHUB_INTEGRATION_API_policy${local.ENV == "" ? "" :"_${local.ENV}"}"
-  path   = "/"
+	path   = "/ORCIDHUB/INTEGRATION/"
   policy = data.aws_iam_policy_document.ORCIDHUB_INTEGRATION_API_policy.json
 }
 
