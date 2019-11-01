@@ -59,7 +59,7 @@ pipeline {
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
 	       // workaround to remove a role if it exists:
-	       sh './purge.sh' 
+	       // sh './purge.sh' 
                sh "terraform init || true"
                // sh "terraform plan -no-color"
                sh "terraform workspace new ${ENV} || terraform workspace select ${ENV} || true"
