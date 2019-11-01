@@ -9,6 +9,7 @@ pipeline {
       TF_INPUT = "0"
       TF_CLI_ARGS = "-no-color"
       TF_CLI_ARGS_input = "false"
+      TF_CLI_ARGS_refresh = "true"
   }
 
   stages {
@@ -62,17 +63,16 @@ pipeline {
 	       // workaround to remove a role if it exists:
 	       // sh './purge.sh' 
                sh "terraform init || true"
-               // sh "terraform plan -no-color"
+               // sh "terraform plan"
                sh "terraform workspace new ${ENV} || terraform workspace select ${ENV} || true"
-               // sh "terraform refresh -no-color"
-               // sh "terraform plan -no-color -out ${ENV}.plan"
+               // sh "terraform refresh"
+               // sh "terraform plan -out ${ENV}.plan"
 	      // if (env.RECREATE == 'true') {
-	      sh "terraform destroy -no-color -force -refresh=true"
+	      sh "terraform destroy -auto-approve"
 	      // }
 	      // Provision and deploy the handler
-	      // sh "terraform apply ${ENV}.plan -no-color -auto-approve -refresh=true"
-	      // sh "terraform apply ${ENV}.plan -no-color"
-	      sh "terraform apply -no-color -input=false"
+	      // sh "terraform apply ${ENV}.plan"
+	      sh "terraform apply -auto-approve
 	     }
 	  // } else {
 	    // // Deploy the handler to already provisioned environment
