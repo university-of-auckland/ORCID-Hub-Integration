@@ -16,7 +16,7 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: '*, */*, */**/*', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
+        copyArtifacts filter: '.go/**,go/**,bin/**,terraform.tfstate.d/**,terraform.tfstate', finrerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
       }
     }
     /*stage('SETUP') {
@@ -72,7 +72,7 @@ pipeline {
 	      // }
 	      // Provision and deploy the handler
 	      // sh "terraform apply ${ENV}.plan"
-	      sh "terraform apply -auto-approve
+	      sh "terraform apply -auto-approve"
 	     }
 	  // } else {
 	    // // Deploy the handler to already provisioned environment
@@ -84,7 +84,7 @@ pipeline {
     // Archive what was achieved, even if unsuccessful so the next run understands even partial components
     stage('Archive Artifacts') {
       steps {
-        archiveArtifacts artifacts: '*,*/**/*,*/*', excludes: '.gitignore,*.tf,*.tfvars,tfplan,*.exe', onlyIfSuccessful: false
+        archiveArtifacts artifacts:  '.go/**,go/**,bin/**,terraform.tfstate.d/**,terraform.tfstate', onlyIfSuccessful: false
        }
     }
   }
