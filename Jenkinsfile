@@ -16,10 +16,10 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: 'main.zip,.go/**,go/**,bin/**,terraform.tfstate.d/**,terraform.tfstate,deployment/.terraform/**', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
+        copyArtifacts filter: 'main.zip,.go/**,go/**,bin/**,**/terraform.tfstate.d/**,**/terraform.tfstate,deployment/.terraform/**', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
       }
     }
-    /*stage('SETUP') {
+    stage('SETUP') {
       steps {
         sh '.jenkins/install.sh'
 	sh 'go version'
@@ -43,7 +43,6 @@ pipeline {
         archiveArtifacts artifacts: 'main.zip', fingerprint: true
       }
     }
-    */
     stage('AWS Credential Grab') {
       steps{
         print "☯ Authenticating with AWS"
@@ -84,8 +83,9 @@ pipeline {
     // Archive what was achieved, even if unsuccessful so the next run understands even partial components
     stage('Archive Artifacts') {
       steps {
-        archiveArtifacts artifacts:  '.go/**,go/**,bin/**,terraform.tfstate.d/**,terraform.tfstate,deployment/.terraform/**', onlyIfSuccessful: false
-       }
+        archiveArtifacts artifacts:  '.go/**,go/**,bin/**,*/**', onlyIfSuccessful: false
+        // archiveArtifacts artifacts:  '.go/**,go/**,bin/**,**/terraform.tfstate.d/**,**/terraform.tfstate,deployment/.terraform/**', onlyIfSuccessful: false
+      }
     }
   }
 }
