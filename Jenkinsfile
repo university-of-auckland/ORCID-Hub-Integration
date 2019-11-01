@@ -58,9 +58,9 @@ pipeline {
 	     dir("deployment") {
 	       // workaround to remove a role if it exists:
 	       sh './purge.sh' 
-               sh "terraform init"
+               sh "terraform init || true"
                // sh "terraform plan -no-color"
-               sh "terraform workspace new ${ENV} || terraform select ${ENV}"
+               sh "terraform workspace new ${ENV} || terraform select ${ENV} || true"
                // sh "terraform refresh -no-color"
                // sh "terraform plan -no-color -out ${ENV}.plan"
 	      // if (env.RECREATE == 'true') {
