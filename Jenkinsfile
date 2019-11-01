@@ -5,6 +5,7 @@ pipeline {
       CGO_ENABLED = "0"
       GO111MODULE = "on"
       PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
+      AWS_DEFAULT_REGION="ap-southeast-2"
   }
 
   stages {
