@@ -16,7 +16,7 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: 'main.zip,.go/**,go/**,bin/**,terraform.tfstate.d/**,terraform.tfstate', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
+        copyArtifacts filter: 'main.zip,.go/**,go/**,bin/**,terraform.tfstate.d/**,terraform.tfstate,deployment/.terraform/**', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
       }
     }
     /*stage('SETUP') {
@@ -61,7 +61,7 @@ pipeline {
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
 	       // workaround to remove a role if it exists:
-	       // sh './purge.sh' 
+	       sh './purge.sh' 
                sh "terraform init || true"
                // sh "terraform plan"
                sh "terraform workspace new ${ENV} || terraform workspace select ${ENV} || true"
@@ -84,7 +84,7 @@ pipeline {
     // Archive what was achieved, even if unsuccessful so the next run understands even partial components
     stage('Archive Artifacts') {
       steps {
-        archiveArtifacts artifacts:  '.go/**,go/**,bin/**,terraform.tfstate.d/**,terraform.tfstate', onlyIfSuccessful: false
+        archiveArtifacts artifacts:  '.go/**,go/**,bin/**,terraform.tfstate.d/**,terraform.tfstate,deployment/.terraform/**', onlyIfSuccessful: false
        }
     }
   }
