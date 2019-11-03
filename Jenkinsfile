@@ -2,18 +2,19 @@ pipeline {
   agent {label("uoa-buildtools-small")}
   environment {
     GOPATH = "$WORKSPACE/.go"
-      CGO_ENABLED = "0"
-      GO111MODULE = "on"
-      PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
-      AWS_DEFAULT_REGION = "ap-southeast-2"
-      TF_INPUT = "0"
-      TF_CLI_ARGS = "-no-color"
-      TF_CLI_ARGS_input = "false"
-      TF_CLI_ARGS_refresh = "true"
-      JAVA_OPTS = "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
-      LANG= "en_US.UTF-8"
-      LANGUAGE = "en_US"
-      LC_ALL = "en_US.UTF-8"
+    CGO_ENABLED = "0"
+    GO111MODULE = "on"
+    PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
+    AWS_DEFAULT_REGION = "ap-southeast-2"
+    TF_INPUT = "0"
+    TF_CLI_ARGS = "-no-color"
+    TF_CLI_ARGS_input = "false"
+    TF_CLI_ARGS_refresh = "true"
+    JAVA_OPTS = "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
+    LANG= "en_US.UTF-8"
+    LANGUAGE = "en_US"
+    LC_ALL = "en_US.UTF-8"
+    RECREATE = "${RECREATE:-$(git log -1 --pretty=%B | grep -iq '\[RECREATE\]' && echo 'true' || echo 'false')}"
   }
 
   stages {
@@ -64,15 +65,15 @@ pipeline {
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
 	       // workaround to remove a role if it exists:
-	       sh './purge.sh' 
                sh "terraform init || true"
                // sh "terraform plan"
-               sh "terraform workspace new ${ENV} || terraform workspace select ${ENV} || true"
+               sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
                // sh "terraform refresh"
                // sh "terraform plan -out ${ENV}.plan"
-	      // if (env.RECREATE == 'true') {
-	      sh "terraform destroy -auto-approve"
-	      // }
+	      if (env.RECREATE == 'true') {
+	        sh './purge.sh' 
+	      	sh "terraform destroy -auto-approve"
+	      }
 	      // Provision and deploy the handler
 	      // sh "terraform apply ${ENV}.plan"
 	      sh "terraform apply -auto-approve"
