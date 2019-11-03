@@ -32,7 +32,7 @@ pipeline {
     stage('Import Artifacts') {
       steps {
         copyArtifacts filter: 'main.zip,.go/**,go.tar.xz,bin/**,**/terraform.tfstate.d/**,**/terraform.tfstate,deployment/.terraform/**', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
-	sh '[ -f go.tar.xz ] && tar xf go.tar.xz'
+	sh 'if [ -f ./go.tar.xz ] ; then tar xf ./go.tar.xz ; fi'
       }
     }
     stage('SETUP') {
@@ -99,7 +99,7 @@ pipeline {
     stage('Archive Artifacts') {
       steps {
         sh 'tar cJf go.tar.xz ./go'
-        archiveArtifacts artifacts:  '.go/**,go.tar.xz,bin/**,deployment/.terraform/**', onlyIfSuccessful: false
+        archiveArtifacts artifacts: '.go/**,go.tar.xz,bin/**,deployment/.terraform/**', onlyIfSuccessful: false
         // archiveArtifacts artifacts:  '.go/**,go/**,bin/**,**/terraform.tfstate.d/**,**/terraform.tfstate,deployment/.terraform/**', onlyIfSuccessful: false
       }
     }
