@@ -44,7 +44,8 @@ pipeline {
         sh 'go vet ./handler'
         sh 'go vet -tags test ./handler'
         sh 'golint ./handler'
-        sh 'go build -o main ./handler/ && upx main && zipit'
+        // sh 'go build -o main ./handler/ && upx main && zipit'
+        sh 'go build -o main ./handler/ && upx main && zip -0 main.zip main'
         archiveArtifacts artifacts: 'main.zip', fingerprint: true
       }
     }
@@ -72,8 +73,8 @@ pipeline {
                // sh "terraform plan -out ${ENV}.plan"
 	
 	      // if (env.RECREATE == 'true') {
-	      sh './purge.sh'
-	        sh 'terraform destroy -auto-approve'
+	      // sh './purge.sh'
+	      //   sh 'terraform destroy -auto-approve'
 	        sh 'if [ "${RECREATE}" == "true" ] || (git log -1 --pretty=%B | grep -iq \'\\[RECREATE\\]\') ; then ./purge.sh; terraform destroy -auto-approve; fi'
 	      // }
 	      // Provision and deploy the handler
