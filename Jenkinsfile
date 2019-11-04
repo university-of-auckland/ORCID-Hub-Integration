@@ -67,21 +67,19 @@ pipeline {
              // sh 'terraform version'
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
-	       // workaround to remove a role if it exists:
                sh "terraform init || true"
-               // sh "terraform plan"
                sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
 	       // Destruction if checked RECREATE or the commit message contains '[RECREATE]'
 	       if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
-	       // sh 'if [ "${RECREATE}" == "true" ] || (git log -1 --pretty=%B | grep -iq \'\\[RECREATE\\]\') ; then ./purge.sh; terraform destroy -auto-approve; fi'
 	         sh './purge.sh'
 		 sh 'terraform destroy -auto-approve'
 	       }
 	       // Provision and deploy the handler
 	       sh "terraform apply -auto-approve"
 	     }
-	  // } else {
-	    // // Deploy the handler to already provisioned environment
+	  } else {
+	    // Deploy the handler to already provisioned environment
+	    sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION_${ENV} --publish --zip-file 'fileb://$WORKSPACE/main.zip'"
 	    // sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION --publish --zip-file 'fileb://$WORKSPACE/main.zip' --region=ap-southeast-2"
 	  }
 	}
