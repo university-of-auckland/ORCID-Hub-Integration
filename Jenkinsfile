@@ -20,8 +20,9 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: '*.tar.gz', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
-	sh 'tar xf ./binaries.tar.gz || true'
+        // copyArtifacts filter: '*.tar.gz', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
+        copyArtifacts filter: 'terraform.tar.gz', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
+	// sh 'tar xf ./binaries.tar.gz || true'
 	sh 'tar xf ./terraform.tar.gz || true'
       }
     }
@@ -90,7 +91,7 @@ pipeline {
     // Archive what was achieved, even if unsuccessful so the next run understands even partial components
     stage('Archive Artifacts') {
       steps {
-        sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
+//         sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
         sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
         archiveArtifacts artifacts: '*.tar.gz', onlyIfSuccessful: false
         // archiveArtifacts artifacts:  '.go/**,go/**,bin/**,**/terraform.tfstate.d/**,**/terraform.tfstate,deployment/.terraform/**', onlyIfSuccessful: false
