@@ -74,7 +74,7 @@ pipeline {
 	      // if (env.RECREATE == 'true') {
 	      sh './purge.sh'
 	        sh 'terraform destroy -auto-approve'
-	        sh 'if [ "${RECREATE}" == "true" ] || (git log -1 --pretty=%B | grep -iq \'\\[RECREATE\\]\') ; the ./purge.sh ; terraform destroy -auto-approve; fi'
+	        sh 'if [ "${RECREATE}" == "true" ] || (git log -1 --pretty=%B | grep -iq \'\\[RECREATE\\]\') ; then ./purge.sh; terraform destroy -auto-approve; fi'
 	      // }
 	      // Provision and deploy the handler
 	      sh "terraform apply -auto-approve"
