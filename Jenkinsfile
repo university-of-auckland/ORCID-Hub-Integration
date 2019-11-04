@@ -14,14 +14,14 @@ pipeline {
     LANG= "en_US.UTF-8"
     LANGUAGE = "en_US"
     LC_ALL = "en_US.UTF-8"
+    COMMIT_MESSAGE = sh([ script: 'git log -1 --pretty=%B', returnStdout: true ]).trim()
   }
 
   stages {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        // copyArtifacts filter: '*.tar.gz', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
-        copyArtifacts filter: 'terraform.tar.gz', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
+        copyArtifacts filter: '*.tar.gz', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
 	// sh 'tar xf ./binaries.tar.gz || true'
 	sh 'tar xf ./terraform.tar.gz || true'
       }
@@ -61,8 +61,9 @@ pipeline {
     stage('DEPLOY') {
       steps {
       	script {
+	  
 	  // "destroy" provisioned environment 
-	  // if (env.PROVISION == 'true') {
+	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
              // sh 'terraform version'
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
@@ -70,31 +71,28 @@ pipeline {
                sh "terraform init || true"
                // sh "terraform plan"
                sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
-               // sh "terraform refresh"
-               // sh "terraform plan -out ${ENV}.plan"
-	
-	      // if (env.RECREATE == 'true') {
-	      // sh './purge.sh'
-	      //   sh 'terraform destroy -auto-approve'
-	        sh 'if [ "${RECREATE}" == "true" ] || (git log -1 --pretty=%B | grep -iq \'\\[RECREATE\\]\') ; then ./purge.sh; terraform destroy -auto-approve; fi'
-	      // }
-	      // Provision and deploy the handler
-	      sh "terraform apply -auto-approve"
+	       // Destruction if checked RECREATE or the commit message contains '[RECREATE]'
+	       if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
+	       // sh 'if [ "${RECREATE}" == "true" ] || (git log -1 --pretty=%B | grep -iq \'\\[RECREATE\\]\') ; then ./purge.sh; terraform destroy -auto-approve; fi'
+	         sh './purge.sh'
+		 sh 'terraform destroy -auto-approve'
+	       }
+	       // Provision and deploy the handler
+	       sh "terraform apply -auto-approve"
 	     }
 	  // } else {
 	    // // Deploy the handler to already provisioned environment
 	    // sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION --publish --zip-file 'fileb://$WORKSPACE/main.zip' --region=ap-southeast-2"
-	  // }
+	  }
 	}
       }
     }
     // Archive what was achieved, even if unsuccessful so the next run understands even partial components
     stage('Archive Artifacts') {
       steps {
-//         sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
+        // sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
         sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
         archiveArtifacts artifacts: '*.tar.gz', onlyIfSuccessful: false
-        // archiveArtifacts artifacts:  '.go/**,go/**,bin/**,**/terraform.tfstate.d/**,**/terraform.tfstate,deployment/.terraform/**', onlyIfSuccessful: false
       }
     }
   }
