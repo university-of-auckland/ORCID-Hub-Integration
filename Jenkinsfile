@@ -45,7 +45,6 @@ pipeline {
         sh 'go vet ./handler'
         sh 'go vet -tags test ./handler'
         sh 'golint ./handler'
-        // sh 'go build -o main ./handler/ && upx main && zipit'
         sh 'go build -o main ./handler/ && upx main && zip -0 main.zip main'
         archiveArtifacts artifacts: 'main.zip', fingerprint: true
       }
