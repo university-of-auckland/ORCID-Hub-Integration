@@ -91,7 +91,7 @@ pipeline {
       steps {
         sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
         sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
-        archiveArtifacts artifacts: 'archive.tar.gz', onlyIfSuccessful: false
+        archiveArtifacts artifacts: '*.tar.gz', onlyIfSuccessful: false
         // archiveArtifacts artifacts:  '.go/**,go/**,bin/**,**/terraform.tfstate.d/**,**/terraform.tfstate,deployment/.terraform/**', onlyIfSuccessful: false
       }
     }
