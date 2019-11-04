@@ -21,8 +21,9 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: 'terraform.tar.gz,binary.tar.gz', fingerprintArtifacts: true, optional: false, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
-	sh 'tar xf ./binaries.tar.gz || true'
+        copyArtifacts filter: 'terraform.tar.gz', fingerprintArtifacts: true, optional: false, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
+        // copyArtifacts filter: 'terraform.tar.gz,binary.tar.gz', fingerprintArtifacts: true, optional: false, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
+	// sh 'tar xf ./binaries.tar.gz || true'
 	sh 'tar xf ./terraform.tar.gz || true'
       }
     }
@@ -30,8 +31,8 @@ pipeline {
       steps {
         sh '.jenkins/install.sh'
 	// sh 'go version; go env; env'
-        sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
-        archiveArtifacts artifacts: 'binaries.tar.gz', onlyIfSuccessful: false
+        // sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
+        // archiveArtifacts artifacts: 'binaries.tar.gz', onlyIfSuccessful: false
       }
     }
     stage('TEST') {
