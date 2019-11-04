@@ -20,8 +20,9 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: '.go/**,go.tar.xz,bin/**,deployment/terraform.tfstate.d/**,deployment/terraform.tfstate,deployment/.terraform/**', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
-	sh 'if [ -f ./go.tar.xz ] ; then tar xf ./go.tar.xz ; fi'
+        copyArtifacts filter: '*.tar.gz', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
+	sh 'tar xf ./binaries.tar.gz || true'
+	sh 'tar xf ./terraform.tar.gz || true'
       }
     }
     stage('SETUP') {
@@ -71,6 +72,8 @@ pipeline {
                // sh "terraform plan -out ${ENV}.plan"
 	
 	      // if (env.RECREATE == 'true') {
+	      sh './purge.sh'
+	        sh 'terraform destroy -auto-approve'
 	        sh 'if [ "${RECREATE}" == "true" ] || (git log -1 --pretty=%B | grep -iq \'\\[RECREATE\\]\') ; the ./purge.sh ; terraform destroy -auto-approve; fi'
 	      // }
 	      // Provision and deploy the handler
@@ -86,8 +89,9 @@ pipeline {
     // Archive what was achieved, even if unsuccessful so the next run understands even partial components
     stage('Archive Artifacts') {
       steps {
-        sh 'tar cJf go.tar.xz ./go'
-        archiveArtifacts artifacts: '.go/**,go.tar.xz,bin/**,deployment/**', onlyIfSuccessful: false
+        sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
+        sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
+        archiveArtifacts artifacts: 'archive.tar.gz', onlyIfSuccessful: false
         // archiveArtifacts artifacts:  '.go/**,go/**,bin/**,**/terraform.tfstate.d/**,**/terraform.tfstate,deployment/.terraform/**', onlyIfSuccessful: false
       }
     }
