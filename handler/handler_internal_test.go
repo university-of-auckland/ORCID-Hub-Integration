@@ -181,7 +181,7 @@ func testHandler(t *testing.T) {
 
 func testIdentityAPICient(t *testing.T) {
 	var c Client
-	// c.ApiKey = os.Getenv("API_KEY")
+	// c.ApiKey = os.Getenv("APIKEY")
 	// c.BaseURL = "https://api.dev.auckland.ac.nz"
 
 	c.baseURL = APIBaseURL
@@ -217,7 +217,7 @@ func testIdentityAPICient(t *testing.T) {
 func testStudentAPICient(t *testing.T) {
 	malformatResponse = false
 	var c Client
-	// c.ApiKey = os.Getenv("API_KEY")
+	// c.ApiKey = os.Getenv("APIKEY")
 	// c.BaseURL = "https://api.dev.auckland.ac.nz"
 
 	c.baseURL = APIBaseURL
@@ -251,7 +251,7 @@ func testEmploymentAPICient(t *testing.T) {
 	var c Client
 
 	malformatResponse = false
-	c.apiKey = os.Getenv("API_KEY")
+	c.apiKey = os.Getenv("APIKEY")
 	c.baseURL = APIBaseURL
 
 	var emp Employment

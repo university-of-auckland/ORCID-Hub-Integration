@@ -9,7 +9,6 @@ resource "aws_lambda_function" "ORCIDHUB_INTEGRATION" {
 
   environment {
     variables = {
-      API_KEY       = "${local.APIKEY}",
       APIKEY        = "${local.APIKEY}",
       CLIENT_ID     = "${local.CLIENT_ID}",
       CLIENT_SECRET = "${local.CLIENT_SECRET}"

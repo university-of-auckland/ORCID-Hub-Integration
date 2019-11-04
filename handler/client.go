@@ -28,9 +28,9 @@ var accessTokenMutex sync.Mutex
 
 func setupAPIClients() (err error) {
 	if api.apiKey == "" {
-		api.apiKey = getenv("API_KEY", "")
+		api.apiKey = getenv("APIKEY", "")
 		api.baseURL = APIBaseURL
-		log.Debug("API_KEY: ", api.apiKey)
+		log.Debug("APIKEY: ", api.apiKey)
 	}
 
 	// Ensure that two guys don't try both to get a token (data race)

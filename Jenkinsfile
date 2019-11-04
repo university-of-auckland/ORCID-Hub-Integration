@@ -21,8 +21,8 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: '*.tar.gz', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy', selector: lastSuccessful()
-	// sh 'tar xf ./binaries.tar.gz || true'
+        copyArtifacts filter: 'terraform.tar.gz,binary.tar.gz', fingerprintArtifacts: true, optional: false, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
+	sh 'tar xf ./binaries.tar.gz || true'
 	sh 'tar xf ./terraform.tar.gz || true'
       }
     }
@@ -30,6 +30,8 @@ pipeline {
       steps {
         sh '.jenkins/install.sh'
 	// sh 'go version; go env; env'
+        sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
+        archiveArtifacts artifacts: 'binaries.tar.gz', onlyIfSuccessful: false
       }
     }
     stage('TEST') {
@@ -59,7 +61,6 @@ pipeline {
     stage('DEPLOY') {
       steps {
       	script {
-	  
 	  // "destroy" provisioned environment 
 	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
              // sh 'terraform version'
@@ -75,20 +76,14 @@ pipeline {
 	       // Provision and deploy the handler
 	       sh "terraform apply -auto-approve"
 	     }
+             sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
+             archiveArtifacts artifacts: 'terraform.tar.gz', onlyIfSuccessful: false
 	  } else {
 	    // Deploy the handler to already provisioned environment
 	    sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION_${ENV} --publish --zip-file 'fileb://$WORKSPACE/main.zip'"
 	    // sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION --publish --zip-file 'fileb://$WORKSPACE/main.zip' --region=ap-southeast-2"
 	  }
 	}
-      }
-    }
-    // Archive what was achieved, even if unsuccessful so the next run understands even partial components
-    stage('Archive Artifacts') {
-      steps {
-        // sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
-        sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
-        archiveArtifacts artifacts: '*.tar.gz', onlyIfSuccessful: false
       }
     }
   }
