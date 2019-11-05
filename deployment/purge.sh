@@ -6,12 +6,10 @@ fi
 
 for id in $(aws apigateway get-rest-apis | jq -r ".items|.[]|select(.name == \"ORCIDHUB_INTEGRATION_API_Terraform${SUFFIX}\")|.id") ; do
   aws apigateway delete-rest-api --rest-api-id $id
-  sleep 1
 done
 
 for id in $(aws apigateway get-rest-apis | jq -r ".items|.[]|select(.name == \"ORCIDHUB_INTEGRATION_API${SUFFIX}\")|.id") ; do
   aws apigateway delete-rest-api --rest-api-id $id
-  sleep 1
 done
 
 aws lambda delete-function --function-name ORCIDHUB_INTEGRATION$SUFFIX
