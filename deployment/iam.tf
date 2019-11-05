@@ -39,7 +39,8 @@ data "aws_iam_policy_document" "ORCIDHUB_INTEGRATION_API_policy" {
       "logs:PutLogEvents",
     ]
     resources = [
-      "arn:aws:logs:*:*:*",
+      //"arn:aws:logs:*:*:*",
+      "*",
     ]
   }
 
@@ -50,7 +51,7 @@ data "aws_iam_policy_document" "ORCIDHUB_INTEGRATION_API_policy" {
     ]
     resources = [
       // "arn:aws:ssm:ap-southeast-2:416527880812:parameter/ORCIDHUB_INTEGRATION_LAMBDA*",
-      "arn:aws:ssm:ap-southeast-2:*",
+			"arn:aws:ssm:ap-southeast-2:${local.ACCOUNT_ID}:parameter/*",
     ]
   }
   statement {
@@ -59,7 +60,8 @@ data "aws_iam_policy_document" "ORCIDHUB_INTEGRATION_API_policy" {
     ]
     resources = [
       // "arn:aws:kms:ap-southeast-2:416527880812:key/ab267594-0f5b-45aa-83be-16a076b2041c",
-      "arn:aws:kms:ap-southeast-2:*",
+			"arn:aws:kms:*:*:alias/*",
+			"arn:aws:kms:ap-southeast-2:${local.ACCOUNT_ID}:key/*",
     ]
   }
 }

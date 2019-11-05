@@ -7,6 +7,7 @@ locals {
 	ENV = "${terraform.workspace == "default" ? "prod" : terraform.workspace}"
 	SP_PREFIX = "${terraform.workspace == "default" ? "/" : "/${terraform.workspace}/"}ORCIDHUB-INTEGRATION-"
 	VERBOSE = "${terraform.workspace == "dev"}"
+  ACCOUNT_ID = "${data.aws_caller_identity.current.account_id}"
 }
 
 
