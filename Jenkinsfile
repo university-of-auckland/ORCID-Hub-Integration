@@ -21,14 +21,13 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: 'terraform.tar.gz', fingerprintArtifacts: true, optional: false, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
+        copyArtifacts filter: '*.tar.gz', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
         // copyArtifacts filter: 'terraform.tar.gz,binary.tar.gz', fingerprintArtifacts: true, optional: false, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
-	// sh 'tar xf ./binaries.tar.gz || true'
-	sh 'tar xf ./terraform.tar.gz || true'
       }
     }
     stage('SETUP') {
       steps {
+	// sh 'tar xf ./binaries.tar.gz || true'
         sh '.jenkins/install.sh'
 	// sh 'go version; go env; env'
         // sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
@@ -64,6 +63,7 @@ pipeline {
       	script {
 	  // "destroy" provisioned environment 
 	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
+	     sh 'tar xf ./terraform.tar.gz || true'
              // sh 'terraform version'
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
@@ -78,12 +78,12 @@ pipeline {
 	       sh "terraform apply -auto-approve"
 	     }
              sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
-             archiveArtifacts artifacts: 'terraform.tar.gz', onlyIfSuccessful: false
 	  } else {
 	    // Deploy the handler to already provisioned environment
 	    sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION_${ENV} --publish --zip-file 'fileb://$WORKSPACE/main.zip'"
 	    // sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION --publish --zip-file 'fileb://$WORKSPACE/main.zip' --region=ap-southeast-2"
 	  }
+          archiveArtifacts artifacts: 'terraform.tar.gz', onlyIfSuccessful: false
 	}
       }
     }
