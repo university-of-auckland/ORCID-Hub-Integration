@@ -31,6 +31,6 @@ if [ ! -x "${WORKSPACE}/bin/upx" ] ; then
 fi
 
 # zip
-if [ ! -x "${WORKSPACE}/bin/zipit" ] ; then 
-  go build -o "${WORKSPACE}/bin/zipit" .jenkins/zipit.go
-fi
+# if [ ! -x "${WORKSPACE}/bin/zipit" ] ; then 
+#   go build -o "${WORKSPACE}/bin/zipit" .jenkins/zipit.go
+# fi
