@@ -30,8 +30,8 @@ pipeline {
 	// sh 'tar xf ./binaries.tar.gz || true'
         sh '.jenkins/install.sh'
 	// sh 'go version; go env; env'
-        sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
-        archiveArtifacts artifacts: 'binaries.tar.gz', onlyIfSuccessful: false
+        // sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
+        // archiveArtifacts artifacts: 'binaries.tar.gz', onlyIfSuccessful: false
       }
     }
     stage('TEST') {
