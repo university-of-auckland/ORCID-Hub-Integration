@@ -1,5 +1,5 @@
 resource "aws_api_gateway_rest_api" "ORCIDHUB_INTEGRATION_API" {
-  name        = "ORCIDHUB_INTEGRATION_API_Terraform${local.ENV == "" ? "" :"_${local.ENV}"}"
+  name        = "ORCIDHUB_INTEGRATION_API${local.ENV == "" ? "" :"_${local.ENV}"}"
   description = "ORCIDHUB INTEGRATION API"
 }
 

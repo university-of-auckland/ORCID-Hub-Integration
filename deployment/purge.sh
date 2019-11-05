@@ -4,6 +4,14 @@ if [ "$ENV" != "prod" ] && [ "$ENV" != "default" ] ; then
   SUFFIX=_$ENV
 fi
 
+for id in $(aws apigateway get-rest-apis | jq -r ".items|.[]|select(.name == \"ORCIDHUB_INTEGRATION_API_Terraform${SUFFIX}\")|.id") ; do
+  aws apigateway delete-rest-api --rest-api-id $id
+done
+
+for id in $(aws apigateway get-rest-apis | jq -r ".items|.[]|select(.name == \"ORCIDHUB_INTEGRATION_API_Terraform${SUFFIX}\")|.id") ; do
+  aws apigateway delete-rest-api --rest-api-id $id
+done
+
 aws lambda delete-function --function-name ORCIDHUB_INTEGRATION$SUFFIX
 ROLE=ORCIDHUB_INTEGRATION_API_role$SUFFIX
 ARN=$(aws iam list-attached-role-policies --role-name $ROLE | jq -r ".AttachedPolicies|.[]|.PolicyArn")
