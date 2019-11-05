@@ -36,7 +36,7 @@ pipeline {
     }
     stage('TEST') {
       steps {
-        // sh 'gotest -tags test ./handler/...'
+       // sh 'gotest -tags test ./handler/...'
         sh 'gotestsum --junitfile tests.xml -- -v -tags test ./handler/...'
         junit 'tests.xml'
       }
