@@ -60,7 +60,6 @@ resource "aws_api_gateway_integration_response" "integration_response_200" {
             "retry" : false
         }
 EOF
-
   }
 }
 
