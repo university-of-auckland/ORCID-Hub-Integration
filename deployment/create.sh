@@ -56,3 +56,12 @@ $KC -H apikey:$APIKEY -H 'Content-Type: application/json' -H 'Accept: applicatio
 EOF
 
 echo "*** Expected callback URL: ${CALLBACK_REQUEST_URL}"
+# if [ "$ENV" != "dev" ] ; then
+  cat <<EOF
+****************************************************************
+*** NB! Don''t forget to create manually Kong service with
+*** the entry point ${CALLBACK_REQUEST_URL}
+*** and the upstream URL: ${UPSTREAM_URL}
+****************************************************************
+EOF
+# fi
