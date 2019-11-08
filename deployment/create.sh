@@ -3,7 +3,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/common.sh"
 
 # NB! Allow all the other environements when the deployment can be done in 'test' and/or 'prod'
-if [ "$ENV" == "dev" ] ; then
+if [ "$ENV" = "dev" ] ; then
   # Service
   $KONG/apis/$SERVICE -X DELETE
   $KONG/apis/ -d "name=$SERVICE" -d 'strip_uri=true' -d "upstream_url=$UPSTREAM_URL" -d "uris=$URI" -d 'methods=POST' -d 'retries=5'
@@ -55,7 +55,7 @@ $KC -H apikey:$APIKEY -H 'Content-Type: application/json' -H 'Accept: applicatio
 }
 EOF
 
-echo "*** Expected callback URL: ${CALLBACK_REQUEST_URL}"
+echo "\n\n*** Expected callback URL: ${CALLBACK_REQUEST_URL}"
 # if [ "$ENV" != "dev" ] ; then
   cat <<EOF
 ****************************************************************
