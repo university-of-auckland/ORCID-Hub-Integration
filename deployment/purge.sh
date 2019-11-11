@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Use this to remove role and dependnat objects terraform fails to deal
 # when you run into 'EntityAlreadyExists'
 
