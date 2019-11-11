@@ -1,9 +1,9 @@
 pipeline {
   agent {label("uoa-buildtools-small")}
   environment {
-    LANG= "en_US.UTF-8"
-    LANGUAGE = "en_US"
-    LC_ALL = "en_US.UTF-8"
+    // LANG= "en_US.UTF-8"
+    // LANGUAGE = "en_US"
+    // LC_ALL = "en_US.UTF-8"
     AWS_DEFAULT_REGION = "ap-southeast-2"
     CGO_ENABLED = "0"
     COMMIT_MESSAGE = sh([ script: 'git log -1 --pretty=%B', returnStdout: true ]).trim()
