@@ -63,7 +63,7 @@ pipeline {
       	script {
 	  // "destroy" provisioned environment 
 	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
-	     sh 'tar xf ./terraform.tar.gz || true'
+	     // sh 'tar xf ./terraform.tar.gz || true'
              // sh 'terraform version'
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
