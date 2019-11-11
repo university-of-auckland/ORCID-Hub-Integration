@@ -64,10 +64,11 @@ pipeline {
 	  // "destroy" provisioned environment 
 	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
 	     // sh 'tar xf ./terraform.tar.gz || true'
-             // sh 'terraform version'
+             sh 'terraform version'
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
                sh "terraform init || true"
+		     sh 'terraform version'
                sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
 	       // Destruction if checked RECREATE or the commit message contains '[RECREATE]'
 	       if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
