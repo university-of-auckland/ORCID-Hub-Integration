@@ -1,15 +1,15 @@
 pipeline {
   agent {label("uoa-buildtools-small")}
   environment {
+    LANG= "en_US.UTF-8"
+    LANGUAGE = "en_US"
+    LC_ALL = "en_US.UTF-8"
     AWS_DEFAULT_REGION = "ap-southeast-2"
     CGO_ENABLED = "0"
     COMMIT_MESSAGE = sh([ script: 'git log -1 --pretty=%B', returnStdout: true ]).trim()
     GO111MODULE = "on"
     GOPATH = "$WORKSPACE/.go"
     JAVA_OPTS = "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
-    LANG= "en_US.UTF-8"
-    LANGUAGE = "en_US"
-    LC_ALL = "en_US.UTF-8"
     PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
     TF_CLI_ARGS = "-no-color"
     TF_CLI_ARGS_input = "false"
@@ -29,7 +29,7 @@ pipeline {
       steps {
 	// sh 'tar xf ./binaries.tar.gz || true'
         sh '.jenkins/install.sh'
-	// sh 'go version; go env; env'
+	sh 'go version; go env; env; locale'
         // sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
         // archiveArtifacts artifacts: 'binaries.tar.gz', onlyIfSuccessful: false
       }
