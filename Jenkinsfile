@@ -75,6 +75,7 @@ pipeline {
 		 sh 'terraform destroy -auto-approve'
 	       }
 	       // Provision and deploy the handler
+	       sh "terraform plan"
 	       sh "terraform apply -auto-approve"
 	     }
              sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
