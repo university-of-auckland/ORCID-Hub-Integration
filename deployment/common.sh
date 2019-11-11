@@ -1,10 +1,6 @@
 # Common settings:
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 [ -f "${DIR}/.env" ] && source "${DIR}/.env"
-
-# TODO: how to pass the velue from terrraform
-[ -z "$KONG_APIKEY" ] && KONG_APIKEY=$2
 
 ENV=${ENV:-dev}
 if [ "$ENV" = "prod" ] ; then
@@ -15,6 +11,29 @@ else
   [ -z "$OH_BASE"] && OH_BASE="https://${ENV}.orcidhub.org.nz"
 fi
 
+# TODO: how to pass the velue from terrraform
+if [ -z "$KONG_APIKEY" ] ; then
+  KONG_APIKEY=$2
+  [ -z "$KONG_APIKEY" ] && KONG_APIKEY=$(aws ssm get-parameter --with-decryption --name "/${ENV}/ORCIDHUB-INTEGRATION-KONG_APIKEY")
+fi
+
+if [ -z "$APIKEY" ] ; then
+  APIKEY=$(aws ssm get-parameter --with-decryption --name "/${ENV}/ORCIDHUB-INTEGRATION-APIKEY")
+fi
+
+if [ -z "$CLIENT_ID" ] ; then
+  CLIENT_ID=$(aws ssm get-parameter --with-decryption --name "/${ENV}/ORCIDHUB-INTEGRATION-CLIENT_ID")
+fi
+
+if [ -z "$CLIENT_SECRET" ] ; then
+  CLIENT_SECRET=$(aws ssm get-parameter --with-decryption --name "/${ENV}/ORCIDHUB-INTEGRATION-CLIENT_SECRET")
+fi
+
+if [ -z "$UPSTREAM_URL" ] ; then
+  UPSTREAM_URL=$(terraform output UPSTREAM_URL)
+  [ -z "$UPSTREAM_URL" ] && UPSTREAM_URL=${1:-https://7n2xndun2c.execute-api.ap-southeast-2.amazonaws.com/dev/ORCIDHUB_INTEGRATION_WEBHOOK/v1}
+fi
+
 KONG="curl -H apikey:${KONG_APIKEY} ${SERVICE_BASE}/kong-loopback-api"
 KC="curl ${SERVICE_BASE}/kafka-connect/v2/connectors"
 
@@ -23,7 +42,6 @@ VERSION=v2
 # service
 SERVICE=orcidhub-trigger-integrations-$VERSION
 URI=/orcidhub-trigger/integrations/$VERSION
-[ -z "$UPSTREAM_URL" ] && UPSTREAM_URL=${1:-https://7n2xndun2c.execute-api.ap-southeast-2.amazonaws.com/dev/ORCIDHUB_INTEGRATION_WEBHOOK/v1}
 
 # Consumer
 CONSUMER=orcidhub-integration 
