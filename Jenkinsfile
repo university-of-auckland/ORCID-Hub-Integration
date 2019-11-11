@@ -71,7 +71,7 @@ pipeline {
                sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
 	       // Destruction if checked RECREATE or the commit message contains '[RECREATE]'
 	       if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
-	         sh '$WORKSPACE/deployment/purge.sh'
+	         sh '"$WORKSPACE/deployment/purge.sh"'
 		 sh 'terraform destroy -auto-approve'
 	       }
 	       // Provision and deploy the handler
