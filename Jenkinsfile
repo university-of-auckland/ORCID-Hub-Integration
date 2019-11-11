@@ -1,8 +1,8 @@
 pipeline {
   agent {label("uoa-buildtools-small")}
   environment {
-    // LANG= "en_US.UTF-8"
-    // LANGUAGE = "en_US"
+    LANG= "en_US.UTF-8"
+    LANGUAGE = "en_US"
     // LC_ALL = "en_US.UTF-8"
     AWS_DEFAULT_REGION = "ap-southeast-2"
     CGO_ENABLED = "0"
@@ -29,7 +29,7 @@ pipeline {
       steps {
 	// sh 'tar xf ./binaries.tar.gz || true'
         sh '.jenkins/install.sh'
-	sh 'go version; go env; env; locale'
+	// sh 'go version; go env; env; locale'
         // sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
         // archiveArtifacts artifacts: 'binaries.tar.gz', onlyIfSuccessful: false
       }
@@ -65,13 +65,9 @@ pipeline {
 	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
 	     // sh 'tar xf ./terraform.tar.gz || true'
              // sh 'terraform version'
-		     sh 'terraform version'
              sh '.jenkins/terraform.sh'
-		     sh 'terraform version'
 	     dir("deployment") {
-		     sh 'terraform version'
                sh "terraform init || true"
-		     sh 'terraform version'
                sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
 	       // Destruction if checked RECREATE or the commit message contains '[RECREATE]'
 	       if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
@@ -79,8 +75,6 @@ pipeline {
 		 sh 'terraform destroy -auto-approve'
 	       }
 	       // Provision and deploy the handler
-		     sh 'terraform validate'
-		     sh 'terraform version'
 	       sh "terraform apply -auto-approve"
 	     }
              sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
