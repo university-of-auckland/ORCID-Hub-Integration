@@ -14,19 +14,19 @@ fi
 # TODO: how to pass the velue from terrraform
 if [ -z "$KONG_APIKEY" ] ; then
   KONG_APIKEY=$2
-  [ -z "$KONG_APIKEY" ] && KONG_APIKEY=$(aws ssm get-parameter --with-decryption --name "/${ENV}/ORCIDHUB-INTEGRATION-KONG_APIKEY")
+  [ -z "$KONG_APIKEY" ] && KONG_APIKEY=$(terraform output KONG_APIKEY)
 fi
 
 if [ -z "$APIKEY" ] ; then
-  APIKEY=$(aws ssm get-parameter --with-decryption --name "/${ENV}/ORCIDHUB-INTEGRATION-APIKEY")
+  APIKEY=$(terraform output APIKEY)
 fi
 
 if [ -z "$CLIENT_ID" ] ; then
-  CLIENT_ID=$(aws ssm get-parameter --with-decryption --name "/${ENV}/ORCIDHUB-INTEGRATION-CLIENT_ID")
+  CLIENT_ID=$(terraform output CLIENT_ID)
 fi
 
 if [ -z "$CLIENT_SECRET" ] ; then
-  CLIENT_SECRET=$(aws ssm get-parameter --with-decryption --name "/${ENV}/ORCIDHUB-INTEGRATION-CLIENT_SECRET")
+  CLIENT_SECRET=$(terraform output CLIENT_SECRET)
 fi
 
 if [ -z "$UPSTREAM_URL" ] ; then
