@@ -63,7 +63,7 @@ pipeline {
       	script {
 	  // "destroy" provisioned environment 
 	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
-	     // sh 'tar xf ./terraform.tar.gz || true'
+	     sh 'tar xf ./terraform.tar.gz || true'
              // sh 'terraform version'
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
@@ -74,11 +74,11 @@ pipeline {
 	       if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
 	         sh '"$WORKSPACE/deployment/purge.sh"'
 		 sh 'terraform destroy -auto-approve'
-	         sh './destroy.sh"'
+	         sh '"$WORKSPACE/deployment/destroy.sh"'
 	       }
 	       // Provision and deploy the handler
 	       sh "terraform apply -auto-approve"
-	       sh './create.sh"'
+	       sh '"$WORKSPACE/deployment/create.sh"'
 	     }
              sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
 	  } else {
