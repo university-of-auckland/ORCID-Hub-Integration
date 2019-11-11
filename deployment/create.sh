@@ -2,6 +2,16 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/common.sh"
 
+# ORCIDHUb Webhook:
+get_oh_access_token
+curl -X PUT "${OH_BASE}/api/v1/webhook" -H "authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d "@-" <<EOF
+{
+  "apikey": "${APIKEY}",
+  "enabled": true,
+  "url": "$UPSTREAM_URL"
+}
+EOF
+
 # NB! Allow all the other environements when the deployment can be done in 'test' and/or 'prod'
 if [ "$ENV" = "dev" ] ; then
   # Service

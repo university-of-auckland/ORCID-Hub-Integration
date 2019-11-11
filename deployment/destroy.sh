@@ -13,3 +13,15 @@ $KC/$CONNECTOR -H "apikey:$APIKEY" -X DELETE
 $KONG/apis/$SERVICE -X DELETE
 # Consumer
 $KONG/consumers/$CONSUMER -X DELETE
+
+# ORCIDHub Webhook:
+get_oh_access_token
+curl -X PUT "${OH_BASE}/api/v1/webhook" -H "authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" -d "@-" <<EOF
+{
+  "apikey": "${APIKEY}",
+  "enabled": false,
+  "url": null
+}
+EOF
+
+curl -X DELETE -H "authorization: Bearer ${TOKEN}" "${OH_BASE}/api/v1/webhook" 
