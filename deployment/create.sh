@@ -1,4 +1,4 @@
-#!/use/bin/env bash
+#!/usr/bin/env bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/common.sh"
 
@@ -59,9 +59,11 @@ echo "\n\n*** Expected callback URL: ${CALLBACK_REQUEST_URL}"
 # if [ "$ENV" != "dev" ] ; then
   cat <<EOF
 ****************************************************************
-*** NB! Don''t forget to create manually Kong service with
+*** NB! Don't forget to create manually Kong service with
 *** the entry point ${CALLBACK_REQUEST_URL}
 *** and the upstream URL: ${UPSTREAM_URL}
 ****************************************************************
 EOF
 # fi
+
+exit 0
