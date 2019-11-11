@@ -1,20 +1,20 @@
 pipeline {
   agent {label("uoa-buildtools-small")}
   environment {
-    GOPATH = "$WORKSPACE/.go"
-    CGO_ENABLED = "0"
-    GO111MODULE = "on"
-    PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
     AWS_DEFAULT_REGION = "ap-southeast-2"
-    TF_INPUT = "0"
-    TF_CLI_ARGS = "-no-color"
-    TF_CLI_ARGS_input = "false"
-    TF_CLI_ARGS_refresh = "true"
+    CGO_ENABLED = "0"
+    COMMIT_MESSAGE = sh([ script: 'git log -1 --pretty=%B', returnStdout: true ]).trim()
+    GO111MODULE = "on"
+    GOPATH = "$WORKSPACE/.go"
     JAVA_OPTS = "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
     LANG= "en_US.UTF-8"
     LANGUAGE = "en_US"
     LC_ALL = "en_US.UTF-8"
-    COMMIT_MESSAGE = sh([ script: 'git log -1 --pretty=%B', returnStdout: true ]).trim()
+    PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
+    TF_CLI_ARGS = "-no-color"
+    TF_CLI_ARGS_input = "false"
+    TF_CLI_ARGS_refresh = "true"
+    TF_INPUT = "0"
   }
 
   stages {
@@ -81,7 +81,6 @@ pipeline {
 	  } else {
 	    // Deploy the handler to already provisioned environment
 	    sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION_${ENV} --publish --zip-file 'fileb://$WORKSPACE/main.zip'"
-	    // sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION --publish --zip-file 'fileb://$WORKSPACE/main.zip' --region=ap-southeast-2"
 	  }
           archiveArtifacts artifacts: 'terraform.tar.gz', onlyIfSuccessful: false
 	}
