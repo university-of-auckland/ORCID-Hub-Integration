@@ -64,7 +64,7 @@ pipeline {
 	  // "destroy" provisioned environment 
 	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
 	     // sh 'tar xf ./terraform.tar.gz || true'
-             sh 'terraform version'
+             // sh 'terraform version'
              sh '.jenkins/terraform.sh'
 	     dir("deployment") {
                sh "terraform init || true"
@@ -76,6 +76,7 @@ pipeline {
 		 sh 'terraform destroy -auto-approve'
 	       }
 	       // Provision and deploy the handler
+		     sh 'terraform version'
 	       sh "terraform apply -auto-approve"
 	     }
              sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
