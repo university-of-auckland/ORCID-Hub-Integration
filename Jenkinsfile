@@ -69,13 +69,13 @@ pipeline {
 	     dir("deployment") {
                sh "terraform init || true"
                sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
+	       sh "terraform plan"
 	       // Destruction if checked RECREATE or the commit message contains '[RECREATE]'
 	       if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
 	         sh '"$WORKSPACE/deployment/purge.sh"'
 		 sh 'terraform destroy -auto-approve'
 	       }
 	       // Provision and deploy the handler
-	       sh "terraform plan"
 	       sh "terraform apply -auto-approve"
 	     }
              sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
