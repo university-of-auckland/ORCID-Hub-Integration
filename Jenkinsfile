@@ -65,8 +65,11 @@ pipeline {
 	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
 	     // sh 'tar xf ./terraform.tar.gz || true'
              // sh 'terraform version'
+		     sh 'terraform version'
              sh '.jenkins/terraform.sh'
+		     sh 'terraform version'
 	     dir("deployment") {
+		     sh 'terraform version'
                sh "terraform init || true"
 		     sh 'terraform version'
                sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
@@ -76,6 +79,7 @@ pipeline {
 		 sh 'terraform destroy -auto-approve'
 	       }
 	       // Provision and deploy the handler
+		     sh 'terraform validate'
 		     sh 'terraform version'
 	       sh "terraform apply -auto-approve"
 	     }

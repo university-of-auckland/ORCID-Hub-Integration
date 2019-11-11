@@ -2,7 +2,6 @@ resource "null_resource" "trigger" {
   depends_on = [null_resource.orcidhub_webhook]
   provisioner "local-exec" {
     command = "./create.sh"
-		// interpreter = ["bash", "-ex"]
     environment = {
 			APIKEY = "${local.APIKEY}"
 			ENV = "${local.ENV}"
@@ -14,7 +13,6 @@ resource "null_resource" "trigger" {
   provisioner "local-exec" {
 		when    = "destroy"
     command = "./destroy.sh"
-		// interpreter = ["bash", "-ex"]
     environment = {
 			APIKEY = "${local.APIKEY}"
 			ENV = "${local.ENV}"
