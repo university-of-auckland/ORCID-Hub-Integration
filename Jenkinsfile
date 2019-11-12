@@ -4,7 +4,7 @@ pipeline {
     LANG= "en_US.UTF-8"
     LANGUAGE = "en_US"
     // LC_ALL = "en_US.UTF-8"
-    AWS_DEFAULT_REGION = (EVN == "test" ? "us-east-1" : "ap-southeast-2")
+    AWS_DEFAULT_REGION = "ap-southeast-2"
     CGO_ENABLED = "0"
     COMMIT_MESSAGE = sh([ script: 'git log -1 --pretty=%B', returnStdout: true ]).trim()
     GO111MODULE = "on"
