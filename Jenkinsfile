@@ -21,11 +21,11 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: '*.tar.gz', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
+        copyArtifacts filter: '*.tar.gz,main.zip', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
         // copyArtifacts filter: 'terraform.tar.gz,binary.tar.gz', fingerprintArtifacts: true, optional: false, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
       }
     }
-    stage('SETUP') {
+    /* stage('SETUP') {
       steps {
 	// sh 'tar xf ./binaries.tar.gz || true'
         sh '.jenkins/install.sh'
@@ -50,13 +50,14 @@ pipeline {
         archiveArtifacts artifacts: 'main.zip', fingerprint: true
       }
     }
+    */
     stage('AWS Credential Grab') {
       steps{
         print "☯ Authenticating with AWS"
         withCredentials([usernamePassword(credentialsId:"aws-user-sandbox", passwordVariable: 'password', usernameVariable: 'username'), string(credentialsId: "aws-token-sandbox", variable: 'token')]) {
           sh "python3 /home/jenkins/aws_saml_login.py --idp iam.auckland.ac.nz --user $USERNAME --password $PASSWORD --token $TOKEN --profile 'default'"
-	  pirntln "*** user:$USERNAME"
-	  pirntln "*** pw:$PASSWORD"
+	  echo "*** user:$USERNAME"
+	  echo "*** pw:$PASSWORD"
         }
       }
     }
