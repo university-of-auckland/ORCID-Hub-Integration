@@ -35,9 +35,7 @@ KONG_APIKEY=$2
 # fi
 
 for var in KONG_APIKEY APIKEY CLIENT_ID CLIENT_SECRET UPSTREAM_URL ; do
-  if [ -n "${!var}" ] ; then
-    continue
-  fi
+  if [ -n "${!var}" ] ; then continue ; fi
   value=$(terraform output $var)
   if [ -z "${!var}" ] ; then
     value=$(aws ssm get-parameter --with-decryption --name "/$ENV/ORCIDHUB-INTEGRATION-$var" | jq -r '.Parameter|.Value')
