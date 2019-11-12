@@ -55,7 +55,7 @@ pipeline {
     stage('AWS Credential Grab') {
       steps{
         print "☯ Authenticating with AWS"
-        withCredentials([usernamePassword(credentialsId:(env.ENV == "test": "uoa-its-nonprod-access":"aws-user-sandbox"), passwordVariable: 'password', usernameVariable: 'username'), string(credentialsId: "aws-token-sandbox", variable: 'token')]) {
+        withCredentials([usernamePassword(credentialsId:(env.ENV == "test" ? "uoa-its-nonprod-access":"aws-user-sandbox"), passwordVariable: 'password', usernameVariable: 'username'), string(credentialsId: "aws-token-sandbox", variable: 'token')]) {
           sh "python3 /home/jenkins/aws_saml_login.py --idp iam.auckland.ac.nz --user $USERNAME --password $PASSWORD --token $TOKEN --profile 'default'"
         }
       }
