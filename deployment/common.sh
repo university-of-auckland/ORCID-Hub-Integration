@@ -36,11 +36,11 @@ KONG_APIKEY=$2
 
 for var in KONG_APIKEY APIKEY CLIENT_ID CLIENT_SECRET UPSTREAM_URL ; do
   if [ -n "${!var}" ] ; then continue ; fi
-  value=$(terraform output $var)
+  value=$(terraform output $var 2>/dev/null)
   if [ -z "${!var}" ] ; then
     value=$(aws ssm get-parameter --with-decryption --name "/$ENV/ORCIDHUB-INTEGRATION-$var" | jq -r '.Parameter|.Value')
   fi
-  eval "${var}='${value}'"
+  eval "export ${var}='${value}'"
 done
 [ -z "$UPSTREAM_URL" ] && UPSTREAM_URL=${1:-https://7n2xndun2c.execute-api.ap-southeast-2.amazonaws.com/dev/ORCIDHUB_INTEGRATION_WEBHOOK/v1}
 
