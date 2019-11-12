@@ -35,7 +35,7 @@ KONG_APIKEY=$2
 # fi
 
 for var in KONG_APIKEY APIKEY CLIENT_ID CLIENT_SECRET UPSTREAM_URL ; do
-  if [ -z "${!var}" ] ; then
+  if [ -n "${!var}" ] ; then
     continue
   fi
   value=$(terraform output $var)
