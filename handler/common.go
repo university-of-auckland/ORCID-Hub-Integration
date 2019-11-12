@@ -36,7 +36,6 @@ var (
 	taskRecordCount      int
 	taskRecordCountMutex sync.Mutex
 	taskRetentionMin     = defaultTaskRetentionMin
-	updateOrcidWG        sync.WaitGroup
 	verbose              bool
 	wg                   sync.WaitGroup
 	env                  string
@@ -240,26 +239,13 @@ func isValidUPI(upi string) bool {
 	return true
 }
 
-// isValidID validates employment/student ID
-func isValidID(uid string) bool {
-	if l := len(uid); l < 8 || l > 10 {
-		return false
-	}
-	for _, r := range uid {
-		if !unicode.IsDigit(r) {
-			return false
-		}
-	}
-	return true
-}
-
 // processUserRegistration handles the user registration/ORCID account linking on the Hub.
 func (e *Event) processUserRegistration() (restponse string, err error) {
 
 	parts := strings.Split(e.EPPN, "@")
 	upi := parts[0]
 	if !isValidUPI(upi) {
-		return "", fmt.Errorf("Invalid UPI: %q", upi)
+		return "", fmt.Errorf("invalid UPI: %q", upi)
 	}
 	log.Info("UPI: ", upi)
 
@@ -278,7 +264,7 @@ func (e *Event) processUserRegistration() (restponse string, err error) {
 
 	id = <-identities
 	if id.ID == 0 {
-		return "", fmt.Errorf("Missing identity reocord for Subject ID: %d", e.Subject)
+		return "", fmt.Errorf("missing identity reocord for Subject ID: %d", e.Subject)
 	}
 	var orcidURI string
 	if env == "" {

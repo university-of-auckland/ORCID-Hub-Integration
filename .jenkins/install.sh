@@ -18,7 +18,8 @@ go get \
   golang.org/x/tools/cmd/cover \
   github.com/mattn/goveralls \
   golang.org/x/lint/golint \
-  gotest.tools/gotestsum
+  gotest.tools/gotestsum \
+  honnef.co/go/tools/cmd/staticcheck
 
 # Upgrade if there is one
 [ "$(go version | cut -d' ' -f3)" != "$LATEST" ] && go get -u golang.org/dl/$LATEST

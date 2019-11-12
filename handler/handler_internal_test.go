@@ -671,11 +671,4 @@ func TestIsValidUPIAndID(t *testing.T) {
 	assert.False(t, isValidUPI("abc1234"))
 	assert.False(t, isValidUPI("abcdd34"))
 	assert.False(t, isValidUPI("abcd23x"))
-
-	assert.False(t, isValidID("123456789A"))
-	assert.False(t, isValidID("123"))
-	assert.False(t, isValidID("1234567890123445"))
-	assert.True(t, isValidID("12345678"))
-	assert.True(t, isValidID("123456789"))
-	assert.True(t, isValidID("1234567890"))
 }

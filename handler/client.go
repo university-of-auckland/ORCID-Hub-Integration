@@ -10,13 +10,6 @@ import (
 	"sync"
 )
 
-// RESTClient ...
-type RESTClient interface {
-	GetAccessToken(url string) error
-	Get(url string, resp interface{}) error
-	Post(url string, body interface{}, resp interface{}) error
-}
-
 // Client - RESTfull service implementation
 type Client struct {
 	http.Client
@@ -124,9 +117,9 @@ func (c *Client) prepare(method, url string, body interface{}) (req *http.Reques
 	if body == nil {
 		return http.NewRequest(method, url, nil)
 	}
-	switch body.(type) {
+	switch body := body.(type) {
 	case string:
-		c.jsonBody = []byte(body.(string))
+		c.jsonBody = []byte(body)
 	default:
 		c.jsonBody, err = json.Marshal(body)
 		if err != nil {

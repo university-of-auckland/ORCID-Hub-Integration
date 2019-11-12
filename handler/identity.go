@@ -86,17 +86,9 @@ TOKEN_FOUND:
 // updateOrcid updates the user ORCID iD.
 func (id *Identity) updateOrcid(ORCID string) {
 	currentORCID := id.GetORCID()
-	if currentORCID != "" {
-		if ORCID != currentORCID {
-			// TODO
-		}
+	if ORCID == currentORCID {
 		return
 	}
-
-	wg.Add(1)
-	defer func() {
-		wg.Done()
-	}()
 
 	// Add ORCID ID if the user doesn't have one
 	var resp struct {

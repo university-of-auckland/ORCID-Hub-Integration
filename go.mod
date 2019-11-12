@@ -34,4 +34,5 @@ require (
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/tools v0.0.0-20190830082254-f340ed3ae274
 	gotest.tools/gotestsum v0.3.5 // indirect
+	honnef.co/go/tools v0.0.1-2019.2.3 // indirect
 )

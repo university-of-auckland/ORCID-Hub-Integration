@@ -59,25 +59,29 @@ func init() {
 	env = os.Getenv("ENV")
 	isLambda = os.Getenv("_LAMBDA_SERVER_PORT") != ""
 	if isLambda {
-		kmsClient = kms.New(session.New())
-		ssmClient = ssm.New(session.New())
+		s, err := session.NewSession()
+		if err != nil {
+			log.Fatal(err)
+		}
+		kmsClient = kms.New(s)
+		ssmClient = ssm.New(s)
 	}
 	go func() {
 		sc := make(chan os.Signal, 1)
-		signal.Notify(sc, syscall.SIGPIPE, syscall.SIGKILL, syscall.SIGTERM)
+		signal.Notify(sc, syscall.SIGPIPE, syscall.SIGTERM)
 
 	TASK_HANDLING:
 		for {
 			select {
 			// every 10 min check if the current task can be submitted for processing
 			case <-time.Tick(time.Minute * 10):
-				if taskID != 0 && taskRecordCount > batchSize && time.Now().Sub(taskCreatedAt).Minutes() > taskRetentionMin {
+				if taskID != 0 && taskRecordCount > batchSize && time.Since(taskCreatedAt).Minutes() > taskRetentionMin {
 					(&Task{ID: taskID}).activate()
 					newTask()
 				}
 			case <-sc:
 				// activate the current task (if it might be activated) at the shutdown
-				if taskID != 0 && taskRecordCount > batchSize && time.Now().Sub(taskCreatedAt).Minutes() > taskRetentionMin {
+				if taskID != 0 && taskRecordCount > batchSize && time.Since(taskCreatedAt).Minutes() > taskRetentionMin {
 					(&Task{ID: taskID}).activate()
 				}
 				log.Info("service terminated")

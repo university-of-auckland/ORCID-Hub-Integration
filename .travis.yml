@@ -10,11 +10,14 @@ before_install:
   - go get github.com/mattn/goveralls
   - go get golang.org/x/lint/golint
   - go get github.com/rakyll/gotest
+  - go get honnef.co/go/tools/cmd/staticcheck
 
 script:
   - go vet ./handler
   - go vet -tags=test ./handler
   - golint ./handler
+  - staticcheck ./handler
+  # - staticcheck -tags=test ./handler
   - gotest -v -tags test -cover -covermode=count -coverprofile coverage.out  ./...
 
 after_success:
