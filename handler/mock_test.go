@@ -8,7 +8,21 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"unicode"
 )
+
+// isValidID validates employment/student ID
+func isValidID(uid string) bool {
+	if l := len(uid); l < 8 || l > 10 {
+		return false
+	}
+	for _, r := range uid {
+		if !unicode.IsDigit(r) {
+			return false
+		}
+	}
+	return true
+}
 
 func createMockHandler(t *testing.T) http.HandlerFunc {
 
