@@ -4,7 +4,7 @@ pipeline {
     LANG= "en_US.UTF-8"
     LANGUAGE = "en_US"
     // LC_ALL = "en_US.UTF-8"
-    AWS_DEFAULT_REGION = "ap-southeast-2"
+    AWS_DEFAULT_REGION = (EVN == "test" ? "us-east-1" : "ap-southeast-2")
     CGO_ENABLED = "0"
     COMMIT_MESSAGE = sh([ script: 'git log -1 --pretty=%B', returnStdout: true ]).trim()
     GO111MODULE = "on"
@@ -57,8 +57,6 @@ pipeline {
         print "☯ Authenticating with AWS"
         withCredentials([usernamePassword(credentialsId:"aws-user-sandbox", passwordVariable: 'password', usernameVariable: 'username'), string(credentialsId: "aws-token-sandbox", variable: 'token')]) {
           sh "python3 /home/jenkins/aws_saml_login.py --idp iam.auckland.ac.nz --user $USERNAME --password $PASSWORD --token $TOKEN --profile 'default'"
-	  echo "*** user:$USERNAME"
-	  echo "*** pw:$PASSWORD"
         }
       }
     }
@@ -82,6 +80,7 @@ pipeline {
 	       }
 	       // Provision and deploy the handler
 	       sh "terraform apply -auto-approve"
+	       sh "terraform output"
 	       sh '"$WORKSPACE/deployment/create.sh"'
 	     }
              sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
