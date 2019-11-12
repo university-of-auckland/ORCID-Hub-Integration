@@ -75,6 +75,7 @@ pipeline {
 	       // Destruction if checked RECREATE or the commit message contains '[RECREATE]'
 	       if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
 	         sh '"$WORKSPACE/deployment/purge.sh"'
+                 sh 'aws sts get-caller-identity --query Account --output text'
 		 sh 'terraform destroy -auto-approve'
 	         sh '"$WORKSPACE/deployment/destroy.sh"'
 	       }
