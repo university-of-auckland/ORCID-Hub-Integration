@@ -33,18 +33,22 @@ output "SP_PREFIX" {
 }
 
 output "APIKEY" {
-	value = "${local.VERBOSE ? local.APIKEY : "*******"}"
+	# value = "${local.VERBOSE ? local.APIKEY : "*******"}"
+	value = "${local.APIKEY}"
 }
 
 output "CLIENT_ID" {
-	value = "${local.VERBOSE ? local.CLIENT_ID : "*******"}"
+	# value = "${local.VERBOSE ? local.CLIENT_ID : "*******"}"
+	value = "${local.CLIENT_ID}"
 }
 
 output "CLIENT_SECRET" {
-	value = "${local.VERBOSE ? local.CLIENT_SECRET : "*******"}"
+	# value = "${local.VERBOSE ? local.CLIENT_SECRET : "*******"}"
+	value = "${local.CLIENT_SECRET}"
 }
 
 output "KONG_APIKEY" {
-	value = "${local.VERBOSE ? local.KONG_APIKEY : "*******"}"
+	# value = "${local.VERBOSE ? local.KONG_APIKEY : "*******"}"
+	value = "${local.KONG_APIKEY}"
 }
 
