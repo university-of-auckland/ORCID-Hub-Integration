@@ -1,6 +1,8 @@
 #!/bin/bash
+set -xe
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/common.sh"
+
 APIKEY=${APIKEY:-$1}
 if [ -z "$APIKEY" ] ; then
   APIKEY=$($KONG/consumers/$CONSUMER/key-auth | sed 's/.*"key":"\([^"]*\).*$/\1/')
