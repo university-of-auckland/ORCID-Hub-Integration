@@ -10,29 +10,41 @@ else
   SERVICE_BASE="https://api.${ENV}.auckland.ac.nz/service"
   [ -z "$OH_BASE"] && OH_BASE="https://${ENV}.orcidhub.org.nz"
 fi
+KONG_APIKEY=$2
 
-# TODO: how to pass the velue from terrraform
-if [ -z "$KONG_APIKEY" ] ; then
-  KONG_APIKEY=$2
-  [ -z "$KONG_APIKEY" ] && KONG_APIKEY=$(terraform output KONG_APIKEY)
-fi
+# # TODO: how to pass the velue from terrraform
+# if [ -z "$KONG_APIKEY" ] ; then
+#   KONG_APIKEY=$2
+#   [ -z "$KONG_APIKEY" ] && KONG_APIKEY=$(terraform output KONG_APIKEY)
+# fi
 
-if [ -z "$APIKEY" ] ; then
-  APIKEY=$(terraform output APIKEY)
-fi
+# if [ -z "$APIKEY" ] ; then
+#   APIKEY=$(terraform output APIKEY)
+# fi
 
-if [ -z "$CLIENT_ID" ] ; then
-  CLIENT_ID=$(terraform output CLIENT_ID)
-fi
+# if [ -z "$CLIENT_ID" ] ; then
+#   CLIENT_ID=$(terraform output CLIENT_ID)
+# fi
 
-if [ -z "$CLIENT_SECRET" ] ; then
-  CLIENT_SECRET=$(terraform output CLIENT_SECRET)
-fi
+# if [ -z "$CLIENT_SECRET" ] ; then
+#   CLIENT_SECRET=$(terraform output CLIENT_SECRET)
+# fi
 
-if [ -z "$UPSTREAM_URL" ] ; then
-  UPSTREAM_URL=$(terraform output UPSTREAM_URL)
-  [ -z "$UPSTREAM_URL" ] && UPSTREAM_URL=${1:-https://7n2xndun2c.execute-api.ap-southeast-2.amazonaws.com/dev/ORCIDHUB_INTEGRATION_WEBHOOK/v1}
-fi
+# if [ -z "$UPSTREAM_URL" ] ; then
+#   UPSTREAM_URL=$(terraform output UPSTREAM_URL)
+# fi
+
+for var in KONG_APIKEY APIKEY CLIENT_ID CLIENT_SECRET UPSTREAM_URL ; do
+  if [ -z "${!var}" ] ; then
+    continue
+  fi
+  value=$(terraform output $var)
+  if [ -z "${!var}" ] ; then
+    value=$(aws ssm get-parameter --with-decryption --name "/$ENV/ORCIDHUB-INTEGRATION-$var" | jq -r '.Parameter|.Value')
+  fi
+  eval "${var}='${value}'"
+done
+[ -z "$UPSTREAM_URL" ] && UPSTREAM_URL=${1:-https://7n2xndun2c.execute-api.ap-southeast-2.amazonaws.com/dev/ORCIDHUB_INTEGRATION_WEBHOOK/v1}
 
 KONG="curl -H apikey:${KONG_APIKEY} ${SERVICE_BASE}/kong-loopback-api"
 KC="curl ${SERVICE_BASE}/kafka-connect/v2/connectors"
