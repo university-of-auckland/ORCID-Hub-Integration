@@ -15,6 +15,7 @@ type Client struct {
 	http.Client
 	accessToken, baseURL, apiKey, clientID, clientSecret string
 	jsonBody                                             []byte
+	messages                                             []string
 }
 
 var accessTokenMutex sync.Mutex
@@ -72,6 +73,8 @@ func (c *Client) execute(req *http.Request, resp interface{}) error {
 		req.Header.Set("apikey", c.apiKey)
 	} else if c.accessToken != "" {
 		req.Header.Set("Authorization", "Bearer "+c.accessToken)
+	} else {
+		c.messages = append(c.messages, "missing credentials")
 	}
 
 	req.Header.Set("Accept", "application/json")
@@ -84,6 +87,8 @@ func (c *Client) execute(req *http.Request, resp interface{}) error {
 	}
 	log.Debug("*****************")
 	log.Debugf("%s %q %d %q", req.Method, req.URL.RequestURI(), r.StatusCode, r.Status)
+	c.messages = append(c.messages, fmt.Sprintf("%s %q %d %q", req.Method, req.URL.RequestURI(), r.StatusCode, r.Status))
+
 	if resp != nil && r.StatusCode == http.StatusOK {
 		defer r.Body.Close()
 		body, err := ioutil.ReadAll(r.Body)

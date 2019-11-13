@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -168,7 +167,7 @@ func (e *Event) processEmpUpdate() (string, error) {
 		logFatal("failed to retrieve the identity record", err)
 	}
 	if id.Upi == "" {
-		return "", errors.New("failed to retrieve the identity record")
+		return "", fmt.Errorf("failed to retrieve the identity record for ID %s, messages: %v", employeeID, api.messages)
 	}
 
 	token, ok := id.GetOrcidAccessToken()
