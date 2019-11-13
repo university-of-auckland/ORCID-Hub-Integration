@@ -53,7 +53,7 @@ SERVICE=orcidhub-trigger-integrations-$VERSION
 URI=/orcidhub-trigger/integrations/$VERSION
 
 # Consumer
-CONSUMER=orcidhub-integration 
+CONSUMER=integration-orcidhub
 
 # Kafka connecotor
 CONNECTOR=connection-orcidhub

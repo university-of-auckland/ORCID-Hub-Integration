@@ -25,7 +25,7 @@ if [ "$ENV" = "dev" ] ; then
 
   # Consumer
   $KONG/consumers/$CONSUMER -X DELETE
-  $KONG/consumers -d "username=orcidhub-integration" -d "custom_id=${SERVICE_ACCOUNT}"
+  $KONG/consumers -d "username=${CONSUMER}" -d "custom_id=${SERVICE_ACCOUNT}"
 
   # curl http://localhost:8001/consumers/$CONSUMER/oauth2 -d "name=Auckland Transport" -d "client_id=$NAME" -d "redirect_uri=https://at.govt.nz/oauth2/uoa-callback"
   $KONG/consumers/$CONSUMER/acls -d "group=student-access"
@@ -36,7 +36,7 @@ if [ "$ENV" = "dev" ] ; then
   # $KONG/consumers/$CONSUMER/acls -d "group=kafka-rest-proxy"
   # $KONG/consumers/$CONSUMER/acls -d "group=kafka-rest-access"
   $KONG/consumers/$CONSUMER/acls -d "group=kafka-connect-api-access"
-  $KONG/consumers/$CONSUMER/key-auth -d "$APIKEY"
+  $KONG/consumers/$CONSUMER/key-auth -d "key=$APIKEY"
 
   # OUTPUT=$($KONG/consumers/$CONSUMER/key-auth -d '')
   # APIKEY=$(sed 's/.*"key":"\([^"]*\).*$/\1/' <<<$OUTPUT)
