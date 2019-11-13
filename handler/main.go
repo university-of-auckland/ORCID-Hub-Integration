@@ -14,20 +14,19 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/aws/aws-sdk-go/service/ssm"
 
 	"github.com/dougEfresh/lambdazap"
 )
 
 var (
-	kmsClient    *kms.KMS
-	ssmClient    *ssm.SSM
+	kmsClient *kms.KMS
+	// ssmClient    *ssm.SSM
 	lambdazapper *lambdazap.LambdaLogContext
 	isLambda     bool
 )
 
 // awsPsPrefix - AWS Paramter Store parameter name prefix
-const awsPsPrefix = "/ORCIDHUB-INTEGRATION-"
+// const awsPsPrefix = "/ORCIDHUB-INTEGRATION-"
 
 // HandleRequest handle "AWS lambda" request with a single event message or
 // a batch of event messages.
@@ -64,7 +63,7 @@ func init() {
 			log.Fatal(err)
 		}
 		kmsClient = kms.New(s)
-		ssmClient = ssm.New(s)
+		// ssmClient = ssm.New(s)
 	}
 	go func() {
 		sc := make(chan os.Signal, 1)
