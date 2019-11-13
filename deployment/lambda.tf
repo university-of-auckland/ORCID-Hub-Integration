@@ -12,6 +12,7 @@ resource "aws_lambda_function" "ORCIDHUB_INTEGRATION" {
       APIKEY        = "${local.APIKEY}",
       CLIENT_ID     = "${local.CLIENT_ID}",
       CLIENT_SECRET = "${local.CLIENT_SECRET}"
+      ENV           = "${local.ENV}"
     }
   }
 }
