@@ -39,22 +39,27 @@ var (
 	verbose              bool
 	wg                   sync.WaitGroup
 	env                  string
-
 	// for testing/mocking
 	logFatal func(args ...interface{})
-)
 
-var (
 	// APIBaseURL is the UoA API base URL
-	APIBaseURL = "https://api.dev.auckland.ac.nz/service"
+	APIBaseURL string
 	// OHBaseURL is the ORCID Hub API base URL
-	OHBaseURL = "https://dev.orcidhub.org.nz"
+	OHBaseURL string
 )
 
 func init() {
 	godotenv.Load()
 
 	env = os.Getenv("ENV")
+	if env != "" && env != "prod" {
+		APIBaseURL = "https://api." + env + ".auckland.ac.nz/service"
+		OHBaseURL = "https://" + env + ".orcidhub.org.nz"
+	} else {
+		APIBaseURL = "https://api.auckland.ac.nz/service"
+		OHBaseURL = "https://orcidhub.org.nz"
+	}
+
 	isDevelopment := strings.Contains(env, "dev")
 
 	if verbose || isDevelopment {
