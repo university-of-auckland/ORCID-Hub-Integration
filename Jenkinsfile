@@ -25,7 +25,7 @@ pipeline {
         // copyArtifacts filter: 'terraform.tar.gz,binary.tar.gz', fingerprintArtifacts: true, optional: false, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
       }
     }
-    /* stage('SETUP') {
+    stage('SETUP') {
       steps {
 	// sh 'tar xf ./binaries.tar.gz || true'
         sh '.jenkins/install.sh'
@@ -51,7 +51,6 @@ pipeline {
         archiveArtifacts artifacts: 'main.zip', fingerprint: true
       }
     }
-    */
     stage('AWS Credential Grab') {
       steps{
         print "☯ Authenticating with AWS"
