@@ -9,6 +9,7 @@ curl -X PUT "${OH_BASE}/api/v1/webhook" -H "authorization: Bearer ${TOKEN}" -H "
 {
   "apikey": "${APIKEY}",
   "enabled": true,
+  "append-orcid": false, 
   "url": "$UPSTREAM_URL"
 }
 EOF
