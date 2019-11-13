@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -54,7 +55,7 @@ var (
 func init() {
 	godotenv.Load()
 
-	env = getenv("ENV", "")
+	env = os.Getenv("ENV")
 	isDevelopment := strings.Contains(env, "dev")
 
 	if verbose || isDevelopment {
