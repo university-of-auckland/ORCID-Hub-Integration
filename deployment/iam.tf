@@ -55,16 +55,16 @@ data "aws_iam_policy_document" "ORCIDHUB_INTEGRATION_API_policy" {
     ]
   }
 
-  # statement {
-  #   actions = [
-  #     "kms:*",
-  #   ]
-  #   resources = [
-  #     // "arn:aws:kms:ap-southeast-2:416527880812:key/ab267594-0f5b-45aa-83be-16a076b2041c",
-			# # "arn:aws:kms:*:*:alias/*",
-			# "arn:aws:kms:ap-southeast-2:${local.ACCOUNT_ID}:alias/*",
-			# "arn:aws:kms:ap-southeast-2:${local.ACCOUNT_ID}:key/*",
-  #   ]
-  # }
+  statement {
+    actions = [
+      "kms:*",
+    ]
+    resources = [
+      // "arn:aws:kms:ap-southeast-2:416527880812:key/ab267594-0f5b-45aa-83be-16a076b2041c",
+			# "arn:aws:kms:*:*:alias/*",
+			"arn:aws:kms:ap-southeast-2:${local.ACCOUNT_ID}:alias/*",
+			"arn:aws:kms:ap-southeast-2:${local.ACCOUNT_ID}:key/*",
+    ]
+  }
 }
 

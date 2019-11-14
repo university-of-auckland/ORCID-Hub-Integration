@@ -21,22 +21,22 @@ pipeline {
     // Imports artifacts if build was previously successful
     stage('Import Artifacts') {
       steps {
-        copyArtifacts filter: '*.tar.gz,main.zip', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
+        copyArtifacts filter: '*.tar.gz', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy'
+        // copyArtifacts filter: 'main.zip', fingerprintArtifacts: true, optional: true, projectName: 'integration-orcidhub-build-deploy'
         // copyArtifacts filter: 'terraform.tar.gz,binary.tar.gz', fingerprintArtifacts: true, optional: false, projectName: 'integration-orcidhub-build-deploy' // , selector: lastSuccessful()
       }
     }
     stage('SETUP') {
       steps {
-	// sh 'tar xf ./binaries.tar.gz || true'
+	    // sh 'tar xf ./binaries.tar.gz || true'
         sh '.jenkins/install.sh'
-	// sh 'go version; go env; env; locale'
+	    // sh 'go version; go env; env; locale'
         // sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
         // archiveArtifacts artifacts: 'binaries.tar.gz', onlyIfSuccessful: false
       }
     }
     stage('TEST') {
       steps {
-       // sh 'gotest -tags test ./handler/...'
         sh 'gotestsum --junitfile tests.xml -- -v -tags test ./handler/...'
         junit 'tests.xml'
       }
@@ -63,34 +63,31 @@ pipeline {
     stage('DEPLOY') {
       steps {
       	script {
-	  // "destroy" provisioned environment 
-	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
-	     sh 'tar xf ./terraform.tar.gz || true'
-             // sh 'terraform version'
-             sh '.jenkins/terraform.sh'
-	     dir("deployment") {
-               sh "terraform init || true"
-               sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
-	       sh "terraform plan"
-	       // Destruction if checked RECREATE or the commit message contains '[RECREATE]'
-	       if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
-	         sh '"$WORKSPACE/deployment/purge.sh"'
-		 sh 'terraform destroy -auto-approve'
-	         sh '"$WORKSPACE/deployment/destroy.sh"'
-	       }
-	       // Provision and deploy the handler
-	       sh "terraform apply -auto-approve"
-	       sh "terraform output"
-	       sh '"$WORKSPACE/deployment/create.sh"'
-	     }
+	      if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
+	         sh 'tar xf ./terraform.tar.gz || true'
+                 // sh 'terraform version'
+                 sh '.jenkins/terraform.sh'
+	         dir("deployment") {
+                   sh "terraform init || true"
+                   sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
+	           sh "terraform plan"
+	           if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
+	             sh '"$WORKSPACE/deployment/purge.sh"'
+	             sh 'terraform destroy -auto-approve'
+	             sh '"$WORKSPACE/deployment/destroy.sh"'
+	           }
+	           sh "terraform apply -auto-approve"
+	           // sh "terraform output"
+	           sh '"$WORKSPACE/deployment/create.sh"'
+	         }
              sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
-	  } else {
-	    // Deploy the handler to already provisioned environment
-	    sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION_${ENV} --publish --zip-file 'fileb://$WORKSPACE/main.zip'"
-	  }
+	      } else {
+	        // Deploy the handler to already provisioned environment
+	        sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION_${ENV} --publish --zip-file 'fileb://$WORKSPACE/main.zip'"
+	      }
           archiveArtifacts artifacts: 'terraform.tar.gz', onlyIfSuccessful: false
-          archiveArtifacts artifacts: 'main.zip', fingerprint: true
-	}
+          // archiveArtifacts artifacts: 'main.zip', fingerprint: true
+	    }
       }
     }
   }
