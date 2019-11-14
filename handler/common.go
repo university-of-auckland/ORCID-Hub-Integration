@@ -179,9 +179,7 @@ func (e *Event) processEmpUpdate() (string, error) {
 	if !ok {
 		return "", fmt.Errorf("the user (ID: %s) hasn't granted access to the profile", employeeID)
 	}
-	if token.ORCID != "" {
-		go id.updateOrcid(token.ORCID)
-	}
+	go id.updateOrcid(token.ORCID)
 
 	var emp Employment
 	err = api.get("employment/integrations/v1/employee/"+employeeID, &emp)
