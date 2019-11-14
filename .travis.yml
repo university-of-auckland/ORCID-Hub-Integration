@@ -16,7 +16,7 @@ script:
   - go vet ./handler
   - go vet -tags=test ./handler
   - golint ./handler
-  - staticcheck ./handler
+  # - staticcheck ./handler
   # - staticcheck -tags=test ./handler
   - gotest -v -tags test -cover -covermode=count -coverprofile coverage.out  ./...
 

@@ -90,12 +90,19 @@ func (id *Identity) updateOrcid(ORCID string) {
 		return
 	}
 
+	var orcidURI string
+	if env == "" {
+		orcidURI = "https://orcid.org/" + ORCID
+	} else {
+		orcidURI = "https://sandbox.orcid.org/" + ORCID
+	}
+
 	// Add ORCID ID if the user doesn't have one
 	var resp struct {
 		StatusCode string `json:"statusCode"`
 	}
 
-	err := api.put(fmt.Sprintf("identity/integrations/v3/identity/%d/identifier/ORCID", id.ID), map[string]string{"identifier": ORCID}, &resp)
+	err := api.put(fmt.Sprintf("identity/integrations/v3/identity/%d/identifier/ORCID", id.ID), map[string]string{"identifier": orcidURI}, &resp)
 	if err != nil {
 		log.Error("failed to update or add ORCID: ", err)
 	}

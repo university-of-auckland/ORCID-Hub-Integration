@@ -179,6 +179,9 @@ func (e *Event) processEmpUpdate() (string, error) {
 	if !ok {
 		return "", fmt.Errorf("the user (ID: %s) hasn't granted access to the profile", employeeID)
 	}
+	if token.ORCID != "" {
+		go id.updateOrcid(token.ORCID)
+	}
 
 	var emp Employment
 	err = api.get("employment/integrations/v1/employee/"+employeeID, &emp)
@@ -271,14 +274,7 @@ func (e *Event) processUserRegistration() (restponse string, err error) {
 	if id.ID == 0 {
 		return "", fmt.Errorf("missing identity reocord for Subject ID: %d", e.Subject)
 	}
-	var orcidURI string
-	if env == "" {
-		orcidURI = "https://orcid.org/" + e.ORCID
-	} else {
-		orcidURI = "https://sandbox.orcid.org/" + e.ORCID
-	}
-
-	go id.updateOrcid(orcidURI)
+	go id.updateOrcid(e.ORCID)
 
 	emp = <-employments
 	if emp.Job != nil {
