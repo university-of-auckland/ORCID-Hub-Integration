@@ -1,7 +1,7 @@
-variable "ACCOUNT" {
+variable ACCOUNT {
   default = "uoa-sandbox"
 }
 
-variable "REGION" {
+variable REGION {
   default = "ap-southeast-2"
 }
