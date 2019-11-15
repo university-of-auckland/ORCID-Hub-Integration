@@ -64,29 +64,29 @@ pipeline {
     stage('DEPLOY') {
       steps {
       	script {
-	      if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
-	        sh 'tar xf ./terraform.tar.gz || true'
-                // sh 'terraform version'
-                sh '.jenkins/terraform.sh'
-	        dir("deployment") {
-                  sh "terraform init || true"
-                  sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
-	          sh "terraform plan"
-	          if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
-	            sh '"$WORKSPACE/deployment/purge.sh"'
-	            sh 'terraform destroy -auto-approve'
-	            sh '"$WORKSPACE/deployment/destroy.sh"'
-	          }
-	          sh "terraform apply -auto-approve"
-	          // sh "terraform output"
-	          sh '"$WORKSPACE/deployment/create.sh"'
-	        }
-                // sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
-                sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate*'
-	      } else {
-	        // Deploy the handler to already provisioned environment
-	        sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION_${ENV} --publish --zip-file 'fileb://$WORKSPACE/main.zip'"
+	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
+	    sh 'tar xf ./terraform.tar.gz || true'
+            // sh 'terraform version'
+            sh '.jenkins/terraform.sh'
+	    dir("deployment") {
+              sh "terraform init || true"
+              sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
+	      sh "terraform plan"
+	      if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
+	        sh '"$WORKSPACE/deployment/purge.sh"'
+	        sh 'terraform destroy -auto-approve'
+	        sh '"$WORKSPACE/deployment/destroy.sh"'
 	      }
+	      sh "terraform apply -auto-approve"
+	      // sh "terraform output"
+	      sh '"$WORKSPACE/deployment/create.sh"'
+	    }
+            // sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
+            sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate*'
+	  } else {
+	    // Deploy the handler to already provisioned environment
+	    sh "aws lambda update-function-code --function-name ORCIDHUB_INTEGRATION_${ENV} --publish --zip-file 'fileb://$WORKSPACE/main.zip'"
+	  }
           archiveArtifacts artifacts: 'terraform.tar.gz', onlyIfSuccessful: false
           // archiveArtifacts artifacts: 'main.zip', fingerprint: true
 	}
