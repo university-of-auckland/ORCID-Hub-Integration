@@ -75,11 +75,11 @@ pipeline {
 	      if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
 	        sh '"$WORKSPACE/deployment/purge.sh"'
 	        sh 'terraform destroy -auto-approve'
-	        sh '"$WORKSPACE/deployment/destroy.sh"'
+	        // sh '"$WORKSPACE/deployment/destroy.sh"'
 	      }
 	      sh "terraform apply -auto-approve"
 	      // sh "terraform output"
-	      sh '"$WORKSPACE/deployment/create.sh"'
+	      // sh '"$WORKSPACE/deployment/create.sh"'
 	    }
             // sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
             sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate*'
