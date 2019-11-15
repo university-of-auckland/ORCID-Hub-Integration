@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 	"unicode"
@@ -22,6 +23,13 @@ func isValidID(uid string) bool {
 		}
 	}
 	return true
+}
+
+func getenv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
 
 func createMockHandler(t *testing.T) http.HandlerFunc {

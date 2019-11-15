@@ -16,9 +16,11 @@ script:
   - go vet ./handler
   - go vet -tags=test ./handler
   - golint ./handler
-  # - staticcheck ./handler
+  - staticcheck ./handler
+  - staticcheck -tags=heroku ./handler
+  - staticcheck -tags=container ./handler
   # - staticcheck -tags=test ./handler
-  - gotest -v -tags test -cover -covermode=count -coverprofile coverage.out  ./...
+  - gotest -v -tags test -cover -covermode=count -coverprofile coverage.out ./...
 
 after_success:
   - $GOPATH/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN

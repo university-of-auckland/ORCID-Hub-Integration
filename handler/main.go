@@ -35,8 +35,6 @@ func HandleRequest(ctx context.Context, e Event) (string, error) {
 
 	defer func() {
 		logger.Sync()
-		wg.Wait()
-		logger.Sync()
 	}()
 
 	return e.handle()

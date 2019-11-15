@@ -24,7 +24,3 @@ resource "null_resource" "orcidhub_webhook" {
     }
 	}
 }
-
-output "UPSTREAM_URL" {
-	value = "${local.UPSTREAM_URL}"
-}

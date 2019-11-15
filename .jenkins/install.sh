@@ -35,3 +35,10 @@ fi
 # if [ ! -x "${WORKSPACE}/bin/zipit" ] ; then 
 #   go build -o "${WORKSPACE}/bin/zipit" .jenkins/zipit.go
 # fi
+
+# recompile terraform 'null' provider:
+if [ ! -x "${GOPATH}/bin/terraform-provider-null" ] ; then
+  git clone git@github.com:terraform-providers/terraform-provider-null "$GOPATH/src/github.com/terraform-providers/terraform-provider-null"
+  cd "$GOPATH/src/github.com/terraform-providers/terraform-provider-null"
+  go install
+fi 

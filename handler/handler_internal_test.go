@@ -34,13 +34,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func getenv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
-}
-
 func isValidUUID(u string) bool {
 	_, err := uuid.Parse(u)
 	return err == nil
@@ -378,7 +371,6 @@ func testProcessRegistration(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// malformatted messages:
-	wg.Wait()
 	logFatal = func(args ...interface{}) {}
 	malformatResponse = true
 
@@ -387,7 +379,6 @@ func testProcessRegistration(t *testing.T) {
 	assert.Empty(t, output)
 	assert.NotNil(t, err)
 
-	wg.Wait()
 	malformatResponse = false
 	// logFatal = log.Fatal
 }
@@ -575,7 +566,7 @@ func testProcessEmpUpdate(t *testing.T) {
 	}).handle()
 	malformatResponse = false
 	logFatal = log.Fatal
-
+	assert.NotNil(t, err)
 }
 
 func testProcessMixed(t *testing.T) {

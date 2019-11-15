@@ -37,7 +37,6 @@ var (
 	taskRecordCountMutex sync.Mutex
 	taskRetentionMin     = defaultTaskRetentionMin
 	verbose              bool
-	wg                   sync.WaitGroup
 	env                  string
 	// for testing/mocking
 	logFatal func(args ...interface{})

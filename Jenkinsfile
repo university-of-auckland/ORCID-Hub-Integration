@@ -47,7 +47,7 @@ pipeline {
         sh 'go vet ./handler'
         sh 'go vet -tags test ./handler'
         sh 'golint ./handler'
-        // sh 'staticcheck ./handler'
+        sh 'staticcheck ./handler'
         sh 'go build -o main ./handler/ && upx main && zip -0 main.zip main'
         archiveArtifacts artifacts: 'main.zip', fingerprint: true
       }
@@ -70,6 +70,8 @@ pipeline {
             sh '.jenkins/terraform.sh'
 	    dir("deployment") {
               sh "terraform init || true"
+	      // override the null provider
+	      sh "cp $GOPATH/bin/terraform-provider-null .terraform/plugins/*/terraform-provider-null_*"
               sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
 	      sh "terraform plan"
 	      if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
