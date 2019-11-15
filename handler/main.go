@@ -64,7 +64,7 @@ func init() {
 			log.Fatal(err)
 		}
 		kmsClient = kms.New(s)
-		// ssmClient = ssm.New(s)
+		ssmClient = ssm.New(s)
 	}
 	go func() {
 		sc := make(chan os.Signal, 1)
