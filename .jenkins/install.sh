@@ -38,7 +38,14 @@ fi
 
 # recompile terraform 'null' provider:
 if [ ! -x "${GOPATH}/bin/terraform-provider-null" ] ; then
-  git clone git@github.com:terraform-providers/terraform-provider-null "$GOPATH/src/github.com/terraform-providers/terraform-provider-null"
+  git clone --depth 1 git@github.com:terraform-providers/terraform-provider-null "$GOPATH/src/github.com/terraform-providers/terraform-provider-null"
   cd "$GOPATH/src/github.com/terraform-providers/terraform-provider-null"
+
+  # wget https://github.com/terraform-providers/terraform-provider-null/archive/master.zip -O null.zip
+  # unzip -q null.zip -d "$GOPATH/src/github.com/terraform-providers/"
+  # cd "$GOPATH/src/github.com/terraform-providers/"
+  # mv terraform-provider-null-master terraform-provider-null
+  # cd terraform-provider-null
   go install
+
 fi 
