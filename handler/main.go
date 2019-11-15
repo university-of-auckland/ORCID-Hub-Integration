@@ -14,19 +14,20 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go/service/ssm"
 
 	"github.com/dougEfresh/lambdazap"
 )
 
 var (
-	kmsClient *kms.KMS
-	// ssmClient    *ssm.SSM
+	kmsClient    *kms.KMS
+	ssmClient    *ssm.SSM
 	lambdazapper *lambdazap.LambdaLogContext
 	isLambda     bool
 )
 
 // awsPsPrefix - AWS Paramter Store parameter name prefix
-// const awsPsPrefix = "/ORCIDHUB-INTEGRATION-"
+const awsPsPrefix = "/ORCIDHUB-INTEGRATION-"
 
 // HandleRequest handle "AWS lambda" request with a single event message or
 // a batch of event messages.
@@ -95,24 +96,24 @@ func init() {
 // getenv returns enviroment variable value if it's defined
 // or the default. If the value is encrypted, it will depcrypt it first.
 func getenv(key, defaultValue string) (value string) {
-	// if isLambda && (key == "APIKEY" || key == "CLIENT_ID" || key == "CLIENT_SECRET") {
-	// 	keyname := awsPsPrefix + key
-	// 	if env != "" {
-	// 		keyname = "/" + env + keyname
-	// 	}
-	// 	log.Debugf("Reading parameter %q", keyname)
-	// 	withDecryption := true
-	// 	param, err := ssmClient.GetParameter(
-	// 		&ssm.GetParameterInput{
-	// 			Name:           &keyname,
-	// 			WithDecryption: &withDecryption,
-	// 		})
-	// 	if err != nil {
-	// 		log.Errorf("Failed to retrieve parameter %q: %v", keyname, err)
-	// 	} else {
-	// 		value = *param.Parameter.Value
-	// 	}
-	// }
+	if isLambda && (key == "APIKEY" || key == "CLIENT_ID" || key == "CLIENT_SECRET") {
+		keyname := awsPsPrefix + key
+		if env != "" {
+			keyname = "/" + env + keyname
+		}
+		log.Debugf("Reading parameter %q", keyname)
+		withDecryption := true
+		param, err := ssmClient.GetParameter(
+			&ssm.GetParameterInput{
+				Name:           &keyname,
+				WithDecryption: &withDecryption,
+			})
+		if err != nil {
+			log.Errorf("Failed to retrieve parameter %q: %v", keyname, err)
+		} else {
+			value = *param.Parameter.Value
+		}
+	}
 	// attempt to use the environment variable
 	if value == "" {
 		value = os.Getenv(key)
