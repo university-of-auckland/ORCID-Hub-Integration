@@ -195,6 +195,7 @@ var degreeCodes = map[string]string{
 	"DENG":          "Doctor of Engineering",
 	"DFA":           "Doctor of Fine Arts",
 	"DHSC":          "Doctor of Health Science",
+	"DIPBUS":        "Diploma in Business",
 	"DJUR":          "Doctor of Jurisprudence",
 	"DLIT":          "Doctor of Literature",
 	"DLITT":         "Doctor of Literature",
