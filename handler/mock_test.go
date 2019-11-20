@@ -353,7 +353,7 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 					{
 						"id": "208013283",
 						"studentDegNbr": "02",
-						"degreeCode": "MESTU-DG",
+						"degreeCode": "NONEXISTING-DG",
 						"degreeDesc": "MEngSt-NOT-EXISTING",
 						"degAcadCareer": "UC01",
 						"degreeConferDate": "2016-09-26T11:00:00.000Z",
@@ -391,22 +391,22 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 						"degAcadDegreeStatus": "A",
 						"prospectusCode": "AU1004",
 						"degreePlans": [
-						{
-							"acadPlanCode": "INFS-DPBUS",
-							"acadPlanDesc": "Information Systems",
-							"dgpAcadCareer": "UC01",
-							"studentCareerNbr": 1,
-							"dgpAcadDegreeStatus": "A",
-							"degreeStatusDate": "2001-03-13T11:00:00.000Z",
-							"acadProgCode": "DPBUS",
-							"acadProgGroupCode": 20,
-							"acadProgGroup": "Diploma",
-							"acadProgLevelCode": "40",
-							"acadProgLevel": "Postgraduate",
-							"acadOrgCode": "BUSEC",
-							"acadGroupDesc": "Business & Economics"
-						}
-						]
+							{
+								"acadPlanCode": "INFS-DPBUS",
+								"acadPlanDesc": "Information Systems",
+								"dgpAcadCareer": "UC01",
+								"studentCareerNbr": 1,
+								"dgpAcadDegreeStatus": "A",
+								"degreeStatusDate": "2001-03-13T11:00:00.000Z",
+								"acadProgCode": "DPBUS",
+								"acadProgGroupCode": 20,
+								"acadProgGroup": "Diploma",
+								"acadProgLevelCode": "40",
+								"acadProgLevel": "Postgraduate",
+								"acadOrgCode": "BUSEC",
+								"acadGroupDesc": "Business & Economics"
+							}
+					    ]
 					}
 				]`)
 			case "477579437", "djim087":
