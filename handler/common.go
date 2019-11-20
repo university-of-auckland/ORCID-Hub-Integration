@@ -45,6 +45,9 @@ var (
 	APIBaseURL string
 	// OHBaseURL is the ORCID Hub API base URL
 	OHBaseURL string
+
+	// Qualification code -> description map (only for 'tertiary' qualifications)
+	qualifications map[string]string
 )
 
 func init() {
@@ -95,6 +98,18 @@ func setup() (err error) {
 	if err != nil {
 		return
 	}
+	lock.Lock()
+	if qualifications == nil {
+		var list Qualifications
+		api.get("external-organisations/v1/qualifications", &list)
+		qualifications = make(map[string]string, len(list))
+		for _, q := range list {
+			if q.Type == "tertiary" {
+				qualifications[q.Code] = q.Description
+			}
+		}
+	}
+	lock.Unlock()
 	return setupTask()
 }
 

@@ -38,6 +38,17 @@ type Degree struct {
 // Degrees - array of degrees
 type Degrees []Degree
 
+// Qualification - external organisations-qualification entry
+type Qualification struct {
+	Type        string `json:"type"`
+	Code        string `json:"code"`
+	Description string `json:"description"`
+	Country     string `json:"country"`
+}
+
+// Qualifications - array of qualifications
+type Qualifications []Qualification
+
 // propagateToHub adds degree/education records to the current affiliation task.
 func (degrees Degrees) propagateToHub(email, orcid string) (count int, err error) {
 
@@ -48,9 +59,13 @@ func (degrees Degrees) propagateToHub(email, orcid string) (count int, err error
 
 	records := make([]Record, count)
 	for i, d := range degrees {
-		degreeName, ok := degreeCodes[strings.ToUpper(d.Desc)]
+
+		degreeName, ok := qualifications[d.Code]
 		if !ok {
-			degreeName = d.Desc
+			degreeName, ok = degreeCodes[strings.ToUpper(d.Desc)]
+			if !ok {
+				degreeName = d.Desc
+			}
 		}
 		date := strings.Split(d.ConferDate, "T")[0]
 		records[i] = Record{

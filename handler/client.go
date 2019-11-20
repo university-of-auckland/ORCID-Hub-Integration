@@ -17,7 +17,7 @@ type Client struct {
 	jsonBody                                             []byte
 }
 
-var accessTokenMutex sync.Mutex
+var lock sync.Mutex
 
 func setupAPIClients() (err error) {
 	if api.apiKey == "" {
@@ -26,9 +26,8 @@ func setupAPIClients() (err error) {
 		log.Debug("APIKEY: ", api.apiKey)
 	}
 
-	// Ensure that two guys don't try both to get a token (data race)
-	accessTokenMutex.Lock()
-	defer accessTokenMutex.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 
 	if oh.accessToken == "" {
 		oh.clientID = getenv("CLIENT_ID", "")
