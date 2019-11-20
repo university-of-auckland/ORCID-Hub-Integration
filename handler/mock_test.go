@@ -378,6 +378,35 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 								"acadGroupDesc": "Engineering"
 							}
 						]
+					},
+					{
+						"id": "8137589",
+						"studentDegNbr": "01",
+						"degreeCode": "DPBUS-DP",
+						"degreeDesc": "DipBus",
+						"degAcadCareer": "UC01",
+						"degreeConferDate": "1997-04-22T12:00:00.000Z",
+						"honorsPrefix": " ",
+						"honorsSuffix": " ",
+						"degAcadDegreeStatus": "A",
+						"prospectusCode": "AU1004",
+						"degreePlans": [
+						{
+							"acadPlanCode": "INFS-DPBUS",
+							"acadPlanDesc": "Information Systems",
+							"dgpAcadCareer": "UC01",
+							"studentCareerNbr": 1,
+							"dgpAcadDegreeStatus": "A",
+							"degreeStatusDate": "2001-03-13T11:00:00.000Z",
+							"acadProgCode": "DPBUS",
+							"acadProgGroupCode": 20,
+							"acadProgGroup": "Diploma",
+							"acadProgLevelCode": "40",
+							"acadProgLevel": "Postgraduate",
+							"acadOrgCode": "BUSEC",
+							"acadGroupDesc": "Business & Economics"
+						}
+						]
 					}
 				]`)
 			case "477579437", "djim087":
@@ -828,7 +857,7 @@ func createMockHandler(t *testing.T) http.HandlerFunc {
 			}`)
 				}
 			}
-		case ru == "/external-organisations/v1/qualifications":
+		case ru == "/service/external-organisations/v1/qualifications":
 			io.WriteString(w, `[
   {
     "type": "tertiary",

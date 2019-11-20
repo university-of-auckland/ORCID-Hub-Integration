@@ -217,7 +217,7 @@ func testStudentAPICient(t *testing.T) {
 	var degrees Degrees
 
 	c.get("student/integrations/v1/student/208013283/degree/", &degrees)
-	assert.Equal(t, 2, len(degrees))
+	assert.Equal(t, 3, len(degrees))
 
 	c.get("student/integrations/v1/student/477579437/degree/", &degrees)
 	assert.Equal(t, 1, len(degrees))
@@ -530,7 +530,7 @@ func testProcessEmpUpdate(t *testing.T) {
 	(&Event{Subject: 208013283}).handle()
 	assert.Nil(t, err)
 	if !live {
-		assert.Equal(t, 6, taskRecordCount)
+		assert.Equal(t, 7, taskRecordCount)
 	}
 
 	_, err = (&Event{Subject: 484378182}).handle()
@@ -624,7 +624,7 @@ func testProcessMixed(t *testing.T) {
 	}).handle()
 
 	if !live {
-		assert.True(t, taskRecordCount == 8, "The number of records should be 8, got: %d.", taskRecordCount)
+		assert.True(t, taskRecordCount == 9, "The number of records should be 8, got: %d.", taskRecordCount)
 	}
 	assert.NotNil(t, err)
 
