@@ -66,8 +66,9 @@ pipeline {
       	script {
 	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
 	    sh 'tar xf ./terraform.tar.gz || true'
-            // sh 'terraform version'
+            sh 'terraform version'
             sh '.jenkins/terraform.sh'
+            sh 'terraform version'
 	    dir("deployment") {
               sh "terraform init || true"
 	      // override the null provider
