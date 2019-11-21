@@ -11,7 +11,7 @@ pipeline {
     GOPATH = "$WORKSPACE/.go"
     JAVA_OPTS = "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
     PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
-    TF_CLI_ARGS = "-no-color"
+    // TF_CLI_ARGS = "-no-color -plugin-dir='$WORKSPACE/.plugins'"
     TF_CLI_ARGS_input = "false"
     TF_CLI_ARGS_refresh = "true"
     TF_INPUT = "0"
@@ -74,6 +74,7 @@ pipeline {
 	      // override the null provider
 	      sh "./patch.sh"
               sh "terraform init || true"
+              sh 'terraform version'
               sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
 	      sh "terraform plan"
 	      if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
