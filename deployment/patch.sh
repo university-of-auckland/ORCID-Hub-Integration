@@ -3,11 +3,12 @@
 # patch terraform: override the null provider
 set -xe
 
+
 # recompile terraform 'null' provider:
 if [ ! -x "${GOPATH}/bin/terraform-provider-null" ] ; then
+  CD=$PWD
   # git clone --depth 1 https://github.com/terraform-providers/terraform-provider-null.git "$GOPATH/src/github.com/terraform-providers/terraform-provider-null"
   # cd "$GOPATH/src/github.com/terraform-providers/terraform-provider-null"
-
   wget -q https://github.com/terraform-providers/terraform-provider-null/archive/master.zip -O null.zip
   mkdir -p "$GOPATH/src/github.com/terraform-providers/"
   unzip -q null.zip -d "$GOPATH/src/github.com/terraform-providers/"
@@ -15,14 +16,14 @@ if [ ! -x "${GOPATH}/bin/terraform-provider-null" ] ; then
   mv terraform-provider-null-master terraform-provider-null
   cd terraform-provider-null
   go install
-
+  cd "$CD"
 fi 
 
-# cp "$GOPATH/bin/terraform-provider-null" .terraform/plugins/*/terraform-provider-null_*
+cp "$GOPATH/bin/terraform-provider-null" .terraform/plugins/*/terraform-provider-null_*
 # for t in .terraform/plugins/*/terraform-provider-null_*; do
 #   cp "$GOPATH/bin/terraform-provider-null" "$t"
 # done
-cp "$GOPATH/bin/terraform-provider-null" .terraform/plugins/linux_amd64/terraform-provider-null_v2.1.2_x4
-
+find -name \*null\* -ls -excp "$GOPATH/bin/terraform-provider-null" .terraform/plugins/linux_amd64/terraform-provider-null_v2.1.2_x4
+# cp "$GOPATH/bin/terraform-provider-null" .terraform/plugins/linux_amd64/terraform-provider-null_v2.1.2_x4
 
 exit 0
