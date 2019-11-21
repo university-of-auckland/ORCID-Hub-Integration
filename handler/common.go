@@ -54,6 +54,8 @@ func init() {
 	godotenv.Load()
 
 	env = os.Getenv("ENV")
+	verboseEnv := os.Getenv("VERBOSE")
+	verbose = verboseEnv != "" && (verboseEnv == "y" || verboseEnv == "1" || verboseEnv == "true")
 	if env != "" && env != "prod" {
 		APIBaseURL = "https://api." + env + ".auckland.ac.nz/service"
 		OHBaseURL = "https://" + env + ".orcidhub.org.nz"
@@ -63,8 +65,7 @@ func init() {
 	}
 
 	isDevelopment := strings.Contains(env, "dev")
-
-	if verbose || isDevelopment {
+	if verbose {
 		loggingLevel = zap.DebugLevel
 	} else {
 		loggingLevel = zap.InfoLevel
