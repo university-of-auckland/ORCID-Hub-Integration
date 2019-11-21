@@ -18,4 +18,7 @@ if [ ! -x "${GOPATH}/bin/terraform-provider-null" ] ; then
 
 fi 
 
-cp -T $GOPATH/bin/terraform-provider-null .terraform/plugins/linux_amd64/terraform-provider-null_*
+alias
+cp $GOPATH/bin/terraform-provider-null .terraform/plugins/*/terraform-provider-null_*
+
+exit 0
