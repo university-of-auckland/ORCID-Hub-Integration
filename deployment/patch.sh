@@ -18,6 +18,9 @@ if [ ! -x "${GOPATH}/bin/terraform-provider-null" ] ; then
 
 fi 
 
-cp "$GOPATH/bin/terraform-provider-null" .terraform/plugins/*/terraform-provider-null_*
+# cp "$GOPATH/bin/terraform-provider-null" .terraform/plugins/*/terraform-provider-null_*
+for t in .terraform/plugins/*/terraform-provider-null_*; do
+  cp "$GOPATH/bin/terraform-provider-null" "$t"
+done
 
 exit 0
