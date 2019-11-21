@@ -75,7 +75,7 @@ pipeline {
 
 	      // sh "cp -T $GOPATH/bin/terraform-provider-null .terraform/plugins/*/terraform-provider-null_*"
 	      sh "cp --help"
-	      sh "for t in .terraform/plugins/linux_amd64/terraform-provider-null_*; do cp $GOPATH/bin/terraform-provider-null $t; done
+	      sh "for t in .terraform/plugins/linux_amd64/terraform-provider-null_*; do cp $GOPATH/bin/terraform-provider-null $t; done"
 	      sh "terraform plan"
 	      if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
 	        sh '"$WORKSPACE/deployment/purge.sh"'
