@@ -70,10 +70,10 @@ pipeline {
             sh '.jenkins/terraform.sh'
 	    dir("deployment") {
               sh "terraform init || true"
-	      // override the null provider
               sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
 	      sh "terraform plan"
-	      sh "cp $GOPATH/bin/terraform-provider-null .terraform/plugins/*/terraform-provider-null_*"
+	      // override the null provider
+	      sh "cp -T $GOPATH/bin/terraform-provider-null .terraform/plugins/*/terraform-provider-null_*"
 	      if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
 	        sh '"$WORKSPACE/deployment/purge.sh"'
 	        sh 'terraform destroy -auto-approve'
