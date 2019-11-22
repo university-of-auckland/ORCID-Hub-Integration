@@ -72,7 +72,7 @@ pipeline {
 	    dir("deployment") {
               sh "terraform init || true"
 	      // override the null provider
-	      sh "./patch.sh"
+	      // sh "./patch.sh"
               sh "terraform init || true"
               sh 'terraform version'
               sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
