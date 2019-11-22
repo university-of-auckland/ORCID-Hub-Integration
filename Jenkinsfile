@@ -68,7 +68,7 @@ pipeline {
 	    // sh 'tar xf ./terraform.tar.gz || true'
             sh 'terraform version'
             sh '.jenkins/terraform.sh'
-            sh 'terraform version'
+            // sh 'terraform version'
 	    dir("deployment") {
               sh "terraform init || true"
 	      // override the null provider
