@@ -11,7 +11,7 @@ pipeline {
     GOPATH = "$WORKSPACE/.go"
     JAVA_OPTS = "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
     PATH = "$WORKSPACE/.go/bin:$WORKSPACE/bin:$WORKSPACE/go/bin:$PATH"
-    TF_CLI_ARGS = "-no-color"
+    // TF_CLI_ARGS = "-no-color"
     TF_CLI_ARGS_input = "false"
     TF_CLI_ARGS_refresh = "true"
     TF_INPUT = "0"
