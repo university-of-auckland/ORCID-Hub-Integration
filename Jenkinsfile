@@ -31,9 +31,9 @@ pipeline {
     }
     stage('SETUP') {
       steps {
-	    // sh 'tar xf ./binaries.tar.gz || true'
+	// sh 'tar xf ./binaries.tar.gz || true'
         sh '.jenkins/install.sh'
-	    // sh 'go version; go env; env; locale'
+	// sh 'go version; go env; env; locale'
         // sh 'tar czf binaries.tar.gz ./.go ./go ./bin'
         // archiveArtifacts artifacts: 'binaries.tar.gz', onlyIfSuccessful: false
       }
@@ -67,26 +67,22 @@ pipeline {
       steps {
       	script {
 	  if (env.PROVISION == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[PROVISION]")) {
-	    // sh 'tar xf ./terraform.tar.gz || true'
+	    sh 'tar xf ./terraform.tar.gz || true'
             sh 'terraform version'
             sh '.jenkins/terraform.sh'
-            // sh 'terraform version'
 	    dir("deployment") {
               sh "terraform init || true"
 	      // override the null provider
 	      // sh "./patch.sh"
               // sh "terraform init || true"
-              sh 'terraform version'
+              // sh 'terraform version'
               sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
-	      sh "terraform plan"
+	      // sh "terraform plan"
 	      if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {
 	        sh '"$WORKSPACE/deployment/purge.sh"'
 	        sh 'terraform destroy -auto-approve'
-	        // sh '"$WORKSPACE/deployment/destroy.sh"'
 	      }
 	      sh "terraform apply -auto-approve"
-	      // sh "terraform output"
-	      // sh '"$WORKSPACE/deployment/create.sh"'
 	    }
             // sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate* ./deployment/.terraform'
             sh 'tar czf terraform.tar.gz ./deployment/terraform.tfstate*'

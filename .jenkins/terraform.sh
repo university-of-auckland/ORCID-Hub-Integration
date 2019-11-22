@@ -9,5 +9,3 @@ if [ $? -ne 0 ] || (terraform  version  | grep -q 'You can update') ; then
   unzip -qq -o terraform.zip -d "$WORKSPACE/bin"
   rm -f terraform.zip
 fi
-
-
