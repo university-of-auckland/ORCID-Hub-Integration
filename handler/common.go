@@ -67,11 +67,6 @@ func init() {
 
 	isDevelopment := strings.Contains(env, "dev")
 	loggingLevel = zap.NewAtomicLevel()
-	if verbose {
-		loggingLevel.Enabled(zap.DebugLevel)
-	} else {
-		loggingLevel.Enabled(zap.InfoLevel)
-	}
 	loggerCfg = zap.Config{
 		Level:       loggingLevel,
 		Development: isDevelopment,
@@ -92,6 +87,11 @@ func init() {
 		OutputPaths:      []string{"stderr"},
 		ErrorOutputPaths: []string{"stderr"},
 	}
+	if verbose {
+		loggingLevel.SetLevel(zap.DebugLevel)
+	} else {
+		loggingLevel.SetLevel(zap.InfoLevel)
+	}
 	logger, _ = loggerCfg.Build()
 	log = logger.Sugar()
 	logFatal = log.Fatal
@@ -105,7 +105,7 @@ func setup() (err error) {
 	lock.Lock()
 	if qualifications == nil {
 		// Reduce verbosity
-		ll := loggingLevel.Level()
+		ll := loggerCfg.Level.Level()
 		loggerCfg.Level.SetLevel(zap.ErrorLevel)
 		var list Qualifications
 		api.get("external-organisations/v1/qualifications", &list)
