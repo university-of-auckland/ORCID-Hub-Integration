@@ -28,6 +28,7 @@ var (
 	counter              int
 	log                  *zap.SugaredLogger
 	logger               *zap.Logger
+	loggerCfg            zap.Config
 	loggingLevel         zap.AtomicLevel
 	oh                   Client
 	taskCreatedAt        time.Time
@@ -71,7 +72,7 @@ func init() {
 	} else {
 		loggingLevel.Enabled(zap.InfoLevel)
 	}
-	logger, _ = zap.Config{
+	loggerCfg = zap.Config{
 		Level:       loggingLevel,
 		Development: isDevelopment,
 		Encoding:    "console",
@@ -90,7 +91,8 @@ func init() {
 		},
 		OutputPaths:      []string{"stderr"},
 		ErrorOutputPaths: []string{"stderr"},
-	}.Build()
+	}
+	logger, _ = loggerCfg.Build()
 	log = logger.Sugar()
 	logFatal = log.Fatal
 }
@@ -104,7 +106,7 @@ func setup() (err error) {
 	if qualifications == nil {
 		// Reduce verbosity
 		ll := loggingLevel.Level()
-		loggingLevel.Enabled(zap.ErrorLevel)
+		loggerCfg.Level.SetLevel(zap.ErrorLevel)
 		var list Qualifications
 		api.get("external-organisations/v1/qualifications", &list)
 		qualifications = make(map[string]string, len(list))
@@ -113,7 +115,7 @@ func setup() (err error) {
 				qualifications[q.Code] = q.Description
 			}
 		}
-		loggingLevel.Enabled(ll)
+		loggerCfg.Level.SetLevel(ll)
 	}
 	lock.Unlock()
 	return setupTask()
