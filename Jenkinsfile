@@ -72,10 +72,6 @@ pipeline {
             sh '.jenkins/terraform.sh'
 	    dir("deployment") {
               sh "terraform init || true"
-	      // override the null provider
-	      // sh "./patch.sh"
-              // sh "terraform init || true"
-              // sh 'terraform version'
               sh "terraform workspace new ${ENV} || terraform workspace select ${ENV}"
 	      // sh "terraform plan"
 	      if (env.RECREATE == 'true' || COMMIT_MESSAGE.toUpperCase().contains("[RECREATE]")) {

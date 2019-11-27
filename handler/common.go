@@ -28,7 +28,7 @@ var (
 	counter              int
 	log                  *zap.SugaredLogger
 	logger               *zap.Logger
-	loggingLevel         zapcore.Level
+	loggingLevel         zap.AtomicLevel
 	oh                   Client
 	taskCreatedAt        time.Time
 	taskID               int
@@ -55,7 +55,7 @@ func init() {
 
 	env = os.Getenv("ENV")
 	verboseEnv := os.Getenv("VERBOSE")
-	verbose = verboseEnv != "" && (verboseEnv == "y" || verboseEnv == "1" || verboseEnv == "true")
+	verbose = verboseEnv != "" && verboseEnv != "n" && verboseEnv != "0" && verboseEnv != "false"
 	if env != "" && env != "prod" {
 		APIBaseURL = "https://api." + env + ".auckland.ac.nz/service"
 		OHBaseURL = "https://" + env + ".orcidhub.org.nz"
@@ -65,13 +65,14 @@ func init() {
 	}
 
 	isDevelopment := strings.Contains(env, "dev")
+	loggingLevel = zap.NewAtomicLevel()
 	if verbose {
-		loggingLevel = zap.DebugLevel
+		loggingLevel.Enabled(zap.DebugLevel)
 	} else {
-		loggingLevel = zap.InfoLevel
+		loggingLevel.Enabled(zap.InfoLevel)
 	}
 	logger, _ = zap.Config{
-		Level:       zap.NewAtomicLevelAt(loggingLevel),
+		Level:       loggingLevel,
 		Development: isDevelopment,
 		Encoding:    "console",
 		EncoderConfig: zapcore.EncoderConfig{
@@ -101,6 +102,9 @@ func setup() (err error) {
 	}
 	lock.Lock()
 	if qualifications == nil {
+		// Reduce verbosity
+		ll := loggingLevel.Level()
+		loggingLevel.Enabled(zap.ErrorLevel)
 		var list Qualifications
 		api.get("external-organisations/v1/qualifications", &list)
 		qualifications = make(map[string]string, len(list))
@@ -109,6 +113,7 @@ func setup() (err error) {
 				qualifications[q.Code] = q.Description
 			}
 		}
+		loggingLevel.Enabled(ll)
 	}
 	lock.Unlock()
 	return setupTask()
