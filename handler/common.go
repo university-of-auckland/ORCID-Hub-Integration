@@ -175,7 +175,7 @@ func (e *Event) handle() (string, error) {
 		if e.EPPN != "" {
 			return e.processUserRegistration()
 		} else if e.Subject != 0 {
-			return e.processEmpUpdate()
+			return e.processUpdate()
 		} else if e.Type == "PING" { // Heartbeat Check
 			return "GNIP", nil
 		}
@@ -183,8 +183,8 @@ func (e *Event) handle() (string, error) {
 	return "", fmt.Errorf("unhandled event: %#v", e)
 }
 
-// processEmpUpdate handles the employer update event.
-func (e *Event) processEmpUpdate() (string, error) {
+// processUpdate handles the employer update event.
+func (e *Event) processUpdate() (string, error) {
 
 	var employeeID = strconv.Itoa(e.Subject)
 
