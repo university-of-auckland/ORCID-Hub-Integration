@@ -57,7 +57,7 @@ $KC -H apikey:$APIKEY -H 'Content-Type: application/json' -H 'Accept: applicatio
             "value.converter":"org.apache.kafka.connect.storage.StringConverter",
             "key.converter":"org.apache.kafka.connect.storage.StringConverter",
             "header.converter":"org.apache.kafka.connect.storage.StringConverter",              
-            "topics":"nz-ac-auckland-employment",
+            "topics":"nz-ac-auckland-employment,nz-ac-auckland-student",
             "callback.request.url":"${CALLBACK_REQUEST_URL}",
             "callback.request.method":"POST",
             "callback.request.headers":"apikey:${APIKEY}|Content-Type:application/json",
