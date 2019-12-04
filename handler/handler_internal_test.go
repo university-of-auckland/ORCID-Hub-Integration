@@ -401,6 +401,11 @@ func testHealthCheck(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestIif(t *testing.T) {
+	assert.Equal(t, "T", iif(true, "T", "F"))
+	assert.Equal(t, "F", iif(false, "T", "F"))
+}
+
 func TestIdentityGetORCID(t *testing.T) {
 	var id Identity
 	json.Unmarshal([]byte(`{
