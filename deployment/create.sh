@@ -14,7 +14,7 @@ curl -X PUT "${OH_BASE}/api/v1/webhook" -H "authorization: Bearer ${TOKEN}" -H "
 }
 EOF
 
-# NB! Allow all the other environements when the deployment can be done in 'test' and/or 'prod'
+# NB! Allow all the other environements when the deployment can be done in 'tst' and/or 'prd'
 if [ "$ENV" = "dev" ] ; then
   # Service
   $KONG/apis/$SERVICE -X DELETE

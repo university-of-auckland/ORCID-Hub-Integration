@@ -2,7 +2,7 @@
 # Use this to remove role and dependnat objects terraform fails to deal
 # when you run into 'EntityAlreadyExists'
 
-if [ "$ENV" != "prod" ] && [ "$ENV" != "default" ] ; then
+if [ "$ENV" != "prd" ] && [ "$ENV" != "default" ] ; then
   SUFFIX=_$ENV
 fi
 

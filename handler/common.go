@@ -57,7 +57,7 @@ func init() {
 	env = os.Getenv("ENV")
 	verboseEnv := os.Getenv("VERBOSE")
 	verbose = verboseEnv != "" && verboseEnv != "n" && verboseEnv != "0" && verboseEnv != "false"
-	if env != "" && env != "prod" {
+	if env != "" && env != "prd" {
 		APIBaseURL = "https://api." + env + ".auckland.ac.nz/service"
 		OHBaseURL = "https://" + env + ".orcidhub.org.nz"
 	} else {

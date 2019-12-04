@@ -1,6 +1,6 @@
 locals {
-	ENV = "${terraform.workspace == "default" ? "prod" : terraform.workspace}"
-	SP_PREFIX = "${terraform.workspace == "default" ? "/" : "/${terraform.workspace}/"}ORCIDHUB-INTEGRATION-"
+	ENV = "${terraform.workspace == "default" ? "prd" : terraform.workspace}"
+	SP_PREFIX = "${terraform.workspace == "default" ? "/prd/" : "/${terraform.workspace}/"}ORCIDHUB-INTEGRATION/"
 	VERBOSE = "${terraform.workspace == "dev"}"
   ACCOUNT_ID = "${data.aws_caller_identity.current.account_id}"
 }
@@ -33,8 +33,8 @@ output "SP_PREFIX" {
 }
 
 output "APIKEY" {
-	# value = "${local.VERBOSE ? local.APIKEY : "*******"}"
-	value = "${local.APIKEY}"
+	value = "${local.VERBOSE ? local.APIKEY : "*******"}"
+	# value = "${local.APIKEY}"
 }
 
 output "CLIENT_ID" {
@@ -43,12 +43,12 @@ output "CLIENT_ID" {
 }
 
 output "CLIENT_SECRET" {
-	# value = "${local.VERBOSE ? local.CLIENT_SECRET : "*******"}"
-	value = "${local.CLIENT_SECRET}"
+	value = "${local.VERBOSE ? local.CLIENT_SECRET : "*******"}"
+	# value = "${local.CLIENT_SECRET}"
 }
 
 output "KONG_APIKEY" {
-	# value = "${local.VERBOSE ? local.KONG_APIKEY : "*******"}"
-	value = "${local.KONG_APIKEY}"
+	value = "${local.VERBOSE ? local.KONG_APIKEY : "*******"}"
+	# value = "${local.KONG_APIKEY}"
 }
 

@@ -3,7 +3,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 [ -f "${DIR}/.env" ] && source "${DIR}/.env"
 
 ENV=${ENV:-dev}
-if [ "$ENV" = "prod" ] ; then
+if [ "$ENV" = "prd" ] ; then
   SERVICE_BASE="https://api.auckland.ac.nz/service"
   [ -z "$OH_BASE"] && OH_BASE="https://orcidhub.org.nz"
 else
@@ -38,7 +38,7 @@ for var in KONG_APIKEY APIKEY CLIENT_ID CLIENT_SECRET UPSTREAM_URL ; do
   if [ -n "${!var}" ] ; then continue ; fi
   value=$(terraform output $var 2>/dev/null || true)
   if [ -z "${value}" ] ; then
-    value=$(aws ssm get-parameter --with-decryption --name "/$ENV/ORCIDHUB-INTEGRATION-$var" | jq -r '.Parameter|.Value')
+    value=$(aws ssm get-parameter --with-decryption --name "/$ENV/ORCIDHUB-INTEGRATION/$var" | jq -r '.Parameter|.Value')
   fi
   eval "export ${var}='${value}'"
 done
