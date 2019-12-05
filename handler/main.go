@@ -27,7 +27,7 @@ var (
 )
 
 // awsPsPrefix - AWS Paramter Store parameter name prefix
-const awsPsPrefix = "/ORCIDHUB-INTEGRATION-"
+const awsPsPrefix = "/ORCIDHUB-INTEGRATION/"
 
 // HandleRequest handle "AWS lambda" request with a single event message or
 // a batch of event messages.

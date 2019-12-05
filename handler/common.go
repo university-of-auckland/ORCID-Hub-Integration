@@ -51,15 +51,23 @@ var (
 	qualifications map[string]string
 )
 
+func iif(cond bool, truePart, falsePart string) string {
+	if cond {
+		return truePart
+	}
+	return falsePart
+}
+
 func init() {
 	godotenv.Load()
 
 	env = os.Getenv("ENV")
 	verboseEnv := os.Getenv("VERBOSE")
 	verbose = verboseEnv != "" && verboseEnv != "n" && verboseEnv != "0" && verboseEnv != "false"
-	if env != "" && env != "prod" {
-		APIBaseURL = "https://api." + env + ".auckland.ac.nz/service"
-		OHBaseURL = "https://" + env + ".orcidhub.org.nz"
+	if env != "" && env != "prd" {
+		var e = iif(env == "tst", "test", env)
+		APIBaseURL = "https://api." + e + ".auckland.ac.nz/service"
+		OHBaseURL = "https://" + e + ".orcidhub.org.nz"
 	} else {
 		APIBaseURL = "https://api.auckland.ac.nz/service"
 		OHBaseURL = "https://orcidhub.org.nz"
