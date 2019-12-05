@@ -71,7 +71,6 @@ func (degrees Degrees) propagateToHub(email, orcid string) (count int, err error
 		records[i] = Record{
 			AffiliationType: "education",
 			EndDate:         date,
-			StartDate:       date,
 			LocalID:         d.ID + "/" + d.StudentDegNbr,
 			Email:           email,
 			Orcid:           orcid,
